@@ -105,7 +105,7 @@ ggplot(pressure, aes(x=temperature, y=pressure)) +
   geom_point(size=6) + 
   geom_line(size=3) +
   theme_classic()
-       
+
 ```
 
 
@@ -165,7 +165,7 @@ sample(x = 1:10, replace = TRUE)
 
 >Q: What is the effect of replace=TRUE/FALSE?
 
-  #removes data from set or not.
+#removes data from set or not.
 ---
 
 # Bird abundance data
