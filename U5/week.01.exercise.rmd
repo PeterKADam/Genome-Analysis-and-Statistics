@@ -101,11 +101,10 @@ You can also embed plots, for example:
 
 names(pressure)
 
-ggplot(pressure, aes(x=temperature, y=pressure)) + 
-  geom_point(size=6) + 
-  geom_line(size=3) +
-  theme_classic()
-
+ggplot(pressure, aes(x = temperature, y = pressure)) +
+    geom_point(size = 6) +
+    geom_line(size = 3) +
+    theme_classic()
 ```
 
 
@@ -176,10 +175,9 @@ Here I load the birdAbundanceData dataset.
 
 ```{r}
 
-birdAbundanceData <- read.csv(file = "chap02e2bDesertBirdAbundance.csv")
+birdAbundanceData <- read.csv(file = r"(chap02e2bDesertBirdAbundance.csv)")
 
 birdAbundanceData
-
 ```
 
 NOTE the naming of the dataset #chap02e2b = chapter2, example 2 B = 2.2B
@@ -208,6 +206,7 @@ max(birdAbundanceData$abundance)
 mean(birdAbundanceData$abundance)
 median(birdAbundanceData$abundance)
 
+hist(birdAbundanceData$abundance)
 ```
 
 
