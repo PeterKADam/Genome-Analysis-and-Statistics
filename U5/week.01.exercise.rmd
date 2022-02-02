@@ -1,0 +1,217 @@
+---
+title: "Week 01. Genome Analysis and Statistics"
+output: 
+  html_document: 
+      theme: readable
+      toc: yes
+editor_options: 
+  chunk_output_type: console
+--- 
+
+# Aim of this exercise
+O
+* Learn the basics of Rmarkdown (combining text and code)
+* Learn how to load and install packages
+* Try a really simple plot (ggplot)
+* How to clear memory/Panic
+* How to get help!
+* Try the sample() function
+* Analyse a small data set
+
+# R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+You can embed an R code chunk like this:
+
+```{r}
+
+summary(cars)
+
+```
+
+The summary() function will summarise at dataset.
+
+Try the small "Run" button in the menu for this panel to see the different options for running the code
+
+```{r}
+
+dim(cars)
+
+```
+
+The dim() function gives you the dimensions of the dataset.
+
+You insert these chunks of code by pressing ctrl+alt+i or by the >Code>Insert chunk menu 
+
+>Q: Insert a chunk of code that uses the head() function to inspect the cars dataset
+
+The head() function prints the first few lines of a data frame.
+
+```{r}
+head(cars)
+
+```
+
+
+
+---
+
+# Loading and/or installing packages
+
+Install a package using the tools>install packages menu.
+
+>Q: Install the tidyverse package(s)
+
+For more info, visit https://www.tidyverse.org/
+
+>Q: Install/update the rmarkdown package
+
+If you have problems with installing packages, please try and ask fellow students.
+
+If you continue to have problems ask your TA.
+
+It normally helps to reinstall R and Rstudio.
+
+Also it should be noted that both R and Rstudio affects your system very little and can easily be removed again.
+
+>Q: Load the tidyverse package. 
+
+This will only work if you have successfully installed the tidyverse package(s).
+
+You load packages with the library(packagename) function.
+
+```{r}
+
+library(tidyverse)
+
+```
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. 
+
+>Q: Try and knit this this document now!
+
+Press the "knit button" or press ctrl+shift+k
+
+# Show a plot
+
+You can also embed plots, for example:
+
+```{r}
+
+names(pressure)
+
+ggplot(pressure, aes(x=temperature, y=pressure)) + 
+  geom_point(size=6) + 
+  geom_line(size=3) +
+  theme_classic()
+       
+```
+
+
+# Clear the console
+
+You can clear the console using the Edit menu or the keyboard shortcut (found in the edit menu)
+
+>Q: Clear the console
+
+
+---
+
+# Restarting the R session
+
+You can restart R using the Session menu or the keyboard shortcut
+
+>Q: Restart R and load the package tidyverse
+
+```{r}
+library(tidyverse)
+```
+
+
+---
+
+# Getting help and loading data
+
+You can get help using the "?" followed by function name
+
+```r
+?function
+help(function)
+
+```
+
+>Q: Try and get some help for the "sample" function
+###
+```{r}
+?sample
+```
+###
+
+---
+
+
+# The sample() function
+
+```{r}
+
+sample(x = 1:10, replace = TRUE)
+
+sample(x = 1:10, replace = FALSE)
+
+sample(x = 1:10, replace = TRUE)
+
+```
+
+>Q: What is the effect of replace=TRUE/FALSE?
+
+  #removes data from set or not.
+---
+
+# Bird abundance data
+
+You can load comma separated files using the read.csv() function
+
+Here I load the birdAbundanceData dataset.
+
+```{r}
+
+birdAbundanceData <- read.csv(file = "chap02e2bDesertBirdAbundance.csv")
+
+birdAbundanceData
+
+```
+
+NOTE the naming of the dataset #chap02e2b = chapter2, example 2 B = 2.2B
+
+Get information about dataset
+
+```{r}
+
+summary(birdAbundanceData)
+
+```
+
+Example of using basic statistical functions
+
+```{r}
+
+min(birdAbundanceData$abundance)
+
+max(birdAbundanceData$abundance)
+
+```
+
+>Q: Can you calculate the mean and median abundance of the dataset?
+
+```{r}
+mean(birdAbundanceData$abundance)
+median(birdAbundanceData$abundance)
+
+```
+
+
+---
+
+# Well done! Congratulations on reaching the end of week 1!
+
