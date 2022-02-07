@@ -1,0 +1,133 @@
+---
+title: "Week 02. Genome Analysis and Statistics"
+author: "Palle Villesen"
+output:
+  html_document: 
+    theme: cosmo
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Goals of the session
+
+1. Loading data in R 
+2. Plotting data in R 
+3. Getting a few summary statistics of data in R
+
+---
+
+# Load package and init
+
+```{r}
+
+library(tidyverse)
+
+options(pillar.sigfig = 5) # Tell R that we want 5 significant digits in output
+
+theme_set(theme_classic()) # Tell R that we want to use the classic theme for plots
+```
+
+# Bird abundance data
+
+You can load comma separated files using the read_csv() function
+
+Here I load the birdAbundanceData dataset, the file should be in this directory (as this rmd file).
+
+```{r}
+
+# These lines converted the datafile to student friendly rds format
+# birdAbundanceData <- read_csv(file = "chap02e2bDesertBirdAbundance.csv")
+# write_rds(x = birdAbundanceData, file = "chap02e2bDesertBirdAbundance.rds")
+#
+# After conversion we load the data using the read_rds() function
+birdAbundanceData <- read_rds("chap02e2bDesertBirdAbundance.rds")
+
+birdAbundanceData
+```
+
+NOTE the naming of the dataset #chap02e2b = chapter2, example 2 B = 2.2B
+
+Get information about dataset
+
+```{r}
+
+summary(birdAbundanceData)
+
+```
+
+## How to make a boxplot
+
+I use some simulated data with three columns:
+
+group    = 3 groups eating different pills
+headache = amount of headache
+vomit    = amount of vomiting
+
+```{r}
+
+mydata <- read_rds(file = "example_data_pills.rds")
+
+mydata
+
+ggplot(data = mydata, aes(x = headache)) +
+    geom_boxplot()
+
+ggplot(data = mydata, aes(y = headache)) +
+    geom_boxplot()
+
+ggplot(data = mydata, aes(x = "All data", y = headache)) +
+    geom_boxplot()
+
+ggplot(data = mydata, aes(x = group, y = headache)) +
+    geom_boxplot()
+```
+
+>Q: Make a boxplot of the birdAbundanceData
+```{r}
+ggplot(data = birdAbundanceData, aes(y = abundance)) +
+    geom_boxplot()
+```
+You only have one column of values.
+ 
+
+---
+
+## How to make a histogram
+
+```{r}
+
+mydata <- read_rds(file = "example_data_pills.rds")
+
+ggplot(data = mydata, aes(x = headache)) +
+    geom_histogram(binwidth = 1, fill = "firebrick", color = "black")
+```
+
+>Q: Make a histogram of the birdAbundanceData like figure 2.2-3
+```{r}
+ggplot(data = birdAbundanceData, aes(x = abundance)) +
+    geom_histogram(binwidth = 1, fill = "firebrick", color = "black")
+```
+
+---
+
+# Summary of data
+
+>Q: What is the sd, mean, max and min abundance?
+
+Hint: min(), max(), mean(), sd()
+
+sd(mydata$headache)
+
+If you dare, you can try to use summarise() to get everything in a nice table.
+
+```{r}
+birdAbundanceData %>%
+    summarise(min = min(abundance), max = max(abundance), mean = mean(abundance), sd = sd(abundance))
+```
+---
+
+
+# Well done! Congratulations on reaching the end!
+
+<img SRC='https://media.giphy.com/media/SggILpMXO7Xt6/giphy.gif' />
