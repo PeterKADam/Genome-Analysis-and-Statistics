@@ -206,7 +206,7 @@ max(birdAbundanceData$abundance)
 mean(birdAbundanceData$abundance)
 median(birdAbundanceData$abundance)
 
-hist(birdAbundanceData$abundance)
+hist(birdAbundanceData$abundance, breaks = 50)
 ```
 
 
