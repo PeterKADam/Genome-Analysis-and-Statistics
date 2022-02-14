@@ -1,0 +1,183 @@
+---
+title: "R exercise:  Week 03 in Genome Analysis and Statistics"
+author: "Thomas Bataillon"
+date: "Time Stamp last update: `r Sys.Date()`"
+output:
+  html_document:
+    theme: paper
+    code_folding: show
+    toc: true
+    toc_depth: 2
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+
+---
+
+# Goals of the session
+
+The main objective for this week is to "practice in R" the central topics that you read about in chapter 4 
+
+1. Doing in R the visualization and stats on gene length dataset (example 4.1)  
+
+2. Getting some experience with manipulating data stored in R 
+
+3. Simulate sampling data from the human gene length distribution and 
+
+4. Exploring how much sample statistics reflect the properties of the population sampled
+
+5. Visualizing a sampling distribution 
+
+6. Checking that the SE calculated with one sample is actually a good guess for the SD of the sampling distribution
+
+# Exercise: Calculating summary statistics and SE around the mean in a sample
+
+Here you will redo exercise 4.1 using pen and paper and R
+
+> Q1 Make a vector called that contains the observations given in the practice exercise 4.1 of the book 
+
+Name this vector  `myvector`
+
+```{r}
+myvector <- c(112, 128, 108, 129, 125, 153, 155, 132, 137)
+```
+
+> Q2 use R functions  to calculate the SE around the mean  
+```{r}
+
+mean(myvector)
+
+SE <- sd(myvector) / sqrt(length(myvector))
+SE
+```
+Hints:
+* if you struggle here go back to week02 R sessions and calculations on vectors  
+* `mean()` `length()` and `sd()` are handy check them out e.g type in the console `> ?sd()`
+
+
+# Working in R on the gene length dataset (BOOK example 4.1)
+
+Here we go through the basic motions of what data analysis typically looks like: 
+
+* We import the data in R (here the data is stored in the text file chap04e1HumanGeneLengths.csv )
+
+* Get an overview of the data 
+
+* Calculate some statistics on the data 
+
+* Vizualize aspects fo the data
+
+For importing the dataset, we use the R function read_csv(file = " ..."), where "..." is a **path** to the file where the data is stored.
+
+
+```{r}
+library(tidyverse)
+# dfHumanGenes <- read_csv(file = "../abd_data/chapter04/chap04e1HumanGeneLengths.csv") # you may need to change this
+# saveRDS(dfHumanGenes, file = "dfHumanGenes.rds") #
+dfHumanGenes <- readRDS("U7\\dfHumanGenes.rds")
+head(dfHumanGenes)
+summary(dfHumanGenes)
+dim(dfHumanGenes)
+```
+
+
+>Q3: Summarise the data by using the dim() and summary() function
+
+```{r}
+dim(dfHumanGenes)
+summary(dfHumanGenes)
+```
+
+* What is dim() doing in the code chunk above?
+	#the number of data-points / "size of data"
+* What is the sample size of the data?
+	#20290
+* What is the mean and the median gene length in the human genome ?
+	#mean=2622, median =2226
+* What is the SD of the gene length ? 
+```{r}
+sd(dfHumanGenes$geneLength)
+```
+* What proportion of genes are at least 5000 nucleotides long ? 
+```{r}
+(sum(dfHumanGenes$geneLength > 5000) / length(dfHumanGenes$geneLength)) * 100
+```
+
+>Q4: use ggplot() to reproduce in R the Figure 4.1-1 
+```{r}
+ggplot(data = dfHumanGenes, aes(x = geneLength)) +
+    geom_histogram(binwidth = 35, fill = "firebrick", color = "black")
+```
+
+Here is the basic code for a histogram : 
+
+```{r}
+# plotting all the data
+ggplot(dfHumanGenes, aes(x = geneLength)) +
+    geom_histogram(bins = 100, fill = "red") +
+    theme_classic() +
+    NULL
+```
+
+The graph looks pretty "ugly" because it is squeezed on the left. 
+
+So try to better graphs :) that look like the book figure.
+
+* Hint1 use filter() in the tidyverse to get rid of the observations with very high values that are "squeezing the graph"
+
+* Hint2 use geom_histogram(bins = 35) if you want 35 bins ...or fewer bins 
+
+
+>Q5: Generate a sample of 100 observations from the whole gene length "population" 
+
+Adapt the R function sample() in the R chunk sketched below to draw at random 100 observations from the gene length data and store these in MySample100. 
+
+Hint: look at the help for the sample() function and discuss with your TA what type of sampling can be implemented in sample(): with or without replacement ?
+Try and evaluate the code your wrote a couple of times: you should get a sightly different answer each time.
+
+```{r}
+MySample100 <- sample(x = c(0, 1, 2, 3), size = 2, replace = T) # adapt
+mean(MySample100) # you should get a mean somewhat near the true mean
+```
+
+
+>Q6: More challenging level 1: redo the sampling distribution of the book  (Fig 4.1-3)
+
+Simulates many samples of size $n=100$ from the human gene length distribution. For each sample, calculate (and store) the mean in the sample. 
+Hint use a for() loop to do $nbSimulations=10^4$ samples and use the vector Vec_meansInSamples to store your calculations.
+An almost complete code chunk template that does just that is provided below: 
+
+```{r}
+nbSimulations <- 10^4 # how many samples do we use to get a sampling
+Vec_meansInSamples <- rep(NA, nbSimulations) # an empty vector to store the observed means
+
+for (i in 1:nbSimulations) {
+    # Your turn ;-) : write a few extra lines of code ... here ...
+}
+
+summary(Vec_meansInSamples)
+```
+
+
+>Q7: Challenging level 2: examine what happens with varying sample size 
+
+Adapt the code you wrote above and redo the extended version of the figure 4.1-4.
+Examine 4 sample size "scenarios" for illustration: n= 10, 30, 100, or 300.
+
+
+>The last Q: How often does a confidence interval "covers" the true mean ? 
+
+A popular way to obtain a 95% confidence interval for the mean is to use observed mean +- 2SEs. 
+Do a small simulation to see if it works:
+
+Adapt the code you wrote for a sample size of n=100.
+Here we use two more vectors (VecUpper and VecLower) to store the upper limit and lower limit of each confidence interval. 
+Calculate what proportion of the 10^4 confidence intervals you generated contain the true population mean.
+
+
+# Congratulations! You did it! 
+You are well on your way to master the whole idea of the "pesky sampling distribution" and using effectively the tidyverse and vectors in R!
+
+

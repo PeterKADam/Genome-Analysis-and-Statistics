@@ -75,7 +75,7 @@ ggplot(data = mydata, aes(x = headache)) +
 
 ggplot(data = mydata, aes(y = headache)) +
     geom_boxplot()
-
+# what the frick is the other axis then?
 ggplot(data = mydata, aes(x = "All data", y = headache)) +
     geom_boxplot()
 
@@ -85,11 +85,11 @@ ggplot(data = mydata, aes(x = group, y = headache)) +
 
 >Q: Make a boxplot of the birdAbundanceData
 ```{r}
-ggplot(data = birdAbundanceData, aes(y = abundance)) +
+ggplot(data = birdAbundanceData, aes(x = "All birds", y = abundance)) +
     geom_boxplot()
 ```
 You only have one column of values.
- 
+
 
 ---
 
@@ -106,7 +106,7 @@ ggplot(data = mydata, aes(x = headache)) +
 >Q: Make a histogram of the birdAbundanceData like figure 2.2-3
 ```{r}
 ggplot(data = birdAbundanceData, aes(x = abundance)) +
-    geom_histogram(binwidth = 1, fill = "firebrick", color = "black")
+    geom_histogram(binwidth = 10, fill = "firebrick", color = "black")
 ```
 
 ---
