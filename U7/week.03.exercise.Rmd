@@ -42,9 +42,13 @@ Name this vector  `myvector`
 
 ```{r}
 myvector <- c(112, 128, 108, 129, 125, 153, 155, 132, 137)
+
+yourvector = c(1)
+
 ```
 
-> Q2 use R functions  to calculate the SE around the mean  
+> Q2 use R functions  to calculate the SE around the mean
+
 ```{r}
 
 mean(myvector)
@@ -76,10 +80,10 @@ For importing the dataset, we use the R function read_csv(file = " ..."), where 
 library(tidyverse)
 # dfHumanGenes <- read_csv(file = "../abd_data/chapter04/chap04e1HumanGeneLengths.csv") # you may need to change this
 # saveRDS(dfHumanGenes, file = "dfHumanGenes.rds") #
-dfHumanGenes <- readRDS("U7\\dfHumanGenes.rds")
+dfHumanGenes <- readRDS("dfHumanGenes.rds")
 head(dfHumanGenes)
-summary(dfHumanGenes)
-dim(dfHumanGenes)
+# summary(dfHumanGenes)
+# dim(dfHumanGenes)
 ```
 
 
@@ -91,12 +95,12 @@ summary(dfHumanGenes)
 ```
 
 * What is dim() doing in the code chunk above?
-	#the number of data-points / "size of data"
+# the number of data-points / "size of data"
 * What is the sample size of the data?
-	#20290
+# 20290
 * What is the mean and the median gene length in the human genome ?
-	#mean=2622, median =2226
-* What is the SD of the gene length ? 
+# mean=2622, median =2226
+* What is the SD of the gene length ?
 ```{r}
 sd(dfHumanGenes$geneLength)
 ```
@@ -107,16 +111,19 @@ sd(dfHumanGenes$geneLength)
 
 >Q4: use ggplot() to reproduce in R the Figure 4.1-1 
 ```{r}
-ggplot(data = dfHumanGenes, aes(x = geneLength)) +
-    geom_histogram(binwidth = 35, fill = "firebrick", color = "black")
+dfHumanGenes %>% 
+	filter(geneLength<10000) %>%
+		ggplot(aes(x = geneLength)) +
+    	geom_histogram(binwidth = 50, fill = "firebrick", color = "black") +theme_classic()
 ```
 
 Here is the basic code for a histogram : 
 
 ```{r}
 # plotting all the data
+filter(dfHumanGenes, geneLength<230) &>%
 ggplot(dfHumanGenes, aes(x = geneLength)) +
-    geom_histogram(bins = 100, fill = "red") +
+    geom_histogram(bins = 35, fill = "red") +
     theme_classic() +
     NULL
 ```
