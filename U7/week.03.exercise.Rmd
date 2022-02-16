@@ -43,8 +43,6 @@ Name this vector  `myvector`
 ```{r}
 myvector <- c(112, 128, 108, 129, 125, 153, 155, 132, 137)
 
-yourvector = c(1)
-
 ```
 
 > Q2 use R functions  to calculate the SE around the mean
@@ -91,6 +89,7 @@ head(dfHumanGenes)
 
 ```{r}
 dim(dfHumanGenes)
+length(dfHumanGenes)
 summary(dfHumanGenes)
 ```
 
@@ -107,21 +106,23 @@ sd(dfHumanGenes$geneLength)
 * What proportion of genes are at least 5000 nucleotides long ? 
 ```{r}
 (sum(dfHumanGenes$geneLength > 5000) / length(dfHumanGenes$geneLength)) * 100
+(sum(dfHumanGenes$geneLength > 5000) / dim(dfHumanGenes$geneLength)) * 100
 ```
 
 >Q4: use ggplot() to reproduce in R the Figure 4.1-1 
 ```{r}
-dfHumanGenes %>% 
-	filter(geneLength<10000) %>%
-		ggplot(aes(x = geneLength)) +
-    	geom_histogram(binwidth = 50, fill = "firebrick", color = "black") +theme_classic()
+dfHumanGenes %>%
+    filter(geneLength < 15000) %>%
+    ggplot(aes(x = geneLength)) +
+    geom_histogram(aes(y = stat(count) / sum(count)), bins = 35, fill = "firebrick", color = "black") + # nolint
+    theme_classic()
 ```
 
 Here is the basic code for a histogram : 
 
 ```{r}
 # plotting all the data
-filter(dfHumanGenes, geneLength<230) &>%
+# filter(dfHumanGenes, geneLength<230)
 ggplot(dfHumanGenes, aes(x = geneLength)) +
     geom_histogram(bins = 35, fill = "red") +
     theme_classic() +
@@ -138,6 +139,12 @@ So try to better graphs :) that look like the book figure.
 
 
 >Q5: Generate a sample of 100 observations from the whole gene length "population" 
+
+```{r}
+MySample100 <- sample(dfHumanGenes$geneLength, size = 100, replace = T) # adapt
+mean(MySample100) # you should get a mean somewhat near the true mean
+mean(dfHumanGenes$geneLength)
+```
 
 Adapt the R function sample() in the R chunk sketched below to draw at random 100 observations from the gene length data and store these in MySample100. 
 
@@ -157,14 +164,21 @@ Hint use a for() loop to do $nbSimulations=10^4$ samples and use the vector Vec_
 An almost complete code chunk template that does just that is provided below: 
 
 ```{r}
-nbSimulations <- 10^4 # how many samples do we use to get a sampling
-Vec_meansInSamples <- rep(NA, nbSimulations) # an empty vector to store the observed means
-
-for (i in 1:nbSimulations) {
-    # Your turn ;-) : write a few extra lines of code ... here ...
+samplesizevector <- function(SSize) {
+    nbSimulations <- 10^4 # how many samples do we use to get a sampling
+    Vec_meansInSamples <- rep(NA, nbSimulations) # an empty vector to store the observed means
+    # print(Vec_meansInSamples)
+    for (i in 1:nbSimulations) {
+        Vec_meansInSamples[i] <- mean(sample(dfHumanGenes$geneLength, size = SSize, replace = T))
+    }
+    Vec_meansInSamples
 }
+```
 
-summary(Vec_meansInSamples)
+
+```{r}
+summary(samplesizevector(100))
+summary(samplesizevector(1000))
 ```
 
 
@@ -173,8 +187,59 @@ summary(Vec_meansInSamples)
 Adapt the code you wrote above and redo the extended version of the figure 4.1-4.
 Examine 4 sample size "scenarios" for illustration: n= 10, 30, 100, or 300.
 
+```{r}
+ggplot() +
+    geom_histogram(aes(samplesizevector(10), y = stat(count) / sum(count)), bins = 35, fill = "firebrick", color = "black") +
+    theme_classic()
+
+ggplot() +
+    geom_histogram(aes(samplesizevector(30), y = stat(count) / sum(count)), bins = 35, fill = "firebrick", color = "black") +
+    theme_classic()
+
+ggplot() +
+    geom_histogram(aes(samplesizevector(100), y = stat(count) / sum(count)), bins = 35, fill = "firebrick", color = "black") +
+    theme_classic()
+
+ggplot() +
+    geom_histogram(aes(samplesizevector(300), y = stat(count) / sum(count)), bins = 35, fill = "firebrick", color = "black") +
+    theme_classic()
+```
 
 >The last Q: How often does a confidence interval "covers" the true mean ? 
+
+```{r}
+samplemean <- sample(dfHumanGenes$geneLength, size = SSize, replace = T)
+print(samplemean)
+```
+
+```{r}
+SEM <- function(sample) {
+    return(sd(sample) / sqrt(length(sample)))
+}
+
+sampleinconf <- function(SSize) {
+    TrueMean <- mean(dfHumanGenes$geneLength)
+    nbSimulations <- 10^4 # how many samples do we use to get a sampling
+    Vec_meansInSamples <- rep(NA, nbSimulations) # an empty vector to store th
+
+    for (i in 1:nbSimulations) {
+        samplevar <- sample(dfHumanGenes$geneLength, size = SSize, replace = T)
+
+        if (TrueMean < mean(samplevar) + 2 * SEM(samplevar) &
+            TrueMean > mean(samplevar) - 2 * SEM(samplevar)) {
+            Vec_meansInSamples[i] <- TRUE
+        } else {
+            Vec_meansInSamples[i] <- FALSE
+        }
+    }
+    sum(Vec_meansInSamples == TRUE) / length(Vec_meansInSamples)
+}
+```
+
+```{r}
+
+sampleinconf(100)
+```
 
 A popular way to obtain a 95% confidence interval for the mean is to use observed mean +- 2SEs. 
 Do a small simulation to see if it works:
