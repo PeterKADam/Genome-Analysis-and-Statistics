@@ -1,0 +1,10 @@
+
+4-2
+```{r}
+datavec <- c(rep(2, 2), rep(3, 14), rep(4, 31), rep(5, 14), rep(6, 20), rep(7, 11), rep(8, 7), rep(9, 4), rep(10, 7), rep(11, 1), rep(12, 2), rep(13, 2))
+
+SE <- sd(datavec) / sqrt(length(datavec))
+SE
+```
+
+4-5

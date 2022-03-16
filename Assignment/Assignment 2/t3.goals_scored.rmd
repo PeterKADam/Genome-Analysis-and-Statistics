@@ -1,0 +1,117 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Background
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+```
+
+```{r}
+
+df <- read_rds("t3.fifa_results_data.rds")
+head(df)
+table(df$tournament)
+
+```
+
+>Q3.1 How many registered matches where Spain was playing at home do we have data for?
+
+Hint: Note that in the dataset `df`, information on which team was considered the "home team" is recorded in the column `home_team` 
+
+---
+
+>Q3.2 What is the maximum number of goals scored by Spain when playing at home?
+
+Hint1: again, by convention all matches where Spain is marked as `home_team`are considered to be played at home (although in some cups/ tournament the match was physically held somewhere outside Spain)
+
+Hint2. The record is actually pretty high :-)
+
+
+---
+
+## A propobability model for the distribution of number of goals
+
+Lets focus on matches where Spain played at home in the category `Friendly` matches 
+
+(check that you have n = 187). 
+
+>Q3.3  what is the mean of the number of goals scored by Spain in these 187 matches ?
+
+
+---
+
+>Q3.4 What is the probability that Spain scores 6 goals or more in a friendly match at home ?
+
+Hint: If we assume that goals have a constant probability of occurring per unit time during a football match, then we expect the number of goals in a match scored by a team to follow a Poisson probability distribution.
+
+
+---
+
+>Q3.5 What is the probability of Spain not scoring any goal during the first 45 mins of a friendly match at home ?
+
+Hint: Here, we assume that goals have a constant probability of occurring per unit time. And just to be clear, we still assume that a football game last 2*45 = 90 mins. 
+(we do not worry about the fact some matches might have involved overtime)
+
+
+---
+
+## Poisson distributed goals?
+
+If the number of goals scored by a team is Poisson distributed (our null hypothesis), we expect the variance to mean of scores to be close to 1. 
+
+Now we will focus on Spain playing in "FIFA World Cup qualification" at home.
+
+>Q3.6 Calculate the variance to mean ratio of goals scored when Spain is playing in "FIFA World Cup qualification" at home.
+
+Hint: just as help to check your consistency in data manipulation,  there where 57 matches where Spain was the home team for that category of `tournament`.
+
+---
+
+## Simulating datasets
+
+Here is a small R code snippet to simulate distribution of that statistic using pseudo datasets of $n=50$ observations from a Poisson with mean  $\lambda = 1.2$ .
+
+```{r}
+
+var_to_mean <- rep(NA, 100) # A vector for storing the ratios simulated under H0
+
+set.seed(0) # random seed init
+for (i in 1:100) {
+  pseudo_data <- rpois(n = 50, lambda = 1.2)
+  var_to_mean[i] <- var(pseudo_data)/mean(pseudo_data)
+}
+
+summary(var_to_mean)
+
+```
+
+Adapt the code above to generate the distribution using 10.000 pseudo datasets of the same size as the observed Spanish data under the null hypothesis that the data is Poisson distributed. 
+
+>Q3.7 Calculate and report the probability that the variance to mean ratio is equal or above the observed value in the actual data for Spain playing at home in the "FIFA World Cup qualification"?
+
+
+---
+
+>Q3.8: What is your conclusion for the p value of this test (if you use 0.05 as significance threshold)?
+
+1. We can't reject H0, so the Poisson model is probably correct.
+2. The p value is just below 0.05 so the Poisson model is probably incorrect but we need more data.
+3. No simulation produced a dataset with variance to mean ratio as extreme as the observed. So we can say that p < 0.001.
+4. It's around the significance threshold, so we can't say anything.
+
+The answer should be given as a single number: 1, 2, 3..
+
+
+---
+

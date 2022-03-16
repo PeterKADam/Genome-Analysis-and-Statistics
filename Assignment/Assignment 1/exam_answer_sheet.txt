@@ -1,0 +1,34 @@
+#########
+#
+# Please fill in your answers into this sheet
+# All answers should be given as numbers that can be understood by R.
+#
+# After each answer the points awarded for a correct answer is indicated.
+#
+# Examples of answers
+#
+# answer$t1.1 = 42         # (1 points)
+# answer$t1.2 = 1.3e-10    # (it's a very small number)
+# answer$t1.3 = 0.00000047 # (1 points) - Maybe I should have used more digits?
+#
+# 
+############ 
+#
+#
+# Life expectancy
+answer$t1.1 = 142 # (1 points)
+answer$t1.2 = 29 # (1 points)
+answer$t1.3 = 117 # (2 points)
+# Alien radio signals
+answer$t2.1 = 4 # (1 points)
+answer$t2.2 = 3 # (1 points)
+answer$t2.3 = 10.00527 # (1 points)
+# Footbal goals
+answer$t3.1 = 362 # (1 points)
+answer$t3.2 = 13 # (1 points)
+answer$t3.3 = 2.02139 # (1 points)
+# Designing an experiment
+answer$t4.1 = 5 # (1 points)
+answer$t4.2 = 7 # (1 points)
+answer$t4.3 = 14000 # (1 points)
+answer$t4.4 = 2000 # (2 points)

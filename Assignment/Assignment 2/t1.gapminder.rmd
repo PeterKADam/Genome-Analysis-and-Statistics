@@ -1,0 +1,96 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+```
+
+# World-wide life expectancy and income
+
+## Background
+
+The gapminder dataset provides information about income and life expectancy in all continents over the 60 years. 
+
+Here the data was obtained from the gapminder R package and a subset of this data is made available as rds file. 
+
+We used the following code to get the data and save it.
+
+```r
+
+library(gapminder)
+data("gapminder")
+summary(gapminder)
+
+#Transforming data for the sake of the exam 
+years_to_keep <-c("1992", "2002")
+
+gap10 <- gapminder %>%
+  select(-c(pop, gdpPercap))  %>%
+  filter( year %in%  years_to_keep)
+ 
+widegap10 <- gap10 %>%
+  pivot_wider(names_from = year, values_from = lifeExp)
+ 
+names(widegap10) <- c("country", "continent", "life_expec_1992", "life_expec_2002")
+
+saveRDS(object = widegap10, file = "t1.gap_minder.rds")
+
+```
+The rds file `t1.gap_minder.rds` is made available below in R as the tibble `df`
+
+```{r}
+
+df <- readRDS("t1.gap_minder.rds")
+head(df) 
+
+```
+
+>Q1.1 How many countries have a reported life expectancy in 1992 ?
+
+
+---
+
+>Q1.2 How many Asian countries had a life expectancy of more than 60 years in 2002?
+
+
+---
+
+>Q1.3 In how many countries did life expectancy increase from 1992 to 2002?
+
+
+---
+
+>Q1.4 What proportion of countries located in Asia had a life expectancy exceeding 60 in 2002
+
+NOTE: A proportion should be reported as a number between 0 and 1 [0, 1]. So 42% should be written as 0.42 or 42/100.
+
+
+---
+
+## Did life expectancy go up in Asia from 1992 to 2002?
+
+You will now test if life expectancy went up in Asia from 1992 to 2020.
+
+Under the null hypothesis ($H_0$) of no change in life expectancy, we expect that the values of 2002 have equal probability to go up or down relative to 2019.
+
+We have the alternative hypothesis that life expectancy is going up (i.e. it is a one tailed test).
+
+Count the number of countries in Asia where the life expectancy is higher in 2002 compared to 1992. 
+
+Calculate the probability under $H_0$ that as many countries as observed or more have a greater life expectancy in 2002 relative to 1992. (this is a one tailed probability).
+
+>Q1.5 What is the calculated probability? (this also the one tailed p value)
+
+
+---

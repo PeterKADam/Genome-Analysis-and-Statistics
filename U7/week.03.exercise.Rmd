@@ -13,7 +13,6 @@ editor_options:
 ---
 
 
-
 ---
 
 # Goals of the session
@@ -43,16 +42,21 @@ Name this vector  `myvector`
 ```{r}
 myvector <- c(112, 128, 108, 129, 125, 153, 155, 132, 137)
 
+sd(myvector)
+length(myvector)
 ```
 
 > Q2 use R functions  to calculate the SE around the mean
 
 ```{r}
 
-mean(myvector)
 
 SE <- sd(myvector) / sqrt(length(myvector))
-SE
+low <- mean(myvector) - 2 * SE
+high <- mean(myvector) + 2 * SE
+
+low
+high
 ```
 Hints:
 * if you struggle here go back to week02 R sessions and calculations on vectors  
@@ -171,13 +175,19 @@ samplesizevector <- function(SSize) {
     for (i in 1:nbSimulations) {
         Vec_meansInSamples[i] <- mean(sample(dfHumanGenes$geneLength, size = SSize, replace = T))
     }
-    Vec_meansInSamples
+    return(Vec_meansInSamples)
 }
 ```
 
 
 ```{r}
 summary(samplesizevector(100))
+df <- data.frame(length = samplesizevector(100), size = 100)
+
+df %>% ggplot(aes(x = length)) +
+    geom_histogram()
+
+
 summary(samplesizevector(1000))
 ```
 
@@ -207,10 +217,7 @@ ggplot() +
 
 >The last Q: How often does a confidence interval "covers" the true mean ? 
 
-```{r}
-samplemean <- sample(dfHumanGenes$geneLength, size = SSize, replace = T)
-print(samplemean)
-```
+
 
 ```{r}
 SEM <- function(sample) {
@@ -235,7 +242,12 @@ sampleinconf <- function(SSize) {
     sum(Vec_meansInSamples == TRUE) / length(Vec_meansInSamples)
 }
 ```
+```{r}
 
+if (test) {
+    kode
+}
+```
 ```{r}
 
 sampleinconf(100)

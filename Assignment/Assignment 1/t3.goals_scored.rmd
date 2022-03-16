@@ -1,0 +1,67 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+## Background
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+```
+
+```{r}
+
+df <- read_rds("t3.fifa_results_data.rds")
+head(df)
+table(df$tournament)
+
+```
+
+>Q3.1 How many registered matches where Spain was playing at home do we have data for?
+
+Hint: Note that in the dataset `df`, information on which team was considered the "home team" is recorded in the column `home_team` 
+```{r}
+sum(df$home_team=="Spain")
+
+```
+
+---
+
+>Q3.2 What is the maximum number of goals scored by Spain when playing at home?
+
+```{r}
+df %>% filter(home_team=="Spain") %>% select(home_score)%>% max()
+
+```
+
+
+
+
+Hint1: again, by convention all matches where Spain is marked as `home_team`are considered to be played at home (although in some cups/ tournament the match was physically held somewhere outside Spain)
+
+Hint2. The record is actually pretty high :-)
+
+
+---
+
+## A propobability model for the distribution of number of goals
+
+Lets focus on matches where Spain played at home in the category `Friendly` matches 
+
+(check that you have n = 187). 
+
+>Q3.3  what is the mean of the number of goals scored by Spain in these 187 matches ?
+
+```{r}
+df %>% filter(home_team=="Spain" & tournament=="Friendly") %>% select(home_score)%>% colMeans()
+```
+
+---
