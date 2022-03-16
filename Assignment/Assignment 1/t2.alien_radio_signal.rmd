@@ -18,14 +18,15 @@ It is not clear what kind of sensor we are talking about.
 
 Your job will be to analyze the file and look for hidden messages in the file.
 
+r
+
 ```{r message=FALSE, warning=FALSE}
 
 library(tidyverse)
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
 df <- read_rds("t2.alien_radio_signal.rds")
-
 ```
 
 >Q2.1 How many columns do we have in the data?
@@ -50,7 +51,7 @@ n_distinct(df$group)
 >Q2.3 What is the mean signal strength?
 
 ```{r}
-mean(df$signal_strength, na.rm=TRUE)
+mean(df$signal_strength, na.rm = TRUE)
 ```
 
 

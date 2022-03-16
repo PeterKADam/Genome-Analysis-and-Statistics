@@ -1,0 +1,452 @@
+---
+title: "Week 07 in Genome Analysis & Statistics"
+author: "Thomas B"
+date: "Spring 2022 (Time Stamp last update: `r Sys.Date()`)"
+output:
+  html_document:
+        theme: cerulean
+        highlight: haddock
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+---
+
+# Preamble 
+We load the infamous `tidyverse` R packages, and just to get graphics looking more alike ... we set the theme using `theme_set(...your favourite theme goes here ...)` :
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+theme_set(theme_light(base_size = 15))
+```
+
+## Objectives for this week 
+* Understand Goodness-of-fit tests:
+  + How do we quantify lack of fit in counts data: the $\chi^2$ test statistic  
+  + How much lack of fit do we expect "just by chance" under H0?  
+  
+  + The $\chi^2$ probability distribution and its use as a null distribution for goodness-of-fit tests  
+  
+* Understand the difference between the $\chi^2$ statistic and the $\chi^2$ probability distribution 
+
+
+1. Try the R new functions we will also discuss Tuesday especially the one that allow you to vizualize and calculate probabilities using the $\chi^2$ probability distributions
+
+2. Try the next questions where you will redo in R examples of Ch8 step by step
+
+3. Try the bonus question , reanalyzing scores from a quizz conducted in 2019
+
+---
+
+
+## The $\chi^2_d$ probability distribution
+Here are the important new R functions that deal with the $\chi^2$ probability distribution:
+
+* `rchisq()`  
+* `dchisq()`  
+* `pchisq()`  
+
+As mentioned last week, these functions have names that are becoming familiar, replacing "binom" (binomial probability distributions) by "chisq" (short for the $\chi^2$ probability distributions) 
+Here you have an image (courtesy of Moi a former TA of this course) that summarizes what these functions do:
+
+![](Moi_howto-chisq.png)
+
+In red you have the input (what you have to specify when you call the function) and in green the output. 
+
+Here is how you draw 10^4 random numbers from a $\chi^2$ distribution (using the function `rchisq( )`) with 1, 2, and 6 degrees of freedom (hereafter d.f). 
+In the R code chunk below,  you have an example demonstrating how to do it. We generate random draws from 3 different $\chi^2$ distributions: 
+
+```{r}
+set.seed(12)
+many <- 10^4
+mydraws1 <- rchisq(n = many, df = 1) ## THESE are the TWO arguments needed
+df1 <- tibble(samples = mydraws1, df = 1)
+df1 %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    NULL
+
+mydraws3 <- rchisq(n = many, df = 3) ##
+df3 <- tibble(samples = mydraws3, df = 3)
+df3 %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    NULL
+
+mydraws6 <- rchisq(n = many, df = 6) ##
+df6 <- tibble(samples = mydraws6, df = 6)
+df6 %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    NULL
+```
+
+Viewing the distributions side by side:
+
+We bind the three tibbles together with `bind_rows()` and facet using the `df` column
+
+```{r}
+together <- bind_rows(df1, df3, df6)
+together %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    facet_wrap(~df) +
+    xlim(c(0, 25)) +
+    ylim(c(0, 1500)) +
+    xlab("") +
+    NULL
+```
+
+If you want to graph the $\chi^2$ probability distribution,  you have to plot the density function over a grid of coordinates.
+We use the function dchisq() to do that for 3 $\chi^2$ distributions with 1, 2 and 6 d.f:
+
+```{r}
+xs <- seq(from = 0.01, to = 20, by = 0.05) # xs is a vector of coordinates on the X axis
+y1 <- dchisq(x = xs, df = 1) # y1 stores the density of the Chi^2 (1 d.f) distribution at each coordinate.
+df_densities_chi2_df1 <- tibble(x = xs, density_of_chi2 = y1, df = 1)
+
+df_densities_chi2_df1 %>%
+    ggplot(aes(x = x, y = density_of_chi2)) +
+    geom_line(size = 0.9, color = "blue") +
+    NULL
+
+y2 <- dchisq(x = xs, df = 2) # y2 stores the density of the Chi^2 (2 d.f) distribution at each coordinate.
+df_densities_chi2_df2 <- tibble(x = xs, density_of_chi2 = y2, df = 2)
+
+df_densities_chi2_df2 %>%
+    ggplot(aes(x = x, y = density_of_chi2)) +
+    geom_line(size = 0.9, color = "green") +
+    NULL
+```
+
+>Q1: Plot the $\chi^2$ distribution with 6 d.f
+
+```{r}
+y6 <- dchisq(x = xs, df = 6)
+df_densities_chi2_df6 <- tibble(x = xs, density_of_chi2 = y6, df = 6)
+
+df_densities_chi2_df6 %>%
+    ggplot(aes(x = x, y = density_of_chi2)) +
+    geom_line(size = 0.9, color = "hotpink") +
+    NULL
+```
+
+
+Check that you have the same curve as in the book Fig 8.2-2 (2nd edition) /8.1-3 (3rd ed)
+
+
+## Probabilities of a range: the area under the (density) curve 
+
+WARNING: the $\chi^2$ distribution is continuous and not discrete (eg 0,1,2, etc) like the binomial or the geometric distribution. (Need a refresher ? Then re-read chapter 5.4).
+If you want to *calculate the area under the curve of the density of a $\chi^2$ distribution*  you need to do an integral under the curve (oups...hate integrals) BUT
+using the function `pchisq()` function just does that for you :-).
+
+```{r}
+pchisq(q = 10, df = 1) # This calculates P( X <=10) if X is a random variable following a $\chi^2 (1 d.f) probability distribution
+pchisq(q = 10, df = 6) # This calculates P( X <=10) if X is a random variable following a $\chi^2 (6 d.f) probability distribution
+```
+
+
+### Mastering $\chi^2$ distributions using dchisq() pchisq() and rchisq()
+
+Your turn, lets call $X$ a random variable that follows a distribution that is Chi^2 (6 d.f), so we write that as $X \sim \chi^2_6$
+
+
+>Q2: use an R function (r,p,d,q?)chisq() to calculate:
+
++ P(X < 6)
+
+```{r}
+pchisq(q = 6, df = 6)
+```
+
+
++ P(3 < X <6)  
+
+```{r}
+pchisq(q = 6, df = 6) - pchisq(q = 3, df = 6)
+```
+
+
++ P(X >12.59)  
+
+```{r}
+pchisq(q = 12.59, df = 6, lower.tail = F)
+```
+
+
+
+>Q3: Using r/d/q/pchisq(), find the critical values C, such that 
+
++ P(X < C) = 0.95
+
+```{r}
+qchisq(p = 0.95, df = 6)
+```
+
+
++ P(X > C) = 0.01
+
+```{r}
+qchisq(p = 0.01, df = 6, lower.tail = F)
+```
+
+
+
+>Q4: Calculate critical values for the 5% level of a $\chi^2$ with 1, 2 and 6 d.f 
+
+```{r}
+qchisq(p = 0.05, df = c(1, 2, 6), lower.tail = F)
+```
+
+
+```{r}
+df_densities_chi2_df1 %>%
+    ggplot(aes(x = x, y = density_of_chi2)) +
+    geom_line(size = 0.9, color = "blue") +
+    geom_vline(xintercept = 3.841459, color = "red", linetype = 2) +
+    xlim(c(0, 5)) +
+    geom_text(aes(label = "RejectH0", 3.841459, 2))
+NULL
+
+df_densities_chi2_df2 %>%
+    ggplot(aes(x = x, y = density_of_chi2)) +
+    geom_line(size = 0.9, color = "blue") +
+    geom_vline(xintercept = 5.991465, color = "red", linetype = 2) +
+    xlim(c(0, 20)) +
+    geom_text(aes(label = "RejectH0", 5.991465, 2))
+NULL
+
+df_densities_chi2_df6 %>%
+    ggplot(aes(x = x, y = density_of_chi2)) +
+    geom_line(size = 0.9, color = "blue") +
+    geom_vline(xintercept = 12.591587, color = "red", linetype = 2) +
+    xlim(c(0, 20)) +
+    geom_text(aes(label = "RejectH0", 12.591587, 2))
+NULL
+```
+
+
+Vizualize each distribution density and their $\alpha=0.05$ critical values on the graph (redoing the equivalent of figure 8.2-3 for each $\chi^2$ distribution)
+Hint you can use the ggplot `geom_vline(xintercept =..)` function to set a vertical line at the position you want (here `xintercept = ...`).
+
+Here is how you do it for one distribution (note that the vertical line is not at the 5% threshold .. update that !)
+
+```{r}
+df_densities_chi2_df1 %>%
+    ggplot(aes(x = x, y = density_of_chi2)) +
+    geom_line(size = 0.9, color = "blue") +
+    geom_vline(xintercept = 1, color = "red", linetype = 2) +
+    xlim(c(0, 5)) +
+    geom_text(aes(label = "RejectH0", 1, 2))
+NULL
+```
+
+---
+
+## Example of the book "No weekend end gateway" in R
+
+First of all, we get the data from the book and plot it to see how the observed data and the expected data are distributed.
+We use dots to visualize the expected counts and bars to look at the actual (observed) counts:
+
+```{r}
+# Copying the data from the book in a R dataframe
+
+bir <- tibble(
+    days = c("Mon", "Tue", "Wed", "Thr", "Fri", "Sat", "Sun"),
+    nbirths = c(33, 41, 63, 63, 47, 56, 47),
+    pbirths = c(49.863, 49.863, 49.863, 49.863, 49.863, 50.822, 49.863)
+)
+
+# Visualizing the data
+
+bir %>%
+    ggplot() +
+    geom_bar(stat = "identity", aes(x = days, y = nbirths), fill = "lightgrey") +
+    geom_point(aes(x = days, y = pbirths), color = "blue", size = 3) +
+    geom_segment(aes(x = days, xend = days, y = nbirths, yend = pbirths), color = "green") +
+    theme(legend.position = "") +
+    xlab("Days of the week") +
+    ylab("Number of Births\n(bars observed, points expected)") +
+    scale_x_discrete(limits = c("Mon", "Tue", "Wed", "Thr", "Fri", "Sat", "Sun")) +
+    theme_light(base_size = 20)
+```
+
+In the plot we have the days of the week in the X axis and the number of births on the Y axis. The bars represent the observed number of births and the dots are the expected values. The lines denote the difference between the observed and the expected values.
+
+>Q5 reproduce in R the calculations of the example:
+
+```{r}
+mutatedbir <- mutate(.data = bir, X2 = (((bir$nbirths - bir$pbirths)^2) / bir$pbirths))
+
+sum(mutatedbir$X2)
+
+
+pchisq(q = sum(mutatedbir$X2), df = 6, lower.tail = F)
+```
+
+
++ calculate the lack of fit "chi square" statistic X2obs  
++ use` pchisq()` to get the pvalue and check with what is reported in the book  
+
+
+
+---
+
+## Example "gene content of the human X chromosome" in R
+We want to use the gene counts on X and autosomes  to test the a priori hypothesis: 
+H0: 5.2% of genes in the human genome are located on the X (this is an a priori expectation based on physical size of the X) 
+
+Here is what the data looks like in R : 
+
+```{r}
+
+gene_density_df <- data.frame(chrom = c("X", "A"), obs = c(781, 19509), exp = c(1055, 19235))
+gene_density_df
+```
+
+>Q6: Calculate in R the test statistic that quantifies the lack of fit between observed and expected counts (we call that X2obs)
+
+```{r}
+gene_mutated <- mutate(.data = gene_density_df, X2 = ((obs - exp)^2 / exp))
+
+(X2 <- sum(gene_mutated$X2))
+```
+
+
+>Q7: Calculate the pvalue for a goodness of fit test assuming that under H0 X2obs should be $\chi^2_1$  ($\chi^2$ with 1.df)
+
+```{r}
+pchisq(q = X2, df = 1, lower.tail = F)
+```
+
+
+>Q8: By the way, is this a one tailed or two tailed test ? 
+
+#One tailed! Because we only have one tail. Our distribution is not symmetrical.
+
+Why is the p value for this case NOT calculated as $p= 2* Pr(\chi^2_1 >X2obs)$ ? 
+
+
+>Q9:DO a binomial test as alternative way to do a goodness of fit and calculate pvalue using the binomial distribution
+
+
+```{r}
+pbinom(781, 781 + 19509, 0.052) * 2
+```
+---
+
+At this stage, you have done your warm up in R,  mastered the binomial and Chi^2 probability distributions as well as the book example !
+
+# Bonus Exercise: Answers to a previous gapminder quizz
+
+We work on the scores for a survey/quizz we conducted in a class in 2019, where `n_obs = 49` students participated
+
+The scores represent eg how many got 0 , 1, 2, ..,13 correct answers out of 13. 
+
+Here we have no one scoring 0 or 1, 5 participants that got a score of 2, 7 that scored 3, etc.  
+
+```{r}
+scores_2019 <- c(0, 0, 5, 7, 7, 12, 10, 1, 3, 4, 0, 0, 0, 0)
+length(scores_2019) == 14
+(n_obs <- sum(scores_2019))
+```
+
+We then make a tibble that includes also the expected scores if participants had what Hans Roslin - Mr Gapminder -  called the "chimpanzee" level of expertise about the world: answering completely randomly and therefore had 1/3 chance to get it right each time... 
+
+Surprise: we use the binomial distribution (N = 13 trials, p=1/3) to model the distribution of scores as we assume that the probability of getting right is homogeneous for all Questions and that students answered independently ( maybe a questionable assumption ;-)).
+
+```{r}
+ho_qs <- tibble(
+    correct_answers = seq(from = 0, to = 13, by = 1),
+    expected = n_obs * dbinom(x = correct_answers, size = 13, prob = 1 / 3),
+    observed = scores_2019
+)
+```
+
+We visualize observed counts per score category (red), and in blue the expected counts under the "chimpanzee" level of expertise about the world.
+And we use `geom_segments()` to prettify and represent the observed lack of fit in each score category
+
+```{r}
+ho_qs %>%
+    ggplot() +
+    geom_bar(stat = "identity", aes(x = correct_answers, y = observed), fill = "pink") +
+    geom_point(aes(x = correct_answers, y = expected), color = "blue", size = 3) +
+    geom_segment(aes(x = correct_answers, xend = correct_answers, y = observed, yend = expected), color = "green", size = 1.25, linetype = "dashed") +
+    theme(legend.position = "") +
+    xlab("Number of good answers out of 13 (Score))") +
+    ylab("Counts per score \n(bars observed, points expected)") +
+    theme_light(base_size = 18) +
+    NULL
+```
+
+Now a few  questions about this data and the fit of the chimpanzee curve ($H_0$)
+
+>Qb1 What is proportion of correct answers and their associated SEs ? 
+
+
+```{r}
+
+
+ho_qs_mutated <- mutate(.data = ho_qs, correct_answers_total = (ho_qs$observed*ho_qs$correct_answers))
+
+(p_correct = sum(ho_qs_mutated$correct_answers_total)/(49*13))
+
+(SE=sqrt(p_correct*(1-p_correct)/(49*13)))
+
+```
+
+>Qb2 Is that proportion different from 1/3 ? 
+
+Hint: this yet another binomial test (`two.tailed`)
+
+```{r}
+2*pbinom(sum(ho_qs_mutated$correct_answers_total)-1,size=49*13,prob=1/3,lower.tail = F)
+```
+
+>Qb3 Make a $\chi^2$ gof test for the scores (to test the chimpanzee $H_0$)
+
+  +  calculate the observed lack of fit using the $\chi^2$ stat
+  +  use the right null distribution and get a p-value
+  +  conclude, and if $H_0$ is rejected, comment on what aspect of the data "do not fit"
+
+
+Hint we suggest you first pool lowest and highest scores to avoid classes with expectations that are too low:
+```{r}
+
+(pooled_exp <- c(sum(ho_qs$expected[1:3]), ho_qs$expected[4:8], sum(ho_qs$expected[9:14])))
+(pooled_obs <- c(sum(ho_qs$observed[1:3]), ho_qs$observed[4:8], sum(ho_qs$observed[9:14])))
+
+sum(pooled_exp) # check that we did not forget counts
+sum(pooled_obs) # check again !
+```
+
+
+
+>Qb4 (harder)  Make a more general gof test, using as $H_0$ "is the score distribution binomial" ? 
+
+  + recalculate the expected count using the observed proportion (instead of 1/3)
+  +  calculate the observed lack of fit using the $\chi^2$ stat
+  +  use the right null distribution (adjust df if needed) and get a p-value
+  +  conclude, and if $H_0$ is rejected, comment on what aspect of the data still"do not fit"
+
+
+
+>Qb5 (*hard*) Is the population of students homogenous ? 
+
+The binomial thing assumes that every student has the same underlying probability of answering correctly. The test we used in 2019 has been around for a while, esp on youtube, so chances are that a fraction of the students had seen these questions before. 
+
+A plausible assumption is that there is two sub-populations among students : 
+ * indifferent students (answering randomly 1/3)
+ * expert students (aka student who took / saw some of the Qs in the test before), these answer say 2/3 of time correct (twice higher relative to the indifferent ones)
+
++ Are scores binomial in that case ? 
+
++ Discuss/ Explore/ Sketch a strategy to guess roughly (estimate) how many students are in each category.
+
+NB This is just up  for exploration/ disscussion.
+
+
