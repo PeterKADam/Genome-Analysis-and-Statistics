@@ -90,6 +90,7 @@ df %>%
     filter(life_expec_1992 < life_expec_2002) %>%
     select(country) %>%
     dim()
+	
 ```
 
 ---
@@ -97,6 +98,7 @@ df %>%
 >Q1.4 What proportion of countries located in Asia had a life expectancy exceeding 60 in 2002
 
 NOTE: A proportion should be reported as a number between 0 and 1 [0, 1]. So 42% should be written as 0.42 or 42/100.
+
 
 
 ---
