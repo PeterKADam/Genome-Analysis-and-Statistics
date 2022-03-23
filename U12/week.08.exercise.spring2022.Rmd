@@ -1,0 +1,337 @@
+---
+title: "Week 08 in Genome Analysis & Statistics"
+author: "Thomas Bataillon"
+date: " (March 2022, Time Stamp last update: `r Sys.Date()`)"
+output:
+  html_document:
+        theme: sandstone
+        highlight: pygments
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+---
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+theme_set(theme_light(base_size = 15))
+```
+
+# Objectives for this week 
+
+Last week we started to do Goodness-of-fit (GoF) tests, now it is time to move to Mastering them :). 
+
+Keep always these points in mind: 
+What null hypothesis is being tested, what degrees of freedoms are appropriate for the null distribution when you use the $\chi^2$  approximation?
+
+
+Here we will work on 
+
+* The Poisson probability distribution and its use as a null distribution for randomness of events in space / time
+
+* GoF tests using the Poisson as a null hypothesis.
+
+
+---
+
+
+
+# README: Important facts about the Poisson distribution.
+
+## Intro & warning:
+
+* The parameter that characterizes each Poisson distribution is its mean. It represents number of event you expect per unit (time or space). 
+
+* In your textbook this mean is refered to by the greek letter "mu" ($\mu$). But, most statistical packages --including R-- refer to the mean value of a Poisson distribution with the greek letter "lambda" ($\lambda$). 
+
+* $\lambda$ can be both a very small or a pretty large number as long as $\lambda >0$: e.g. you can have $\lambda = 0.01$ if you want to model a rare event such as the number of new mutation in a small viral genome (where you expect only 1 event out of 100 genomes replicated) or $\lambda=40$ if you want a model for the number of worldwide (non lethal) shark attacks per year. 
+
+* The Poisson distribution, like the binomial, is discrete (0 event, 1 event , 2 , 3, ...etc) 
+* But note that the the number of events (also called successes in the book) observed per unit (time/ space) is not bounded (it is potentially infinite).
+
+This week you need to get used to 3 not so new R functions that deal with the Poisson probability distribution:
+
+* `rpois()`: to simulate observations from a Poisson distribution (see below) 
+* `dpois()`: to get the probability of the number of events from a Poisson distribution 
+* `ppois():` to calculate probabilities of the tails or a range of events in the Poisson distribution, etc.
+
+As mentioned last week these functions have names that are becoming familiar, just like `r/d/p/qbinom()` and the `r/d/p/qchisq()`.
+
+----
+
+P
+## Simulating from a Poisson probability distribution
+
+Here is how you draw $10^4$ datatpoints (random numbers) from a Poisson distribution with a mean number events per unit$\lambda= 0.5$,  $\lambda= 1$, and $\lambda= 5$:
+
+```{r}
+many <- 10^4
+mydraws1 <- rpois(n = many, lambda = 0.5) ##
+df1 <- tibble(samples = mydraws1, lambda = 0.5)
+df1 %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    xlab("Number of events per unit") +
+    NULL
+
+mydraws3 <- rpois(n = many, lambda = 1) ##
+df3 <- tibble(samples = mydraws3, lambda = 1)
+df3 %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    xlab("Number of events per unit") +
+    NULL
+
+mydraws4 <- rpois(n = many, lambda = 4) ##
+df4 <- tibble(samples = mydraws4, lambda = 4)
+df4 %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    xlab("Number of events per unit") +
+    NULL
+```
+
+>Q0: Is "0" or "1 event" the more probable outcome if you simulate from Poisson ($\lambda=1$)? 
+
+
+```{r}
+df3 %>%
+    ggplot(aes(x = samples)) +
+    geom_histogram(binwidth = 0.5) +
+    xlab("Number of events per unit")
+```
+
+1 is slightly more probable with lambda1
+
+## Plotting a Poisson probability distribution
+In practice, if you want to graph the Poisson  probability distribution: you have to "plot" the probability density function over a grid of coordinates (here 0,1,2, etc). And it is always nice to adjust -by eye- the range that you are using for plotting. 
+As a guideline, you should get the range of values where > 99% of the probability mass is lying (see below for an example).
+
+Note that here we plot the Poisson with mean $\lambda=1$, in the range 0,1,..10 but that the probability of events above 5 is getting tiny tiny:
+
+```{r}
+df_poisson <- tibble(
+    xs = seq(from = 0, to = 6, by = 1),
+    probability = dpois(x = xs, lambda = 1)
+)
+
+sum(df_poisson$probability[1:6]) # prob. of having between 0 and 5 events
+
+df_poisson %>%
+    ggplot(aes(x = xs, y = probability)) +
+    geom_col() +
+    xlab("Number of events per unit") +
+    ylab("Probability (number of events)") +
+    scale_x_continuous(breaks = 0:10) +
+    NULL
+```
+
+Or you can plot just with dots : 
+```{r}
+df_poisson %>%
+    ggplot(aes(x = xs, y = probability)) +
+    geom_point(color = "blue") +
+    xlab("Number of events per unit") +
+    ylab("Probability (number of events)") +
+    scale_x_continuous(breaks = 0:10) +
+    NULL
+```
+
+Note that when events are happening randomly -- so the number of event per unit is Poisson distributed -- then something "strange" happens when the mean number of event is $\lambda =1$ : "0 event" or "1 event" are just as likely! (you have your answer to the question Q0 :-) )
+
+>Q1: Plot the Poisson distribution with a mean of $\lambda=0.5$ and $\lambda=5$
+
+```{r}
+df_poisson_half <- tibble(
+    xs = seq(from = 0, to = 3, by = 1),
+    probability = dpois(x = xs, lambda = 0.5)
+)
+df_poisson_5 <- tibble(
+    xs = seq(from = 0, to = 12, by = 1),
+    probability = dpois(x = xs, lambda = 5)
+)
+
+sum(df_poisson_half$probability)
+sum(df_poisson_5$probability)
+
+df_poisson_5 %>%
+    ggplot(aes(x = xs, y = probability)) +
+    geom_col() +
+    xlab("Number of events per unit") +
+    ylab("Probability (number of events)") +
+    scale_x_continuous(breaks = 0:10) +
+    NULL
+df_poisson_half %>%
+    ggplot(aes(x = xs, y = probability)) +
+    geom_col() +
+    xlab("Number of events per unit") +
+    ylab("Probability (number of events)") +
+    scale_x_continuous(breaks = 0:10) +
+    NULL
+```
+
+---
+
+## Example of the book "Mass extinctions" in R
+
+We first import the data directly from the original dataset stored as csv file.  Note that the data is structured as 1 line per strata so 76 lines.
+
+```{r}
+extinctData <- read_csv("U12\\chap08e6MassExtinctions.csv")
+head(extinctData) %>%
+    knitr::kable(align = "l")
+dim(extinctData) # Check: you should have 76 obs (strata)
+```
+
+We use the handy R function table to get the observed counts: 
+```{r}
+table(extinctData$numberOfExtinctions) ## See "holes" in the vector !
+
+extinctData$nExtinctFactor <- factor(extinctData$numberOfExtinctions, levels = c(0:20)) ## forcing table to look at all entries
+extinctTable <- table(extinctData$nExtinctFactor) ## CHECK it should be identical to the counts of the book table
+```
+>Q2 Step A: calculate the mean number of extinction per strata
+
+```{r}
+mean(extinctData$numberOfExtinctions)
+```
+
+Check your answers against the book.   
+
+>Q3 Step B: calculate the expected counts of extinction for each class in the data under a random (Poisson) model of extinction
+
+```{r}
+exptected <- tibble(
+    xs = seq(from = 0, to = 20, by = 1),
+    probability = dpois(x = xs, lambda = mean(extinctData$numberOfExtinctions)) * 76
+)
+```
+
+>Q4 Step C: discuss if /why you should pool some classes, decide on a number of classes (and accordingly choose df in step E)
+amounts over 8 should probably be pooled to get the prob over 5, aswell as 0 and 1 to remove the 1.
+
+
+>Q5 Step D: calculate the lack of fit "chi square" statistic (X2obs) of the data to this model
+
+```{r}
+(pooled_exp <- c(sum(exptected$probability[1:2]), exptected$probability[3:8], sum(exptected$probability[9:21])))
+(pooled_obs <- c(sum(extinctTable[1:2]), extinctTable[3:8], sum(extinctTable[9:21])))
+```
+
+
+
+* Calculate the lack of fit for each class. 
+
+```{r}
+(x2 <- (chisq.test(pooled_obs, p = pooled_exp / sum(pooled_exp))$statistic))
+```
+
+* Which class contributes the most to the total lack of fit. Does it match what you can see visually (plot the data or look at the book figure) ?
+
+
+>Q6 Step E: use pchisq() to get the p-value: do you accept or reject H0?
+
+```{r}
+(p <- pchisq(q = x2, df = 6, lower.tail = F))
+```
+
+## BONUS: Another way to look at the data: the Variance / Mean ratio
+
+If Extinctions are a random process that is homogeneous the number of extinction per strata should be Poisson ($\lambda = 4.21$). 
+
+Another very unique and characteristic property of a poisson distribution is that the variance of the number of events is equal to the mean. Very few discrete distributions have this property. 
+So calculating the variance/mean ratio for a dataset a very integrative way to decide if data seems to be Poisson or not. 
+
+See also the book for more on that over (and) clumped versus dispersed). 
+
+Lets see how we can use this ratio as a test statistic: 
+$H_0$: data is distributed as Poisson and V/M=1
+$H_A$: data is not Poisson and V/M is something else.
+
+```{r}
+(ratio_obs <- var(extinctData$numberOfExtinctions) / mean(extinctData$numberOfExtinctions))
+```
+So it is actually quite different from 1 as the variance is >3 times what we epect given the mean number of extinction. What does that mean: extinctions are "clumped" so some strata have 0 very few extinctions (only 1) and a few have many (>10).
+
+Let's use simulations to determine the plausible range of that ratio.. as we know that just by chance this ratio can deviate a bit from 1. 
+
+Below, we simulate  many datatsets of 76 obs from the poisson we fitted to data and each time we get the ratio and look at its distribution:
+
+```{r}
+set.seed(0)
+many <- 10^5
+ho_ratios <- rep(NA, many)
+for (i in 1:many) {
+    fake_data <- rpois(n = 76, lambda = 4.21) # simulate 1 dataset under H0
+    ho_ratios[i] <- var(fake_data) / mean(fake_data) # save the ratio observed
+}
+summary(ho_ratios)
+```
+
+We did $10^5$ simulations under H0 and we never observed a ratio higher than 1.93 so our observed ratio is clearly "extreme" 
+
+Note that p-value is at least <0.0001 (otherwise out of $10^5$ datasets, we would have observed on average 10 ones with a higher ratio)
+
+
+
+----
+
+## Book exercises in R 
+
+
+>Q: Chapter 8: do Problem 8.2 
+
+**Same numbering in both 2nd & 3rd edition** 
+
+The text of the exercise starts with " The parasitic nematode ..."
+
+```{r}
+(df_nematode <- tibble(nr_nematodes = 0:6, nr_fish = c(103, 72, 44, 14, 3, 1, 1)))
+```
+
+
+```{r}
+df_nematode %>% ggplot(aes(x = nr_nematodes, y = log(nr_fish, base = 10))) +
+    geom_bar(stat = "identity")
+```
+
+>Q: Chapter 8: do Problem on Hurricanes 
+
+Note the number depends on your book edition:  
+* 2nd edition --> **8.19**  
+* 3rd edition --> **8.17**.
+
+As a help to do the exercise in R, here is the data table ( here as tibble) on numbers of category 3 hurricanes. Note here that the data structure is similar to the book example - here time unit is a year and there is a count of how many years had 0, 1,2 etc events: 
+
+```{r}
+class3 <- tibble(
+    categories = factor(c(0, 1, 2, 3, ">3"), levels = c(0, 1, 2, 3, ">3")),
+    counts = c(50, 39, 7, 4, 0)
+)
+class3
+class3 %>%
+    ggplot(aes(x = categories, y = counts)) +
+    geom_col(fill = "red") +
+    scale_x_discrete(drop = FALSE) +
+    scale_fill_discrete(drop = FALSE) +
+    xlab("Number of hurricane recorded per year")
+```
+
+>Extra Q: use the Variance /Mean ratio on the category 3 hurricanes dataset
+
+* Use the counts of the (exercise above) and calculate the var/mean ratio. 
+
+* Adapt the code for the mass extinction, and simulate 10^4 datasets of "category 3 hurricanes" under your H0 and get a p-value for the var/mean ratio test. 
+
+
+... and ... 
+
+## Congratulations you are done!!
+
+At this stage, you have done your warm up in R, mastered the use of the binomial, $\chi^2$ and Poisson probability distributions to formulate a null hypothesis / calculate P-values to analyze various types of data.
+
+You are ready for the next level and the famous projects A & B.
+
