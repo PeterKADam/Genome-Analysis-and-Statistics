@@ -21,34 +21,43 @@ Your job will be to analyze the file and look for hidden messages in the file.
 ```{r message=FALSE, warning=FALSE}
 
 library(tidyverse)
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-df <- read_rds("t2.alien_radio_signal.rds")
-
+df <- read_rds("Assignment\\Assignment 2\\t2.alien_radio_signal.rds")
 ```
 
 >Q2.1 How many columns do we have in the data?
 
-
+```{r}
+ncol(df)
+```
 ---
 
 Look at the "group" variable.
 
 >Q2.2 How many groups do we have in the data?
-
+```{r}
+n_distinct(df$group)
+```
 
 ---
 
 >Q2.3 What is the mean signal strength?
-
+```{r}
+mean(df$signal_strength, na.rm = TRUE)
+```
 
 ---
 
 >Q2.4 Which of the following statements is true?
 
 Hint: plot the distribution of values for each group
-
+```{r}
+df %>%
+    ggplot(aes(x = sensor1, fill = group)) +
+    geom_histogram(position = "identity", alpha = 0.3, )
+```
 1. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group B
 2. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group C
 3. Sensor 1 show a normal distribution of values in Group B and a uniform (flat) distribution of values in Group A
@@ -57,12 +66,18 @@ Hint: plot the distribution of values for each group
 6. Sensor 1 show a normal distribution of values in Group C and a uniform (flat) distribution of values in Group B
 
 The answer should be given as a single number: 1, 2, 3..
-
+6
 
 ---
 
 >Q2.5 What is the mean sensor 2 value in group A?
 
+```{r}
+df %>%
+    filter(group == "A") %>%
+    select(sensor2) %>%
+    colMeans()
+```
 
 ---
 
