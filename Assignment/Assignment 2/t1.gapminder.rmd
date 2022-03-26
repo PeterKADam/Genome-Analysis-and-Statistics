@@ -89,6 +89,7 @@ df %>%
     filter(life_expec_1992 < life_expec_2002) %>%
     select(country) %>%
     dim()
+	
 ```
 
 ---
@@ -107,6 +108,7 @@ NOTE: A proportion should be reported as a number between 0 and 1 [0, 1]. So 42%
 
 # 29/33
 ```
+
 
 ---
 

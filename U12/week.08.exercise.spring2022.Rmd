@@ -81,7 +81,7 @@ mydraws3 <- rpois(n = many, lambda = 1) ##
 df3 <- tibble(samples = mydraws3, lambda = 1)
 df3 %>%
     ggplot(aes(x = samples)) +
-    geom_histogram(binwidth = 0.5) +
+    geom_histogram(binwidth = 1) +
     xlab("Number of events per unit") +
     NULL
 
@@ -100,11 +100,13 @@ df4 %>%
 ```{r}
 df3 %>%
     ggplot(aes(x = samples)) +
-    geom_histogram(binwidth = 0.5) +
+    geom_histogram(binwidth = 1) +
     xlab("Number of events per unit")
+
+
 ```
 
-1 is slightly more probable with lambda1
+they should be equal at mu=1
 
 ## Plotting a Poisson probability distribution
 In practice, if you want to graph the Poisson  probability distribution: you have to "plot" the probability density function over a grid of coordinates (here 0,1,2, etc). And it is always nice to adjust -by eye- the range that you are using for plotting. 
@@ -176,7 +178,7 @@ df_poisson_half %>%
 ---
 
 ## Example of the book "Mass extinctions" in R
-
+PAGE 217 in book
 We first import the data directly from the original dataset stored as csv file.  Note that the data is structured as 1 line per strata so 76 lines.
 
 ```{r}
@@ -190,8 +192,11 @@ We use the handy R function table to get the observed counts:
 ```{r}
 table(extinctData$numberOfExtinctions) ## See "holes" in the vector !
 
-extinctData$nExtinctFactor <- factor(extinctData$numberOfExtinctions, levels = c(0:20)) ## forcing table to look at all entries
+extinctData$nExtinctFactor <- factor(extinctData$numberOfExtinctions,
+    levels = c(0:20)
+) ## forcing table to look at all entries
 extinctTable <- table(extinctData$nExtinctFactor) ## CHECK it should be identical to the counts of the book table
+extinctTable
 ```
 >Q2 Step A: calculate the mean number of extinction per strata
 
@@ -206,7 +211,10 @@ Check your answers against the book.
 ```{r}
 exptected <- tibble(
     xs = seq(from = 0, to = 20, by = 1),
-    probability = dpois(x = xs, lambda = mean(extinctData$numberOfExtinctions)) * 76
+    probability = dpois(
+        x = xs,
+        lambda = mean(extinctData$numberOfExtinctions)
+    ) * 76
 )
 ```
 
@@ -217,8 +225,20 @@ amounts over 8 should probably be pooled to get the prob over 5, aswell as 0 and
 >Q5 Step D: calculate the lack of fit "chi square" statistic (X2obs) of the data to this model
 
 ```{r}
-(pooled_exp <- c(sum(exptected$probability[1:2]), exptected$probability[3:8], sum(exptected$probability[9:21])))
-(pooled_obs <- c(sum(extinctTable[1:2]), extinctTable[3:8], sum(extinctTable[9:21])))
+(pooled_exp <- c(
+    sum(exptected$probability[1:2]),
+    exptected$probability[3:8],
+    sum(exptected$probability[9:21])
+))
+(pooled_obs <- c(
+    sum(extinctTable[1:2]),
+    extinctTable[3:8],
+    sum(extinctTable[9:21])
+))
+
+
+
+df_pool <- tibble(pooled_obs, pooled_exp)
 ```
 
 
@@ -226,7 +246,10 @@ amounts over 8 should probably be pooled to get the prob over 5, aswell as 0 and
 * Calculate the lack of fit for each class. 
 
 ```{r}
-(x2 <- (chisq.test(pooled_obs, p = pooled_exp / sum(pooled_exp))$statistic))
+df_pool <- mutate(
+    df_pool,
+    pooledX2 = ((pooled_obs - pooled_exp)^2) / pooled_exp
+)
 ```
 
 * Which class contributes the most to the total lack of fit. Does it match what you can see visually (plot the data or look at the book figure) ?
@@ -235,6 +258,7 @@ amounts over 8 should probably be pooled to get the prob over 5, aswell as 0 and
 >Q6 Step E: use pchisq() to get the p-value: do you accept or reject H0?
 
 ```{r}
+x2 <- sum(df_pool$pooledX2)
 (p <- pchisq(q = x2, df = 6, lower.tail = F))
 ```
 
@@ -289,13 +313,61 @@ Note that p-value is at least <0.0001 (otherwise out of $10^5$ datasets, we woul
 The text of the exercise starts with " The parasitic nematode ..."
 
 ```{r}
-(df_nematode <- tibble(nr_nematodes = 0:6, nr_fish = c(103, 72, 44, 14, 3, 1, 1)))
+(df_nematode <- tibble(
+    nr_nematodes = 0:6,
+    nr_fish = c(103, 72, 44, 14, 3, 1, 1)
+))
 ```
-
+a
 
 ```{r}
-df_nematode %>% ggplot(aes(x = nr_nematodes, y = log(nr_fish, base = 10))) +
-    geom_bar(stat = "identity")
+df_nematode %>%
+    ggplot(aes(
+        x = nr_nematodes,
+        y = nr_fish
+    )) +
+    geom_col()
+```
+b
+```{r}
+df_nematode <- mutate(df_nematode, totalnematode = nr_nematodes * nr_fish)
+mean_nematode <- sum(df_nematode$totalnematode) / sum(df_nematode$nr_fish)
+
+
+df_nematode <- mutate(
+    df_nematode,
+    exp_nr_fish = dpois(nr_nematodes, mean_nematode) * sum(nr_fish)
+)
+```
+C
+
+```{r}
+df_nematode %>%
+    ggplot(aes(x = nr_nematodes, y = nr_fish)) +
+    geom_col(fill = "#0026ff", alpha = 0.5) +
+    geom_line(aes(y = exp_nr_fish), fill = "#AE00FF", alpha = 0.5)
+```
+
+D
+```{r}
+pooled_nematodes_obs <- c(
+    df_nematode$nr_fish[1:4],
+    sum(df_nematode$nr_fish[5:7])
+)
+pooled_nematodes_exp <- c(
+    df_nematode$exp_nr_fish[1:4],
+    sum(df_nematode$exp_nr_fish[5:7])
+)
+
+df_pool <- tibble(pooled_nematodes_obs, pooled_nematodes_exp)
+df_pool <- mutate(
+    df_pool,
+    pooledX2 = ((pooled_nematodes_obs - pooled_nematodes_exp)^2)
+    / pooled_nematodes_exp
+)
+sum(df_pool$pooledX2)
+
+(p <- pchisq(q = sum(df_pool$pooledX2), df = 3, lower.tail = F))
 ```
 
 >Q: Chapter 8: do Problem on Hurricanes 
@@ -318,6 +390,9 @@ class3 %>%
     scale_x_discrete(drop = FALSE) +
     scale_fill_discrete(drop = FALSE) +
     xlab("Number of hurricane recorded per year")
+```
+
+```{r}
 ```
 
 >Extra Q: use the Variance /Mean ratio on the category 3 hurricanes dataset
