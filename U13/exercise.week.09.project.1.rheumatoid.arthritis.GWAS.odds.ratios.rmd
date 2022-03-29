@@ -555,9 +555,7 @@ snpdata %>%
         total = n()
     ) %>%
     mutate(percent = extreme_snps / total) %>%
-    {
-        .[which.max(.$percent), "chromosome"]
-    }
+    arrange(desc(percent))
 ```
 E.g. it turns out that 121 SNPs on chromosome 8 has a 99% CI <> 1.0
 
@@ -578,27 +576,33 @@ And the second highest is found on chromosome 22
 
 > Q: Plot the extreme SNPs on this chromosome only (x=chromosome_position, y=oddsratio)
 
+```{r}
+snpdata %>%
+    filter(chromosome == 6 & (outside <- low99 > 1 | high99 < 1.0)) %>%
+    ggplot(aes(x = chromosome_position, y = oddsratio)) +
+    geom_point()
+```
 Can you see a region where there is a "pillar" of strong signal?
-
+right after around 3.1E7
 
 ---
 
 >BONUS Q: identiy the region with most signal
-
+que?
 Use cut_width etc. to identify the window with the most SNPs where the 99% CI does NOT overlap 1.00 
 
 
 ---
 
 > Q: What kind of genes do you find the interesting area? 
-
-If you are in doubt - it's around position 31.000.000 on chromosome 6.
+genes that seem bad to have errors in. this kills the student.If you are in doubt - it's around position 31.000.000 on chromosome 6.
 
 Have a look at one of the genome browsers: https://genome-euro.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr6%3A31000000-33000000
 
 >  
 >google Rheumatoid arthritis - what kind of disease is it?
 >   
+it's pretty sick. outright gnarly m8, busted AF. 
 
 
 
