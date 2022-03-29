@@ -392,6 +392,42 @@ Add these to the snpdata data_frame and call the columns:
  * high99
 
 
+```{r}
+
+OR <- rep(NA, nrow(snpdata))
+CIHigh <- rep(NA, nrow(snpdata))
+CILow <- rep(NA, nrow(snpdata))
+
+for (i in 1:length(x)) {
+    # Get data
+    Mi <- snpdata$contingency_table[[i]]
+    a <- Mi[1, 1]
+    b <- Mi[1, 2]
+    c <- Mi[2, 1]
+    d <- Mi[2, 2]
+    # Calculate stuff
+    MiOR <- (a * d) / (b * c) # ad/bc
+    SElnORMi <- sqrt(1 / a + 1 / b + 1 / c + 1 / d)
+    # 2.58 for CI99
+    CI99ORMi <- exp(c((log(MiOR) - 2.58 * SElnORMi), (log(MiOR) + 2.58 * SElnORMi)))
+
+
+
+    # Save result
+    OR[i] <- MiOR
+    CIHigh[i] <- CI99ORMi[2]
+    CILow[i] <- CI99ORMi[1]
+}
+
+snpdata$oddsratio <- OR
+snpdata$high99 <- CIHigh
+snpdata$low99 <- CILow
+```
+
+```{r}
+head(snpdata)
+```
+
 ---
 
 # Checkpoint 
@@ -463,12 +499,24 @@ alpha = 0 makes points invisible (bad idea)
 
 > Q: plot the oddsratio as function of genome position for all odds ratios
 
+```{r}
+snpdata %>% ggplot(aes(x = genome_position, y = oddsratio)) +
+    geom_point(alpha = 0.5)
+```
+
 This will be slow, since it's plotting 280.000 datapoints.
 
 
 ---
 
 > Q: plot the oddsratio as function of genome position for all odds ratios where the 99% confidence interval DO NOT overlap 1.00
+```{r}
+snpdata %>%
+    filter(low99 > 1 | 1 > high99) %>%
+    ggplot(aes(x = genome_position, y = oddsratio)) +
+    geom_point(alpha = 0.5)
+```
+
 
 ...this should be faster to plot, since you remove a lot of datapoints...
 
@@ -498,6 +546,19 @@ snpdata %>%
 
 > Q: Which chromosome has the highest percentage of SNPs where the 99% confidence interval do NOT overlap 1.00?
 
+```{r}
+snpdata %>%
+    mutate(outside = low99 > 1 | high99 < 1.0) %>%
+    group_by(chromosome) %>%
+    summarise(
+        extreme_snps = sum(outside == TRUE),
+        total = n()
+    ) %>%
+    mutate(percent = extreme_snps / total) %>%
+    {
+        .[which.max(.$percent), "chromosome"]
+    }
+```
 E.g. it turns out that 121 SNPs on chromosome 8 has a 99% CI <> 1.0
 
 There are 16470 SNPs on chromosome 8 in total.
