@@ -127,7 +127,8 @@ df %>%
     filter(size == 10, effect == 0.98) %>%
     select(p) %>%
     count(. <= 0.05)
-#173
+
+
 ```
 
 ---

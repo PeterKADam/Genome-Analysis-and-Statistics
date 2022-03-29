@@ -1,0 +1,545 @@
+---
+title: "Project A (1)"
+author: "Palle Villesen"
+output:
+  html_document: 
+    theme: cosmo
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Book exercises
+
+>Do the practice problem 2: "Calculation practice: Odds ratio".
+
+Write down your calculations/answers here in the rmd file.
+
+```{r}
+nocoffee <- 7890
+highcoffee <- 2492
+nocoffeecancer <- 122
+highcoffeecancer <- 19
+
+# a:
+highcoffeeP <- highcoffeecancer / highcoffee
+(oddshighcoffee <- (highcoffeeP) / (1 - highcoffeeP))
+
+# b:
+nocoffeeP <- nocoffeecancer / nocoffee
+(oddsnocoffee <- (nocoffeeP) / (1 - nocoffeeP))
+
+# c:
+(OR <- oddshighcoffee / oddsnocoffee)
+
+# d:
+(lnOR <- log(OR))
+
+# e:
+(SElnOR <- sqrt(1 / highcoffeecancer + 1 / highcoffee + 1 / nocoffeecancer + 1 / nocoffee))
+
+# f:
+(CI95lnOR <- c((lnOR - 1.96 * (SElnOR)), (lnOR + 1.96 * (SElnOR))))
+
+# g
+(CI95OR <- exp(CI95lnOR))
+
+# h:
+# der er negativ correlation mellem kaffe og cancerdoodles
+```
+
+
+# Learning goals for this exercise
+
+ * Have a look at the GWAS data from the paper.
+ * Calculate odds ratios by "hand" and associated values (confidence intervals etc.)
+ * Visualize single and many odds ratios
+ * Identify extreme odds ratios
+ * Explain the pattern by biomedical knowledge
+
+# R functions used this week (you have seen them all before)
+
+ * group_by()
+ * summarise()
+ * count()
+ * filter()
+ * sqrt(), log(), exp() + basic math like +,-,/,*
+ * ggplot() - for plotting
+ * for() loops
+
+# Initialise session
+
+```{r}
+
+library(tidyverse)
+
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+```
+
+# Reading data
+
+```{r}
+
+snpdata <- read_rds(file = "U13\\gwas_allele_counts.julia.2008.rds")
+```
+
+# Data description
+
+This dataset is described in the paper "Genome-Wide Association Study of Rheumatoid Arthritis in
+the Spanish Population" by Julia et al. 2008
+
+The first three columns are easy:
+
+ * rsid                (SNP id)
+ * chromosome          (the name of the chromosome)
+ * chromosome_position (the position of the SNP within the chromosome)
+
+We have taken all the chromosomes and glued them together from chromosome 1...chromosome 22
+
+Then we made a new coordinate system starting from 1 (chromosome 1) and ending around position 3.000.000.000 (chromosome 22)
+
+This position is calculated in the column called "genome_position" (for easy plotting along the entire genome)
+
+Finally we have counted the number of alleles in cases and controls and put this contingency table into the variable "contingency_table"
+
+Here we get the first one:
+
+```{r}
+
+snpdata$contingency_table[[1]]
+```
+
+Note how we use [[]] and NOT []. That is because the column "contingency_table" consists of a lot of tables and they are stored in an R list object. And if you use [] you get a new list - with length 1. And that's not what you typically want. You want the stuff that is in the "cell" (like an excel cell). And then you need the infamous [[1]].
+
+If you use "[]" you get new lists:
+
+```{r}
+
+snpdata$contingency_table[1:3]
+```
+
+# First look at the data
+
+## SNP counting etc.
+
+>Q: Count the number of SNPs pr chromosome
+
+
+```{r}
+(snpcount <- snpdata %>%
+    group_by(chromosome) %>%
+    count())
+```
+
+
+Hint: group_by() + summarise() or try the count() function
+
+Also: Think about why the number of SNPs are different on the different chromosomes.
+
+
+---
+
+>Q: Visualize the number of SNPs pr chromosome
+
+I would suggest a bar plot - one bar for each chromosome.
+
+```{r}
+snpcount %>% ggplot(aes(x = chromosome, y = n)) +
+    geom_col()
+```
+
+Also: Discuss/explain the pattern.
+hmm, gad vide om større chromosome har flere snps. ku jo være?
+
+---
+
+>BONUS Q: SNP density pr. chromosome
+
+```{r}
+max <- snpdata %>%
+    group_by(chromosome) %>%
+    summarise(max = max(chromosome_position, na.rm = T)) %>%
+    mutate("snpcount" = snpcount$n)
+
+ggplot(data = max, aes(x = chromosome, y = ((snpcount / max) / 10^6))) +
+    geom_col()
+```
+
+
+You can use the maximum chromosome_position for each chromosome as an estimate of chromosome length. (it's cheating but easy).
+
+Can you then visualize the SNP density (SNPs pr. 1 megabase)?
+
+
+---
+
+## Looking at chromosome_position
+
+Please note that this is the position within the chromosome.
+
+> Q: Make a histogram of the chromosome_position but for each chromosome separately.
+
+```{r}
+snpdata %>% ggplot(aes(x = chromosome_position)) +
+    geom_histogram() +
+    facet_wrap(~chromosome, scales = "free")
+```
+
+HINT: Yes!! - that is 22 plots, but ggplot makes it easy if you use the facet_wrap() function. 
+
+Also try facet_wrap(..., scales="free") (default is ...,scales="fixed")
+
+
+---
+
+> Q: What will you say about SNP density on the different chromosomes (from this dataset). Is it uniform, are there "holes"? Do some chromosomes look weird?
+many chromosomes have lower snp density near their centre, some even have no snps at all.
+
+---
+
+## Looking at genome_position
+
+> Q: Make a histogram of the genome_position
+
+Does it look like the SNP density is more or less the same throughout the genome?
+somewhat yes, apart from start and end.
+```{r}
+snpdata %>% ggplot(aes(x = genome_position)) +
+    geom_histogram()
+```
+
+---
+
+> Q: What is the mean and median number of SNPs pr. 10 megabases?
+
+
+```{r}
+snpdata %>%
+    mutate(window = cut_width(genome_position, width = 10 * 10^6, boundary = 0)) %>%
+    group_by(window) %>%
+    summarise(n = n()) %>%
+    summarise(mean = mean(n), median = median(n))
+```
+
+And yes... I mean across the entire genome.
+
+Hint: 
+
+ * first count the number of SNPs for each 10 megabase window (genome_position)
+ * then get the mean and median of all these numbers.
+
+You can use the smart cut_width() function to convert numbers to windows:
+
+```{r}
+
+x <- tibble(pos = sample(1:10000, size = 8000, replace = TRUE))
+
+x %>%
+    mutate(window = cut_width(pos, width = 1000, boundary = 0))
+```
+
+You may also check the count() function!
+
+```{r}
+
+x %>%
+    mutate(window = cut_width(pos, width = 1000, boundary = 0)) %>%
+    count(window)
+```
+
+count() is a simple way of doing this:
+
+```{r}
+
+x %>%
+    mutate(window = cut_width(pos, width = 1000, boundary = 0)) %>%
+    group_by(window) %>%
+    summarise(n = n())
+```
+
+
+---
+
+> Q: Visualize the distribution of number of SNPs in 10 mb windows
+
+```{r}
+snpdata %>%
+    ggplot(aes(x = genome_position)) +
+    geom_histogram(binwidth = 10^7)
+```
+
+So we want to see how much variation we see around the typical 1000 SNPs pr. megabase.
+
+Hint: A histogram of the number of snps pr. window
+
+
+---
+
+# Odds ratio for a single contingency table
+
+We will look on SNP number 1 and SNP number 2059
+
+First some example code
+
+```{r}
+
+M1 <- snpdata$contingency_table[[1]]
+M2 <- snpdata$contingency_table[[2059]]
+
+M1
+addmargins(M1)
+M2
+addmargins(M2)
+
+a <- M1[1, 1]
+c <- M1[2, 1]
+a + c
+```
+
+> Q: Use the equations from the book to calculate the odds ratio for the first table (M1)
+
+```{r}
+(a <- a)
+(b <- M1[1, 2])
+(c <- c)
+(d <- M1[2, 2])
+
+(M1OR <- (a * d) / (b * c))
+```
+
+
+### Hint
+
+>Make 4 variables like the layout in example 9.3 - also page 239 in Analysis of biological data, 2nd (and 3rd) edition
+
+>So you should make a,b,c,d from the contingency table
+
+
+---
+
+> Q: Use the equations from the book the calculate the SE of the log-odds ratio
+
+```{r}
+SElnORM1 <- sqrt(1 / a + 1 / b + 1 / c + 1 / d)
+```
+
+---
+
+> Q: Use the equations from the book to calculate the 99% confidence interval of the odds ratio
+
+NOTE! 99% NOT 95%
+```{r}
+(CI99lnORM1 <- c((log(M1OR) - 2.58 * SElnORM1), (log(M1OR) + 2.58 * SElnORM1)))
+
+(CI99ORM1 <- exp(CI99lnORM1))
+```
+
+---
+
+> Q: Does the confidence interval overlap and Odds ratio of 1.0? What is your conclusion?
+it overlaps with 1 but there is probably little to no effect
+---
+
+> Q: Also calculate the OR and the 99% CI for M2 (the other SNP)
+
+
+---
+
+> Q: Does the confidence interval overlap 1.0? What is your conclusion?
+
+---
+
+# Many odds ratios
+
+## Example
+
+```{r}
+
+x <- rep(NA, nrow(snpdata))
+
+for (i in 1:length(x)) {
+    # Get data
+    M1 <- snpdata$contingency_table[[i]]
+    a <- M1[1, 1]
+    c <- M1[2, 1]
+    # Calculate stuff
+    result <- a + c
+    # Save result
+    x[i] <- result
+}
+
+snpdata$x <- x
+
+snpdata
+
+ggplot(snpdata, aes(x = x)) +
+    geom_histogram(fill = "firebrick", color = "black", bins = 50) +
+    theme_classic()
+
+# Remove column from data frame
+snpdata <- snpdata %>% select(-x)
+
+snpdata
+```
+
+> Q: Use the example above to calculate odds ratio and 99% confidence intervals for all SNPs
+
+Add these to the snpdata data_frame and call the columns:
+
+ * oddsratio
+ * low99
+ * high99
+
+
+---
+
+# Checkpoint 
+
+Now you should see the following
+
+```
+head(snpdata)
+
+# A tibble: 6 x 8
+
+rsid       chromosome chromosome_position genome_position contingency_table oddsratio low99 high99
+<chr>      <fct>                    <dbl>           <dbl> <list>                <dbl> <dbl>  <dbl>
+1 rs3934834  1                       995669          995669 <dbl [2 x 2]>         1.06  0.756   1.49
+2 rs3737728  1                      1011278         1011278 <dbl [2 x 2]>         0.951 0.699   1.30
+3 rs6687776  1                      1020428         1020428 <dbl [2 x 2]>         0.944 0.677   1.32
+4 rs9651273  1                      1021403         1021403 <dbl [2 x 2]>         0.936 0.696   1.26
+5 rs4970405  1                      1038818         1038818 <dbl [2 x 2]>         0.967 0.657   1.42
+6 rs12726255 1                      1039813         1039813 <dbl [2 x 2]>         0.941 0.671   1.32
+
+```
+
+```{r}
+
+head(snpdata)
+```
+
+## If you see something different get help!!
+
+
+# Visualizing many odds ratios in the genome
+
+## Example of filter() and geom_point()
+
+```{r}
+
+set.seed(0)
+
+pd <- data_frame(var1 = rnorm(5000), var2 = rnorm(5000))
+
+ggplot(pd, aes(x = var1, y = var2)) +
+    geom_point(color = "firebrick", alpha = 0.5) +
+    theme_classic()
+
+pd %>%
+    mutate(positive = var1 > 0 & var2)
+
+pd2 <- pd %>%
+    mutate(positive = var1 > 0 & var2) %>%
+    filter(positive == TRUE)
+
+pd2
+
+ggplot(pd2, aes(x = var1, y = var2)) +
+    geom_point(alpha = 0.5) +
+    theme_classic()
+
+pd2 <- pd %>%
+    mutate(positive = var1 > 0 & var2 > 0)
+
+ggplot(pd2, aes(x = var1, y = var2, color = positive)) +
+    geom_point(alpha = 0.5) +
+    theme_classic()
+```
+
+alpha < 1.0 makes dots more and more transparent. (default value is 1.0)
+
+alpha = 0 makes points invisible (bad idea)
+
+> Q: plot the oddsratio as function of genome position for all odds ratios
+
+This will be slow, since it's plotting 280.000 datapoints.
+
+
+---
+
+> Q: plot the oddsratio as function of genome position for all odds ratios where the 99% confidence interval DO NOT overlap 1.00
+
+...this should be faster to plot, since you remove a lot of datapoints...
+
+Hint: 
+
+filter(x1 > 5 | x2 < 8) means "x1 > 5 OR x2 < 8"
+
+
+---
+
+# Look for a biological signal in the genome using the odds ratios
+
+We're quickly giving you some code that will tag if a SNP CI overlaps or not, and count how many pr. chrosome.
+
+```{r}
+snpdata %>%
+    mutate(outside = low99 > 1 | high99 < 1.0) %>%
+    group_by(chromosome) %>%
+    summarise(
+        extreme_snps = sum(outside == TRUE),
+        total = n()
+    )
+```
+
+
+
+
+> Q: Which chromosome has the highest percentage of SNPs where the 99% confidence interval do NOT overlap 1.00?
+
+E.g. it turns out that 121 SNPs on chromosome 8 has a 99% CI <> 1.0
+
+There are 16470 SNPs on chromosome 8 in total.
+
+So 121 / 16470 is 0.73%
+
+Hint: mutate() & arrange()
+
+
+---
+
+# Checkpoint II
+
+The answer should be that ~1.4% of SNPs on that chromosome have a 99% CI that do NOT overlap 1.0
+
+And the second highest is found on chromosome 22
+
+> Q: Plot the extreme SNPs on this chromosome only (x=chromosome_position, y=oddsratio)
+
+Can you see a region where there is a "pillar" of strong signal?
+
+
+---
+
+>BONUS Q: identiy the region with most signal
+
+Use cut_width etc. to identify the window with the most SNPs where the 99% CI does NOT overlap 1.00 
+
+
+---
+
+> Q: What kind of genes do you find the interesting area? 
+
+If you are in doubt - it's around position 31.000.000 on chromosome 6.
+
+Have a look at one of the genome browsers: https://genome-euro.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr6%3A31000000-33000000
+
+>  
+>google Rheumatoid arthritis - what kind of disease is it?
+>   
+
+
+
+---
+
