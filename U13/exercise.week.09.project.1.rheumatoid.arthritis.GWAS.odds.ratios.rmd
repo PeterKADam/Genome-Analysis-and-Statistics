@@ -409,9 +409,12 @@ for (i in 1:length(x)) {
     MiOR <- (a * d) / (b * c) # ad/bc
     SElnORMi <- sqrt(1 / a + 1 / b + 1 / c + 1 / d)
     # 2.58 for CI99
-    CI99ORMi <- exp(c((log(MiOR) - 2.58 * SElnORMi), (log(MiOR) + 2.58 * SElnORMi)))
-
-
+    CI99ORMi <- exp(
+        c(
+            (log(MiOR) - 2.58 * SElnORMi),
+            (log(MiOR) + 2.58 * SElnORMi)
+        )
+    )
 
     # Save result
     OR[i] <- MiOR

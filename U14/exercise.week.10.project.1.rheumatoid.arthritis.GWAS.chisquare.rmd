@@ -16,7 +16,30 @@ editor_options:
 
 
 ```{r}
+library(tidyverse)
 
+drinkers <- 201
+abstainers <- 209
+total <- drinkers + abstainers
+CAdrinkers <- 9
+CAabstainers <- 12
+totalCA <- CAdrinkers + CAabstainers
+# HO drinking is not associated
+# HA drinking is associated
+pCA <- totalCA / total
+
+(expCAdrinkers <- pCA * drinkers)
+(expCAabstainers <- pCA * abstainers)
+
+(x2drinkers <- ((CAdrinkers - expCAdrinkers)^2) / expCAdrinkers)
+(x2abstainers <- ((CAabstainers - expCAabstainers)^2) / expCAabstainers)
+(totalx2 <- x2abstainers + x2drinkers)
+
+pchisq(q = totalx2, 1, lower.tail = F)
+
+# we cannot conconclude that there is not differenct. (cannot reject H0)
+# well yes, but no.
+# mismatch between effect and samplesize. Bad data collection?
 ```
 
 # Learning goals for this exercise
@@ -47,20 +70,15 @@ What you will do:
 # Initialise session
  
 ```{r}
-
-library(tidyverse)
-
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
-
 ```
 
 # Reading data
 
 ```{r}
 
-snpdata <- read_rds(file = "gwas_allele_counts.julia.2008.rds")
-
+snpdata <- read_rds(file = "U14\\gwas_allele_counts.julia.2008.rds")
 ```
 
 # Working on a single SNP - number 2059
@@ -75,30 +93,31 @@ First some example code
 
 Observed <- snpdata$contingency_table[[2059]]
 
-a <- Observed[1,1]
-b <- Observed[1,2]
-c <- Observed[2,1]
-d <- Observed[2,2]
+a <- Observed[1, 1]
+b <- Observed[1, 2]
+c <- Observed[2, 1]
+d <- Observed[2, 2]
 
-n <- a+b+c+d
+n <- a + b + c + d
 
-Pr_row1 <- (a+b)/n 
-Pr_row2 <- (c+d)/n
-Pr_col1 <- (a+c)/n
-Pr_col2 <- (b+d)/n
+Pr_row1 <- (a + b) / n
+Pr_row2 <- (c + d) / n
+Pr_col1 <- (a + c) / n
+Pr_col2 <- (b + d) / n
 
-E_a <- Pr_row1 * Pr_col1 * n 
-E_b <- Pr_row1 * Pr_col2 * n 
-E_c <- Pr_row2 * Pr_col1 * n 
-E_d <- Pr_row2 * Pr_col2 * n 
+E_a <- Pr_row1 * Pr_col1 * n
+E_b <- Pr_row1 * Pr_col2 * n
+E_c <- Pr_row2 * Pr_col1 * n
+E_d <- Pr_row2 * Pr_col2 * n
 
 # This is one of several way you can make your own 2x2 table in R.
-Expected <- as.table(rbind(c(E_a, E_b), 
-                           c(E_c, E_d)))
+Expected <- as.table(rbind(
+    c(E_a, E_b),
+    c(E_c, E_d)
+))
 
 rownames(Expected) <- rownames(Observed)
 colnames(Expected) <- colnames(Observed)
-
 ```
 
 ```{r}
@@ -109,7 +128,6 @@ Expected
 
 addmargins(Observed)
 addmargins(Expected)
-
 ```
 
 ## calculating stuff
@@ -118,17 +136,19 @@ First: you can easily subtract and manipulate two tables
 
 ```{r}
 
-Observed-Expected
+Observed - Expected
 
-(Observed-Expected)^2
+(Observed - Expected)^2
 
-sum(Observed-Expected)
-
+sum(Observed - Expected)
 ```
 
 >Q: calculate the chi square value.
 
+```{r}
 
+x2 <- sum((((Observed - Expected)^2) / Expected))
+```
 ---
 
 ## P value from a chisquare value and the chi square distribution
@@ -147,15 +167,19 @@ Here I say that we observed a chisquare value of 5.0
 
 chisquare <- 5.0
 
-df <- (nrow(Observed)-1)*(ncol(Observed) - 1) 
+df <- (nrow(Observed) - 1) * (ncol(Observed) - 1)
 
-pchisq(q = chisquare, df = df, lower.tail = FALSE) 
-
+pchisq(q = chisquare, df = df, lower.tail = FALSE)
 ```
 
 >Q: Get the p value of your SNP?
 
+```{r}
 
+df <- (nrow(Observed) - 1) * (ncol(Observed) - 1)
+
+pchisq(q = x2, df = df, lower.tail = FALSE)
+```
 ---
 
 ## Using the builtin test in R for comparison
@@ -168,19 +192,34 @@ x
 # You can get observed and expected counts back
 addmargins(x$observed)
 addmargins(x$expected)
-
 ```
 
 >Q: Compare the values of chi square and the p value and the degrees of freedom for the two approaches
+
+```{r}
+# dey is the same, just rounded
+```
+
 
 ## Yates correction for continuity
 
 >Q: Try and perform a chisquare test with correction for contunuity
 
+```{r}
+
+(x2correct <- sum((((abs(Observed - Expected) - (1 / 2)))^2) / Expected))
+
+pchisq(q = x2correct, 1, lower.tail = FALSE)
+```
+
 Yes - we want you to calculate the modified chi square value and use pchisq() etc.
 
 Also do it with the builtin chisq.test() and compare the results
 
+
+```{r}
+(x <- chisq.test(Observed, correct = T))
+```
 
 ---
 
@@ -215,8 +254,17 @@ x <- chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 300000)
 x
 x$p.value
 x$statistic
-
 ```
+
+```{r}
+# r$> x$p.value
+# [1] 3.333322e-06
+
+# r$> x$statistic
+# X-squared
+#  36.82864
+```
+
 
 ## Compare with builtin function with and without correction
 
@@ -225,8 +273,27 @@ x$statistic
 chisq.test(Observed, correct = F)
 
 chisq.test(Observed, correct = T)
-
 ```
+
+```{r}
+# r$> chisq.test(Observed, correct = F)
+
+#         Pearson's Chi-squared test
+
+# data:  Observed
+# X-squared = 36.829, df = 1, p-value = 1.29e-09
+
+
+# r$>
+
+# r$> chisq.test(Observed, correct = T)
+
+#         Pearson's Chi-squared test with Yates' continuity correction
+
+# data:  Observed
+# X-squared = 36.217, df = 1, p-value = 1.765e-09
+```
+
 
 ## Compare with fishers exact test
 
@@ -237,12 +304,20 @@ fisher.test(Observed)
 x <- fisher.test(Observed)
 
 x$p.value
+```
 
+```{r}
+# x <- fisher.test(Observed)
+
+# r$> x$p.value
+# [1] 1.636953e-09
 ```
 
 Assume that the fisher exact test is the most correct.
 
 >Q: Which of the chisq.test() methods above gave the most correct p value?
+
+If the Fischer test is most correct then the Yates corrected test is most accurate
 
 ```{r}
 
@@ -257,7 +332,6 @@ x$p.value
 
 x <- chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 300000)
 x$p.value
-
 ```
 
 ## Soon you will do 280000 test... so you have to worry about speed.
@@ -269,12 +343,13 @@ We will NOT do any timing of the running time. Just believe me.
 So, based on your results:
 
 >Q: What settings/strategy for for the chisq.test() will you use for all 280.000 SNPS?
+yates?
 
 # Working on 280.000 SNPs
 
-## Restart R 
+## Restart R (no)
 
-This will clear your memory.
+This will clear your memory. #make me
 
 Go to Session>Restart R
 
@@ -288,9 +363,8 @@ To see all shortcuts Help>Keyboard shortcuts help
 
 ```{r}
 
-library(tidyverse)
-snpdata <- read_rds(file = "gwas_allele_counts.julia.2008.rds")
-
+# library(tidyverse)
+# snpdata <- read_rds(file = "gwas_allele_counts.julia.2008.rds")
 ```
 
 ## Perform a gwas
@@ -309,7 +383,31 @@ More precise, but slower: fisher.test()
 
 BONUS task if you have a lot of time: run different kinds of test and compare results
 
+```{r}
 
+x <- rep(NA, nrow(snpdata))
+
+for (i in seq_len(length(x))) {
+    # Get data
+    data <- snpdata$contingency_table[[i]]
+    # Calculate stuff
+    x[i] <- chisq.test(data, correct = T)$p.value
+}
+
+snpdata$p.value <- x
+
+head(snpdata$p.value)
+# snpdata
+
+# ggplot(snpdata, aes(x = x)) +
+#    geom_histogram(fill = "firebrick", color = "black", bins = 50) +
+#    theme_classic()
+
+# Remove column from data frame
+# snpdata <- snpdata %>% select(-x)
+
+# snpdata
+```
 ---
 
 
@@ -319,13 +417,26 @@ A Manhattan plot is really just a scatterplot with genome position on x and -log
 
 >Q: Make a manhattan plot of your chisq.test() p values.
 
+```{r}
+snpdata %>%
+    ggplot(aes(x = genome_position, y = -log(p.value, base = 10), color = chromosome)) +
+    geom_point(alpha = 0.5) +
+    theme_classic()
+```
+
+
 Bonus: you can also add chromosome as color to see the different chromosomes.
 
-
+(U14\plot.png)
 ---
 
 >Q: How many SNPs are significant at alpha = 0.05?
 
+```{r}
+snpdata %>%
+    filter(p.value <= 0.05) %>%
+    count()
+```
 
 
 ---
@@ -333,12 +444,21 @@ Bonus: you can also add chromosome as color to see the different chromosomes.
 
 >Q: How many did you expect at alpha=0.05?
 
-
+```{r}
+nrow(snpdata) * 0.05
+# no idea?
+```
 
 ---
 
 >Q: How many SNPs are significant after bonferroni correction? (interleaf 8)
 
+```{r}
+
+snpdata %>%
+    filter(p.value <= (0.05 / nrow(snpdata))) %>%
+    count()
+```
 
 ---
 
@@ -348,6 +468,14 @@ Please note the 0.005 level!!!
 
 How is this compared to your findings last week?
 
+```{r}
+snpdata %>%
+    group_by(chromosome) %>%
+    summarise(sig = sum(p.value <= 0.005), sigpercent = sum(p.value <= 0.005) / n()) %>%
+    arrange(desc(sigpercent))
+```
+
+oddly enough its the same chromosome. Who'd have guessed however there are much fewer sig's than last week(262) (0.0138%)
 
 ---
 
