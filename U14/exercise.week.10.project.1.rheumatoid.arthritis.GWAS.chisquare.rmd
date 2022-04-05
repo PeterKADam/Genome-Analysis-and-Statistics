@@ -273,6 +273,9 @@ x$statistic
 chisq.test(Observed, correct = F)
 
 chisq.test(Observed, correct = T)
+
+
+quantile()
 ```
 
 ```{r}

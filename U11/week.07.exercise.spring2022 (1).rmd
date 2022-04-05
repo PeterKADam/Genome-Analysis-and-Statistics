@@ -391,12 +391,11 @@ Now a few  questions about this data and the fit of the chimpanzee curve ($H_0$)
 ```{r}
 
 
-ho_qs_mutated <- mutate(.data = ho_qs, correct_answers_total = (ho_qs$observed*ho_qs$correct_answers))
+ho_qs_mutated <- mutate(.data = ho_qs, correct_answers_total = (ho_qs$observed * ho_qs$correct_answers))
 
-(p_correct = sum(ho_qs_mutated$correct_answers_total)/(49*13))
+(p_correct <- sum(ho_qs_mutated$correct_answers_total) / (49 * 13))
 
-(SE=sqrt(p_correct*(1-p_correct)/(49*13)))
-
+(SE <- sqrt(p_correct * (1 - p_correct) / (49 * 13)))
 ```
 
 >Qb2 Is that proportion different from 1/3 ? 
@@ -404,7 +403,7 @@ ho_qs_mutated <- mutate(.data = ho_qs, correct_answers_total = (ho_qs$observed*h
 Hint: this yet another binomial test (`two.tailed`)
 
 ```{r}
-2*pbinom(sum(ho_qs_mutated$correct_answers_total)-1,size=49*13,prob=1/3,lower.tail = F)
+2 * pbinom(sum(ho_qs_mutated$correct_answers_total) - 1, size = 49 * 13, prob = 1 / 3, lower.tail = F)
 ```
 
 >Qb3 Make a $\chi^2$ gof test for the scores (to test the chimpanzee $H_0$)
