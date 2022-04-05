@@ -1,0 +1,353 @@
+---
+title: "Project A (2)"
+output: 
+  html_document:
+    code_folding: show
+    theme: cosmo
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+
+# Book exercises
+
+>Do the practice problem 11 in chapter 9: "alcohol and heart disease".
+
+
+```{r}
+
+```
+
+# Learning goals for this exercise
+
+We start by doing some work on single SNPs to get a good understanding of the calculations
+
+What you will do:
+
+ * Calculate chisquare statitics by hand and use chisquare distribution to get a p value
+ * Use R's chi square test function to get a p value
+ * use R's fishers exact test to get a p value
+ * Compare all the results
+ * Compare the time used for test
+
+## Working on 280.000 SNPs
+
+ * Perform a GWAS (280.000 SNPs)
+ * Identify which chromosome has the highest fraction of significant SNPs (at alfa=0.005)
+
+# R functions used this week
+
+ * basic math like +,-,/,*
+ * for() loops
+ * chisq.test()
+ * fisher.test()
+ * nrow()
+
+# Initialise session
+ 
+```{r}
+
+library(tidyverse)
+
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+```
+
+# Reading data
+
+```{r}
+
+snpdata <- read_rds(file = "gwas_allele_counts.julia.2008.rds")
+
+```
+
+# Working on a single SNP - number 2059
+
+## Chi.square calculations
+
+We will look at SNP number 2059
+
+First some example code
+
+```{r}
+
+Observed <- snpdata$contingency_table[[2059]]
+
+a <- Observed[1,1]
+b <- Observed[1,2]
+c <- Observed[2,1]
+d <- Observed[2,2]
+
+n <- a+b+c+d
+
+Pr_row1 <- (a+b)/n 
+Pr_row2 <- (c+d)/n
+Pr_col1 <- (a+c)/n
+Pr_col2 <- (b+d)/n
+
+E_a <- Pr_row1 * Pr_col1 * n 
+E_b <- Pr_row1 * Pr_col2 * n 
+E_c <- Pr_row2 * Pr_col1 * n 
+E_d <- Pr_row2 * Pr_col2 * n 
+
+# This is one of several way you can make your own 2x2 table in R.
+Expected <- as.table(rbind(c(E_a, E_b), 
+                           c(E_c, E_d)))
+
+rownames(Expected) <- rownames(Observed)
+colnames(Expected) <- colnames(Observed)
+
+```
+
+```{r}
+
+Observed
+
+Expected
+
+addmargins(Observed)
+addmargins(Expected)
+
+```
+
+## calculating stuff
+
+First: you can easily subtract and manipulate two tables
+
+```{r}
+
+Observed-Expected
+
+(Observed-Expected)^2
+
+sum(Observed-Expected)
+
+```
+
+>Q: calculate the chi square value.
+
+
+---
+
+## P value from a chisquare value and the chi square distribution
+
+Compare the value with the chi square NULL distribution
+
+We use the formula in chapter 9 to calculate the degrees of freedom.
+
+The chi square NULL distribution is different for different degrees of freedom.
+
+For a 2x2 table it's 1*1=1
+
+Here I say that we observed a chisquare value of 5.0
+
+```{r}
+
+chisquare <- 5.0
+
+df <- (nrow(Observed)-1)*(ncol(Observed) - 1) 
+
+pchisq(q = chisquare, df = df, lower.tail = FALSE) 
+
+```
+
+>Q: Get the p value of your SNP?
+
+
+---
+
+## Using the builtin test in R for comparison
+
+```{r}
+
+x <- chisq.test(Observed, correct = F)
+x
+
+# You can get observed and expected counts back
+addmargins(x$observed)
+addmargins(x$expected)
+
+```
+
+>Q: Compare the values of chi square and the p value and the degrees of freedom for the two approaches
+
+## Yates correction for continuity
+
+>Q: Try and perform a chisquare test with correction for contunuity
+
+Yes - we want you to calculate the modified chi square value and use pchisq() etc.
+
+Also do it with the builtin chisq.test() and compare the results
+
+
+---
+
+## Simulating the NULL distribution
+
+The chisq.test() can get you simulation results directly. 
+
+Here I run it with 10 and 100000 simulations.
+
+Why should you do it? It works - even if the assumptions are violated.
+
+Why should you NOT do it? It takes longer time.
+
+How does it calculate the p.value? 
+
+It takes the number of simulated chi square values that are >= the observed chi square value anmd call it n_extreme.
+
+Then it assumes the next simulation would be more extreme as well.
+
+p.val = (n.extreme + 1) / (number of simulations + 1)
+
+The problems is: if you want high precision and small p values - then you need millions of simulations.
+
+
+```{r}
+
+chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 9)
+
+chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 300000)
+
+x <- chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 300000)
+x
+x$p.value
+x$statistic
+
+```
+
+## Compare with builtin function with and without correction
+
+```{r}
+
+chisq.test(Observed, correct = F)
+
+chisq.test(Observed, correct = T)
+
+```
+
+## Compare with fishers exact test
+
+```{r}
+
+fisher.test(Observed)
+
+x <- fisher.test(Observed)
+
+x$p.value
+
+```
+
+Assume that the fisher exact test is the most correct.
+
+>Q: Which of the chisq.test() methods above gave the most correct p value?
+
+```{r}
+
+x <- fisher.test(Observed)
+x$p.value
+
+x <- chisq.test(Observed, correct = T)
+x$p.value
+
+x <- chisq.test(Observed, correct = F)
+x$p.value
+
+x <- chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 300000)
+x$p.value
+
+```
+
+## Soon you will do 280000 test... so you have to worry about speed.
+
+So, the fisher.test() is quite slow.
+
+We will NOT do any timing of the running time. Just believe me.
+
+So, based on your results:
+
+>Q: What settings/strategy for for the chisq.test() will you use for all 280.000 SNPS?
+
+# Working on 280.000 SNPs
+
+## Restart R 
+
+This will clear your memory.
+
+Go to Session>Restart R
+
+Or press ctrl + shift + f10 (windows/linux) or Command+Shift+F10 (mac)
+
+You can also clear the console (ctrl+L)
+
+To see all shortcuts Help>Keyboard shortcuts help
+
+## Reading data (again)
+
+```{r}
+
+library(tidyverse)
+snpdata <- read_rds(file = "gwas_allele_counts.julia.2008.rds")
+
+```
+
+## Perform a gwas
+
+Last week you calculated Odds ratios for many snps.
+
+>Q: Use the code above and from last week to test all 280.000 SNPs using the chisq.test
+>for each test you want to extract the p value
+>and finally save it in column snpdata$p.value
+
+So you should add the p.value as a column to the dataset.
+
+It should run pretty fast, since we use the fast chisq.test()
+
+More precise, but slower: fisher.test()
+
+BONUS task if you have a lot of time: run different kinds of test and compare results
+
+
+---
+
+
+## The Manhattan plot
+
+A Manhattan plot is really just a scatterplot with genome position on x and -log10(p) on y.
+
+>Q: Make a manhattan plot of your chisq.test() p values.
+
+Bonus: you can also add chromosome as color to see the different chromosomes.
+
+
+---
+
+>Q: How many SNPs are significant at alpha = 0.05?
+
+
+
+---
+
+
+>Q: How many did you expect at alpha=0.05?
+
+
+
+---
+
+>Q: How many SNPs are significant after bonferroni correction? (interleaf 8)
+
+
+---
+
+>Q: Which chromosome has the highest percentage of significant SNPs at the 0.005 level?
+
+Please note the 0.005 level!!!
+
+How is this compared to your findings last week?
+
+
+---
+

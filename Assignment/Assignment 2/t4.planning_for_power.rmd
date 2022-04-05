@@ -113,6 +113,8 @@ df %>%
 
 NOTE: The rate is a number [0;1]. So your answer should be between 0 and 1.
 
+i really have no idea
+
 ```{r}
 0.05
 ```
@@ -121,6 +123,8 @@ NOTE: The rate is a number [0;1]. So your answer should be between 0 and 1.
 ---
 
 >Q4.6 How many tests were significant at the 0.05 level for sample size=10 and effect size=0.98?
+
+i really have no idea
 
 ```{r}
 df %>%
@@ -136,12 +140,12 @@ df %>%
 >Q4.7: What is the estimated power for alfa=0.05 using sample_size=10 and effect size=0.98?
 
 Power is a number [0;1] 
-
+i really have no idea
 
 ---
 
 >Q4.8: What is the estimated power for the more conservative significance threshold alfa=0.01 using sample_size=20 and effect size=0.98?
 
 Power is a number [0;1] 
-
+i really have no idea
 

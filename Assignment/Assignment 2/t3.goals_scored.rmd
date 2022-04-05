@@ -19,8 +19,6 @@ options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 ```{r}
 
 df <- read_rds("Assignment\\Assignment 2\\t3.fifa_results_data.rds")
-head(df)
-table(df$tournament)
 ```
 
 >Q3.1 How many registered matches where Spain was playing at home do we have data for?
@@ -67,7 +65,7 @@ Lets focus on matches where Spain played at home in the category `Friendly` matc
 Hint: If we assume that goals have a constant probability of occurring per unit time during a football match, then we expect the number of goals in a match scored by a team to follow a Poisson probability distribution.
 
 ```{r}
-ppois(6, meangoals_friendly_home, lower.tail = F)
+ppois(q=6-1, meangoals_friendly_home, lower.tail = F)
 ```
 
 ---
@@ -148,6 +146,8 @@ sum(var_to_mean >= v2m_obs) / length(var_to_mean)
 4. It's around the significance threshold, so we can't say anything.
 
 The answer should be given as a single number: 1, 2, 3..
+
+
 1
 
 ---

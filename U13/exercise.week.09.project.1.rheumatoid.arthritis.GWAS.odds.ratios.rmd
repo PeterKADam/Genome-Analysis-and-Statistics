@@ -266,7 +266,7 @@ x %>%
 ```{r}
 snpdata %>%
     ggplot(aes(x = genome_position)) +
-    geom_histogram(binwidth = 10^7)
+    geom_histogram(binwidth = 10^7, fill = chromosome)
 ```
 
 So we want to see how much variation we see around the typical 1000 SNPs pr. megabase.
@@ -450,10 +450,6 @@ rsid       chromosome chromosome_position genome_position contingency_table odds
 
 ```
 
-```{r}
-
-head(snpdata)
-```
 
 ## If you see something different get help!!
 

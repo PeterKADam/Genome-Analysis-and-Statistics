@@ -58,6 +58,7 @@ df %>%
     ggplot(aes(x = sensor1, fill = group)) +
     geom_histogram(position = "identity", alpha = 0.3, )
 ```
+
 1. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group B
 2. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group C
 3. Sensor 1 show a normal distribution of values in Group B and a uniform (flat) distribution of values in Group A
@@ -66,6 +67,7 @@ df %>%
 6. Sensor 1 show a normal distribution of values in Group C and a uniform (flat) distribution of values in Group B
 
 The answer should be given as a single number: 1, 2, 3..
+
 6
 
 ---
