@@ -21,21 +21,36 @@ library(tidyverse)
 drinkers <- 201
 abstainers <- 209
 total <- drinkers + abstainers
+
+
 CAdrinkers <- 9
 CAabstainers <- 12
 totalCA <- CAdrinkers + CAabstainers
+
+NCAdrinkers <- drinkers - CAdrinkers
+NCAabstainers <- abstainers - CAabstainers
 # HO drinking is not associated
 # HA drinking is associated
 pCA <- totalCA / total
+pNCA <- 1 - pCA
 
 (expCAdrinkers <- pCA * drinkers)
 (expCAabstainers <- pCA * abstainers)
+(expNCAdrinkers <- pNCA * drinkers)
+(expNAabstainers <- pNCA * abstainers)
+
+
+
 
 (x2drinkers <- ((CAdrinkers - expCAdrinkers)^2) / expCAdrinkers)
 (x2abstainers <- ((CAabstainers - expCAabstainers)^2) / expCAabstainers)
-(totalx2 <- x2abstainers + x2drinkers)
+(x2NCAdrinkers <- ((NCAdrinkers - expNCAdrinkers)^2) / expNCAdrinkers)
+(x2NCAabstainers <- ((NCAabstainers - expNCAabstainers)^2) / expNCAabstainers)
+
+(totalx2 <- x2abstainers + x2drinkers + x2NCAabstainers + x2NCAdrinkers)
 
 pchisq(q = totalx2, 1, lower.tail = F)
+
 
 # we cannot conconclude that there is not differenct. (cannot reject H0)
 # well yes, but no.
@@ -275,7 +290,7 @@ chisq.test(Observed, correct = F)
 chisq.test(Observed, correct = T)
 
 
-quantile()
+
 ```
 
 ```{r}
