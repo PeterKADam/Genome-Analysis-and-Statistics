@@ -266,7 +266,7 @@ chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 9)
 chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 300000)
 
 x <- chisq.test(Observed, correct = F, simulate.p.value = TRUE, B = 300000)
-x
+# x
 x$p.value
 x$statistic
 ```
@@ -377,7 +377,7 @@ You can also clear the console (ctrl+L)
 
 To see all shortcuts Help>Keyboard shortcuts help
 
-## Reading data (again)
+## Reading data (again) # no
 
 ```{r}
 
@@ -406,10 +406,7 @@ BONUS task if you have a lot of time: run different kinds of test and compare re
 x <- rep(NA, nrow(snpdata))
 
 for (i in seq_len(length(x))) {
-    # Get data
-    data <- snpdata$contingency_table[[i]]
-    # Calculate stuff
-    x[i] <- chisq.test(data, correct = T)$p.value
+    x[i] <- chisq.test(snpdata$contingency_table[[i]], correct = T)$p.value
 }
 
 snpdata$p.value <- x
@@ -436,8 +433,13 @@ A Manhattan plot is really just a scatterplot with genome position on x and -log
 >Q: Make a manhattan plot of your chisq.test() p values.
 
 ```{r}
+# snpdata %>%
+#     ggplot(aes(x = genome_position, y = -log(p.value, base = 10), color = chromosome)) +
+#     geom_point(alpha = 0.5) +
+#     theme_classic()
+
 snpdata %>%
-    ggplot(aes(x = genome_position, y = -log(p.value, base = 10), color = chromosome)) +
+    ggplot(aes(x = genome_position, y = -log(p.value, base = 10), color = (as.integer(chromosome) %% 2))) +
     geom_point(alpha = 0.5) +
     theme_classic()
 ```
@@ -474,7 +476,7 @@ nrow(snpdata) * 0.05
 ```{r}
 
 snpdata %>%
-    filter(p.value <= (0.05 / nrow(snpdata))) %>%
+    filter(p.value <= (0.05 / nrow(.))) %>%
     count()
 ```
 
@@ -489,7 +491,10 @@ How is this compared to your findings last week?
 ```{r}
 snpdata %>%
     group_by(chromosome) %>%
-    summarise(sig = sum(p.value <= 0.005), sigpercent = sum(p.value <= 0.005) / n()) %>%
+    summarise(
+        sig = sum(p.value <= 0.005),
+        sigpercent = sum(p.value <= 0.005) / n()
+    ) %>%
     arrange(desc(sigpercent))
 ```
 
