@@ -75,7 +75,6 @@ rm(x1, y, result)
 
 snpdata %>%
     select(p.value, everything())
-
 ```
 
 ## Save the data for future use
@@ -162,7 +161,6 @@ results <- tibble(pvalue = c(
 ))
 
 results %>% mutate(adjusted_pvalue = p.adjust(p = pvalue, method = "bonferroni"))
-
 ```
 
 >Q1: Adjust the original p values using the bonferroni adjustment
@@ -271,18 +269,26 @@ So you need both the number of SNPs on each chromosome AND the number of "signif
 ```{r}
 snpdata %>%
     group_by(chromosome) %>%
-    summarise(sigpercent = sum(fdr <= 0.2) / n())
+    summarise(sigpercent = sum(fdr <= 0.2) / n()) %>%
+    arrange(desc(sigpercent))
 ```
 
 ---
 
 >Q10: Make a plot of this proportion on each chromosome
 
-
+```{r}
+snpdata %>%
+    group_by(chromosome) %>%
+    summarise(sigpercent = sum(fdr <= 0.2) / n()) %>%
+    ggplot(fill = chromosome) +
+    geom_bar(aes(x = chromosome, y = sigpercent, ), stat = "identity", )
+```
 ---
 
 >Q11: Which chromosome is most enriched for significant SNPs?
 
+chromosome 6?
 
 ---
 
@@ -315,6 +321,43 @@ Hint:
 
 set.seed(1)
 
+
+
+scen1 <- rep(NA, 1000)
+
+for (i in 1:length(scen1)) {
+    x1 <- tibble(
+        group = "cases",
+        allele = sample(c("Ref", "Alt"), size = 100, prob = c(0.25, 0.75), replace = T)
+    )
+    x2 <- tibble(
+        group = "controls",
+        allele = sample(c("Ref", "Alt"), size = 100, prob = c(0.20, 0.80), replace = T)
+    )
+
+    x3 <- rbind(x1, x2)
+
+    fisher.test(x = x3$allele, y = x3$group)$p.value
+}
+
+
+table(x3$allele, x3$group)
+(x <- fisher.test(x = x3$allele, y = x3$group))
+x$p.value
+```
+
+You could simulate in other ways. This is just one way of getting 200 "Ref" or "Alt" alleles with given proportions and random sampling.
+
+The sample() function has one drawback: the higher "n" the more time it uses. (There are faster ways to simulate 2x2 tables in R - but they are more difficult to understand). 
+
+---
+
+>Scenario 2: 100 cases and 100 controls (a total of 400 alleles in 200 persons)
+
+```{r}
+
+set.seed(1)
+
 (x1 <- tibble(
     group = "cases",
     allele = sample(c("Ref", "Alt"), size = 200, prob = c(0.25, 0.75), replace = T)
@@ -330,16 +373,6 @@ table(x3$allele, x3$group)
 (x <- fisher.test(x = x3$allele, y = x3$group))
 x$p.value
 ```
-
-You could simulate in other ways. This is just one way of getting 200 "Ref" or "Alt" alleles with given proportions and random sampling.
-
-The sample() function has one drawback: the higher "n" the more time it uses. (There are faster ways to simulate 2x2 tables in R - but they are more difficult to understand). 
-
-1
----
-
->Scenario 2: 100 cases and 100 controls (a total of 400 alleles in 200 persons)
-
 
 ---
 
@@ -364,6 +397,22 @@ WARNING: Don't run - it will freeze your computer.
 If you are going to try it anyway.... go ahead.
 
 ```{r}
-# fisher.test(x3)
+fisher.test(x3)
 ```
+
+```{r}
+# 	r$> fisher.test(x3)
+
+#   Fisher's Exact Test for Count Data
+
+# data:  x3
+# p-value < 2.2e-16
+# alternative hypothesis: true odds ratio is not equal to 1
+# 95 percent confidence interval:
+#  1.333301 1.333959
+# sample estimates:
+# odds ratio
+#   1.333536
+```
+
 
