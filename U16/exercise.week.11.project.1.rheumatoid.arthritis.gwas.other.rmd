@@ -335,7 +335,7 @@ You could simulate in other ways. This is just one way of getting 200 "Ref" or "
 
 The sample() function has one drawback: the higher "n" the more time it uses. (There are faster ways to simulate 2x2 tables in R - but they are more difficult to understand). 
 
-1
+
 ---
 
 >Scenario 2: 100 cases and 100 controls (a total of 400 alleles in 200 persons)
