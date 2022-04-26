@@ -52,11 +52,28 @@ df_khan <- read_rds(r"(U17\khan_2vs4.tibble2.rds)")
 >Q1. How many samples do we have for each of the two cancer types?
 
 
+```{r}
+table(df_khan$cancer_group)
+
+df_khan %>%
+    group_by(cancer_group) %>%
+    count()
+```
+
+
+2: 29
+4: 25
+
 ---
 
 
 >Q2. How many genes do we have in total?
 
+```{r}
+df_khan %>%
+    select(-cancer_group) %>%
+    ncol()
+```
 
 ---
 
@@ -84,12 +101,29 @@ df_khan %>%
 >Q3. Use the sd() and sqrt() function to calculate the standard error of the mean for the two groups.
 
 
+```{r}
+df_khan %>%
+    group_by(cancer_group) %>%
+    summarize(
+        n_obs = n(),
+        SEMlow = mean(gene_11) - 2 * (sd(gene_11) / sqrt(n())),
+        SEMhigh = mean(gene_11) + 2 * (sd(gene_11) / sqrt(n()))
+    ) %>%
+    kable(col.names = c("Cancer group", "n", "SEMlow", "SEMhigh"))
+```
+
 ---
 
 ## Plotting a single gene
 
 >Q4. Make a facetted histogram plot of gene 11.
 
+
+```{r}
+df_khan %>% ggplot(aes(x = gene_11)) +
+    geom_histogram(bins = 10) +
+    facet_wrap(~cancer_group)
+```
 
 ---
 
@@ -136,10 +170,33 @@ shapiro.test(x = df_test$x2)
 
 >Q5. Which of the two variables x1 and x2 are NOT normally distributed?
 
+x1 has a high probability to come from a normal distribution
+x2 has a low probability of coming from a normal distribution (We can not reject our H0 hypothesis)
 
 ---
 
 >Q6. What if you log transform the two variables?
+
+
+```{r}
+shapiro.test(x = log(df_test$x1, base = 4.20))
+shapiro.test(x = log(df_test$x2, base = 4.20))
+```
+
+#x1
+Shapiro-Wilk normality test
+
+data:  log(df_test$x1, base = 4.2)
+W = 0.9, p-value = 0.05
+
+#x2
+Shapiro-Wilk normality test
+
+data:  log(df_test$x2, base = 4.2)
+W = 1, p-value = 0.8
+
+would u look at that :O
+
 
 There are several different ways of log transforming in R. Your job is to try at least one of them and test the results of the shapiro.test() on x1 and x2 from before.
 
@@ -176,7 +233,7 @@ ggplot(
     mapping = aes(x = gene_11)
 ) +
     geom_histogram() +
-    geom_vline(color = "red", xintercept = 1.00) +
+    geom_vline(color = "#00ff37", xintercept = 1.00) +
     facet_wrap(~cancer_group, ncol = 1) +
     NULL
 ```
@@ -189,16 +246,37 @@ df_khan_2 <- df_khan %>%
     filter(cancer_group == "2") %>%
     select(starts_with("gene"))
 
-df_khan_2[, 11]
 
-df_khan_2[, 11] %>% pull()
-
-gene_values <- df_khan_2[, 11] %>% pull()
-shapiro.test(gene_values)
+gene_values2 <- df_khan_2[, 11] %>% pull()
+shapiro.test(gene_values2)
 ```
+#Cancer group 2 - Gene 11
+Shapiro-Wilk normality test
+
+data:  gene_values
+W = 1, p-value = 0.7
+
+
 
 >Q7. Write the code to filter, extract and test group 4 - for gene 11.
 
+```{r}
+
+df_khan_4 <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    select(starts_with("gene"))
+
+gene_values4 <- df_khan_4[, 11] %>% pull()
+shapiro.test(gene_values4)
+```
+
+shapiro.test(gene_values4)
+
+#Cancer group 4 - Gene 11
+Shapiro-Wilk normality test
+
+data:  gene_values4
+W = 1, p-value = 0.5
 
 ---
 
@@ -214,6 +292,8 @@ df_khan_2 <- df_khan %>%
     filter(cancer_group == "2") %>%
     select(starts_with("gene"))
 
+
+
 for (i in 1:8) {
     gene_values <- df_khan_2[, i] %>% pull()
     x <- shapiro.test(gene_values)
@@ -225,17 +305,76 @@ for (i in 1:8) {
 results
 ```
 
->Q8. Reqrite the code so it tests group 2 and group 4 and do it for all genes.
+>Q8. Rewrite the code so it tests group 2 and group 4 and do it for all genes.
+
+```{r}
+
+set.seed(0)
+
+results <- tibble(group2 = rep(NA, 2308), group4 = rep(NA, 2308)) # 2308 is number of genes
+
+df_khan_2 <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    select(starts_with("gene")) # Makes the df with all genes of cancer type 2
+
+df_khan_4 <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    select(starts_with("gene")) # Makes the df with all genes of cancer type 4
+
+for (i in 1:nrow(results)) {
+    results$group2[i] <- shapiro.test(df_khan_2[, i] %>% pull())$p.value
+    results$group4[i] <- shapiro.test(df_khan_4[, i] %>% pull())$p.value
+    cat("Finished gene ", i, "\n")
+    flush.console()
+}
+
+results
+```
 
 How many genes are NOT normally distributed in cancer  type 2?
 
+
+```{r}
+
+results %>%
+    filter(group2 < 0.05) %>%
+    select(group2) %>%
+    count()
+```
+
+471 genes are not normally distributed in cancer type 2.
+
 How many genes are NOT normally distributed in cancer  type 4?
+
+```{r}
+
+results %>%
+    filter(group4 < 0.05) %>%
+    select(group4) %>%
+    count()
+```
+
+
+458 genes are not normally distributed in cancer type 4.
 
 BONUS: How many did you expect? (remember that even Shapiro test can make false positives)
 
+
+
 BONUS: are the p values correlated(?) (is it the same genes that are NOT normal in group 2 and group4)?
 
+```{r}
 
+results %>%
+    filter(group4 < 0.05 & group2 < 0.05) %>%
+    count()
+```
+
+```{r}
+(137 * 2) / (471 + 458)
+```
+
+only 137 are both not normal. (about 30% of all not normals) seems weak.
 
 ---
 
