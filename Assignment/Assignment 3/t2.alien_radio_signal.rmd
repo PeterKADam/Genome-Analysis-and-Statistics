@@ -112,6 +112,30 @@ Now we will look for patterns in the noise.
 
 >Q2.9: Which two people are hidden in the data?
 
+
+
+```{r}
+df %>%
+    filter(group == "A") %>%
+    ggplot(aes(x = signal_strength)) +
+    geom_histogram(position = "identity", alpha = 0.3)
+
+df <- df %>%
+    filter(group == "A") %>%
+    mutate(subgroup = ifelse(signal_strength < 20, 1, 2))
+```
+
+
+```{r}
+df %>%
+    filter(group == "A") %>%
+    ggplot(aes(x = sensor1, y = sensor2)) +
+    geom_point() +
+    scale_color_gradientn(colours = rainbow(20)) +
+    facet_wrap(~subgroup, ncol = 1)
+```
+
+
 1. Barack Obama & Michelle Obama
 2. Barack Obama & Joe Biden
 3. Barack Obama & Donald Trump
@@ -123,7 +147,7 @@ Now we will look for patterns in the noise.
 9. Palle & Thomas
 
 The answer should be given as a single number: 1, 2, 3..
-
+3
 
 ---
 
