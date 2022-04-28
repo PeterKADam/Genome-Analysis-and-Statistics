@@ -3,22 +3,23 @@ output:
   html_document:
         theme: readable
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
+
 
 
 ```{r message=FALSE, warning=FALSE}
 
 library(tidyverse)
 
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
-
 ```
 
 # World-wide life expectancy and income
 
 ## Background
+
 
 The gapminder dataset provides information about income and life expectancy in all continents over the 60 years. 
 
@@ -26,54 +27,86 @@ Here the data was obtained from the gapminder R package and a subset of this dat
 
 We used the following code to get the data and save it.
 
-```r
+
+
+```{r}
 
 library(gapminder)
 data("gapminder")
 summary(gapminder)
 
-#Transforming data for the sake of the exam 
-years_to_keep <-c("1992", "2002")
+# Transforming data for the sake of the exam
+years_to_keep <- c("1992", "2002")
 
 gap10 <- gapminder %>%
-  select(-c(pop, gdpPercap))  %>%
-  filter( year %in%  years_to_keep)
- 
+    select(-c(pop, gdpPercap)) %>%
+    filter(year %in% years_to_keep)
+
 widegap10 <- gap10 %>%
-  pivot_wider(names_from = year, values_from = lifeExp)
- 
+    pivot_wider(names_from = year, values_from = lifeExp)
+
 names(widegap10) <- c("country", "continent", "life_expec_1992", "life_expec_2002")
 
 saveRDS(object = widegap10, file = "t1.gap_minder.rds")
-
 ```
+
+
+
+
 The rds file `t1.gap_minder.rds` is made available below in R as the tibble `df`
 
 ```{r}
 
 df <- readRDS("t1.gap_minder.rds")
-head(df) 
-
+head(df)
 ```
 
 >Q1.1 How many countries have a reported life expectancy in 1992 ?
+
+```{r}
+length(df$life_expec_1992)
+```
 
 
 ---
 
 >Q1.2 How many Asian countries had a life expectancy of more than 60 years in 2002?
 
+```{r}
+df %>%
+    filter(continent == "Asia" & life_expec_2002 > 60) %>%
+    select(country) %>%
+    dim()
+```
+
 
 ---
 
 >Q1.3 In how many countries did life expectancy increase from 1992 to 2002?
 
+```{r}
+df %>%
+    filter(life_expec_1992 < life_expec_2002) %>%
+    select(country) %>%
+    dim()
+```
 
 ---
 
 >Q1.4 What proportion of countries located in Asia had a life expectancy exceeding 60 in 2002
 
 NOTE: A proportion should be reported as a number between 0 and 1 [0, 1]. So 42% should be written as 0.42 or 42/100.
+
+```{r}
+(proportion <- (df %>%
+    filter(continent == "Asia" & life_expec_2002 > 60) %>%
+    select(country) %>%
+    nrow()) /
+    nrow(df %>% filter(continent == "Asia"))
+)
+
+# 29/33
+```
 
 
 ---
@@ -92,7 +125,19 @@ Calculate the probability under $H_0$ that as many countries as observed or more
 
 >Q1.5 What is the calculated probability? (this also the one tailed p value)
 
+```{r}
+nr_higher <- df %>%
+    filter(continent == "Asia" & life_expec_1992 < life_expec_2002) %>%
+    select(country) %>%
+    nrow()
 
+pbinom(
+    q = nr_higher,
+    size = nrow(df %>% filter(continent == "Asia")),
+    prob = nr_higher / nrow(df %>% filter(continent == "Asia")),
+    lower.tail = F
+)
+```
 ---
 
 >Q1.6 Use the appropriate type of t-test to test whether life expectancy has changed significantly from 1992 to 2002 in Asia. Report the p value as your answer.
