@@ -145,8 +145,8 @@ df <- df %>%
 df %>%
     filter(group == "A") %>%
     ggplot(aes(x = sensor1, y = sensor2)) +
-    geom_point() +
-    scale_color_gradientn(colours = rainbow(20)) +
+    geom_point(aes(color = sensor1)) +
+    scale_color_gradientn(colours = rainbow(10)) +
     facet_wrap(~subgroup, ncol = 1)
 ```
 
