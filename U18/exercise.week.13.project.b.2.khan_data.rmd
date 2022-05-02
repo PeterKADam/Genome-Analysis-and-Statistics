@@ -39,17 +39,16 @@ Here we will consider the subset of the `Khan` dataset where we focus on differe
 ```{r}
 
 library(tidyverse)
-library(knitr)     # required for nice table output
-library(ggthemes)  # required for nice colors
+library(knitr) # required for nice table output
+library(ggthemes) # required for nice colors
 
-options(digits = 3)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 3) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 3) # number of digits printed by tibbles default.
 
 set.seed(42) # to reproduce the example
-theme_set(theme_minimal(base_size = 18)) # to get homogeneous figs 
+theme_set(theme_minimal(base_size = 18)) # to get homogeneous figs
 
-df_khan <- read_rds("khan_2vs4.tibble2.rds")
-
+df_khan <- read_rds(r"(U18\khan_2vs4.tibble2.rds)")
 ```
 
 # Looking at gene 11
@@ -64,31 +63,33 @@ Ha: Genes have a different expression
 
 ```{r}
 
-pd <- df_khan %>% filter(cancer_group==2)
+pd <- df_khan %>% filter(cancer_group == 2)
 
-ggplot(data = pd, mapping = aes(x=gene_11)) +
-  geom_histogram() +
-  geom_vline(color="red", xintercept = 1.3) +
-  facet_wrap(~cancer_group, ncol = 1)+
-  NULL
-
+ggplot(data = pd, mapping = aes(x = gene_11)) +
+    geom_histogram() +
+    geom_vline(color = "red", xintercept = 1.3) +
+    facet_wrap(~cancer_group, ncol = 1) +
+    NULL
 ```
 
 ## The mean of expression of gene 11
 
-Remember last week? You found the mean and SE of gene 11.
+Remember last week? (no) You found the mean and SE of gene 11.
 
 ```{r}
 
 df_khan %>%
-  group_by(cancer_group) %>%
-  summarize(n_obs = n(),
-            mean_exp  = mean(gene_11), 
-            std_dev   = sd(gene_11),
-            std_error = std_dev /sqrt(n_obs)) %>%
-   kable(col.names = c("Cancer group", "n","mean expression","SD", "SE (mean)")) %>%
-  {.}
-
+    group_by(cancer_group) %>%
+    summarize(
+        n_obs = n(),
+        mean_exp = mean(gene_11),
+        std_dev = sd(gene_11),
+        std_error = std_dev / sqrt(n_obs)
+    ) %>%
+    kable(col.names = c("Cancer group", "n", "mean expression", "SD", "SE (mean)")) %>%
+    {
+        .
+    }
 ```
 
 So we see that the mean expression in group 2 is 1.61.
@@ -100,28 +101,33 @@ We extract all observations in group `2` and store it in a new vector
 ```{r}
 
 group2_values <- df_khan %>%
-  filter(cancer_group=="2") %>%
-  pull(gene_11)
+    filter(cancer_group == "2") %>%
+    pull(gene_11)
 
 group2_values
-
 ```
 
 Then we use the very versatile function `t.test`
 
 ```{r}
 
-myvalues <- c(1.29, 0.99, 1.32, 1.59, 1.73, 1.26, 1.3, 1, 1.44, 1.22, 1.44, 
-              1.49, 1.56, 1.23, 1.45, 1.01, 1.19, 1.18, 0.87, 1.36)
+myvalues <- c(
+    1.29, 0.99, 1.32, 1.59, 1.73, 1.26, 1.3, 1, 1.44, 1.22, 1.44,
+    1.49, 1.56, 1.23, 1.45, 1.01, 1.19, 1.18, 0.87, 1.36
+)
 
 t.test(x = myvalues)
 t.test(x = myvalues, mu = 0)
 t.test(x = myvalues, mu = 1.15)
-
 ```
 
 ## >Q1. Test group2_values against H0: mu=1.3. What is your conclusion?
 
+
+```{r}
+
+t.test(x = group2_values, mu = 1.3)
+```
 
 ---
 
@@ -135,10 +141,9 @@ Note we can also save the output of t.test
 
 mytest1 <- t.test(x = group2_values, mu = 1.3)
 names(mytest1)
-mytest1$stderr      # check we had already done that
-mytest1$method      # What kind of test did we do?
+mytest1$stderr # check we had already done that
+mytest1$method # What kind of test did we do?
 mytest1$alternative # check we wanted a two-sided
-
 ```
 
 You can extract also the p-value, etc.
@@ -147,20 +152,24 @@ You can extract also the p-value, etc.
 
 ```{r}
 
-myvalues1 <- c(1.34, 1.26, 1.31, 1.35, 1.31, 1.46, 1.3, 1.31, 1.42, 1.24, 
-               1.35, 1.19, 1.47, 1.32, 1.3, 1.23, 1.35, 1.27, 1.3, 1.48)
+myvalues1 <- c(
+    1.34, 1.26, 1.31, 1.35, 1.31, 1.46, 1.3, 1.31, 1.42, 1.24,
+    1.35, 1.19, 1.47, 1.32, 1.3, 1.23, 1.35, 1.27, 1.3, 1.48
+)
 
-myvalues2 <- c(1.23, 1.14, 1.27, 1.21, 1.31, 1.39, 1.15, 1.3, 1.26, 1.34, 
-               1.23, 1.33, 1.08, 1.42, 1.34, 1.23, 1.11, 1.31)
+myvalues2 <- c(
+    1.23, 1.14, 1.27, 1.21, 1.31, 1.39, 1.15, 1.3, 1.26, 1.34,
+    1.23, 1.33, 1.08, 1.42, 1.34, 1.23, 1.11, 1.31
+)
 
 t.test(x = myvalues1, y = myvalues2)
-try(t.test(x = myvalues1, y = myvalues2, paired = T)) # Why does it fail?
+try(t.test(x = myvalues1, y = myvalues2, paired = T)) # Why does it fail? - They have different lengths!
 t.test(x = myvalues1, y = myvalues2, var.equal = T)
-
 ```
 
 ## >Q2. Which of the three test runs is the correct two sample t test, that assumes equal variance in the two groups?
 
+the last one assumes equal variance.
 
 ---
 
@@ -168,6 +177,30 @@ t.test(x = myvalues1, y = myvalues2, var.equal = T)
 
 What is your conclusion. Do the two groups have the same expression?
 
+```{r}
+
+group2_values <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    pull(gene_11)
+group4_values <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    pull(gene_11)
+
+t.test(x = group2_values, y = group4_values, var.equal = T)
+```
+
+t.test(x = group2_values, y = group4_values, var.equal = T)                                                                                                                                                                                         
+                                                                                                                                                                                                                                                        
+Two Sample t-test                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                        
+data:  group2_values and group4_values                                                                                                                                                                                                                  
+t = -2, df = 52, p-value = 0.04                                                                                                                                                                                                                         
+alternative hypothesis: true difference in means is not equal to 0                                                                                                                                                                                      
+95 percent confidence interval:
+ -0.45777 -0.00971              # what el fuk?
+sample estimates:
+mean of x mean of y
+     1.61      1.85
 
 ---
 
@@ -183,21 +216,42 @@ It uses the same input as the two sample t.test()
 
 ```{r}
 
-myvalues1 <- c(1.34, 1.26, 1.31, 1.35, 1.31, 1.46, 1.3, 1.31, 1.42, 1.24, 
-               1.35, 1.19, 1.47, 1.32, 1.3, 1.23, 1.35, 1.27, 1.3, 1.48)
+myvalues1 <- c(
+    1.34, 1.26, 1.31, 1.35, 1.31, 1.46, 1.3, 1.31, 1.42, 1.24,
+    1.35, 1.19, 1.47, 1.32, 1.3, 1.23, 1.35, 1.27, 1.3, 1.48
+)
 
-myvalues2 <- c(1.23, 1.14, 1.27, 1.21, 1.31, 1.39, 1.15, 1.3, 1.26, 1.34, 
-               1.23, 1.33, 1.08, 1.42, 1.34, 1.23, 1.11, 1.31)
+myvalues2 <- c(
+    1.23, 1.14, 1.27, 1.21, 1.31, 1.39, 1.15, 1.3, 1.26, 1.34,
+    1.23, 1.33, 1.08, 1.42, 1.34, 1.23, 1.11, 1.31
+)
 
 wilcox.test(x = myvalues1, y = myvalues2, exact = F)
-
 ```
+
+Warning message:
+In wilcox.test.default(x = myvalues1, y = myvalues2, exact = T) :
+  cannot compute exact p-value with ties
 
 #### >Q4. Test gene 11 using the wilcox.test().
 
-What is your conclusion. Do the two groups have the same expression?
+```{r}
+wilcox.test(x = group2_values, y = group4_values, exact = F)
+```
 
-If you get a different conclusion - why?
+data:  group2_values and group4_valuesntinuity correction
+W = 265, p-value = 0.09
+alternative hypothesis: true location shift is not equal to 0
+
+>What is your conclusion. Do the two groups have the same expression?
+
+they does yes
+
+
+>If you get a different conclusion - why?
+
+I am indecisive and dyslexic
+i mean, i cant re-decide that quick
 
 
 ---
@@ -210,20 +264,40 @@ We can quickly check normality
 
 ```{r}
 
-group2_values <- df_khan %>% filter(cancer_group=="2") %>% pull(gene_11)
-group4_values <- df_khan %>% filter(cancer_group=="4") %>% pull(gene_11)
+group2_values <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    pull(gene_11)
+group4_values <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    pull(gene_11)
 
 shapiro.test(group2_values)
 
 shapiro.test(group4_values)
-
 ```
+
+r$> shapiro.test(group2_values)
+
+        Shapiro-Wilk normality test
+
+data:  group2_values
+W = 1, p-value = 0.7
+
+
+r$>
+
+r$> shapiro.test(group4_values)
+
+        Shapiro-Wilk normality test
+
+data:  group4_values
+W = 1, p-value = 0.5
 
 They look ok - so my best guess right now is that the t.test() is ok.
 
 What should we do then? We can use permutation test to get a p value.
 
-For gene 11 we just switch around labels `2` and `4` at random.
+For gene 11 we just switch around labels `2` and `4` at "random".
 
 We first make a small dataset and demonstrate the permutation of label 
 
@@ -234,7 +308,6 @@ set.seed(0) # Make sure we ALL get the same permutation
 (df_khan_2 <- df_khan %>% select(cancer_group, gene_11))
 
 (df_khan_2 <- df_khan_2 %>% mutate(perm_group = sample(x = cancer_group)))
-
 ```
 
 In `df_g11`, we have added a new column `perm_group` that contains a permutation of `cancer_group `label (shuffling the group labels)
@@ -247,40 +320,112 @@ NOTE THE FILTER!! WE use the `perm_group` !!!
 
 ```{r}
 
-pseudo2  <- df_khan_2 %>% filter(perm_group=="2") %>% pull(gene_11)
+pseudo2 <- df_khan_2 %>%
+    filter(perm_group == "2") %>%
+    pull(gene_11)
 
-pseudo4  <- df_khan_2 %>% filter(perm_group=="4") %>% pull(gene_11)
+pseudo4 <- df_khan_2 %>%
+    filter(perm_group == "4") %>%
+    pull(gene_11)
 
 t.test(x = pseudo2, y = pseudo4)
-
 ```
+
+ t.test(x = pseudo2, y = pseudo4)
+
+        Welch Two Sample t-test
+
+data:  pseudo2 and pseudo4
+t = -0.3, df = 46, p-value = 0.8
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.270  0.205
+sample estimates:
+mean of x mean of y
+     1.71      1.74
 
 Now we can do it a few times with a `for()` loop and output the statistic we get every time
 
 ```{r}
 
-group2_values <- df_khan %>% filter(cancer_group=="2") %>% pull(gene_11)
-group4_values <- df_khan %>% filter(cancer_group=="4") %>% pull(gene_11)
+group2_values <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    pull(gene_11)
+group4_values <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    pull(gene_11)
 
 x <- t.test(x = group2_values, y = group4_values, var.equal = T)
 
 observed <- abs(x$statistic)
 
 set.seed(0)
- 
-for(i in 1:8) {
-  df_khan_2 <- df_khan_2 %>%  mutate(perm_group = sample(x = cancer_group))  
-  pseudo2  <- df_khan_2 %>%   filter(perm_group=="2") %>% pull(gene_11)
-  pseudo4  <- df_khan_2 %>%   filter(perm_group=="4") %>% pull(gene_11)
-  
-  x <- t.test(x = pseudo2, y = pseudo4)
-  
-  cat("t-test t value of permutation ", i, " :", x$statistic, "\n")
-}
 
+for (i in 1:8) {
+    df_khan_2 <- df_khan_2 %>% mutate(perm_group = sample(x = cancer_group))
+    pseudo2 <- df_khan_2 %>%
+        filter(perm_group == "2") %>%
+        pull(gene_11)
+    pseudo4 <- df_khan_2 %>%
+        filter(perm_group == "4") %>%
+        pull(gene_11)
+
+    x <- t.test(x = pseudo2, y = pseudo4)
+
+    cat("t-test t value of permutation ", i, " :", x$statistic, "\n")
+}
 ```
 
+
+t-test t value of permutation  1  : -0.274 
+t-test t value of permutation  2  : 0.434 
+t-test t value of permutation  3  : 1.03 
+t-test t value of permutation  4  : -0.406
+t-test t value of permutation  5  : -0.206 
+t-test t value of permutation  6  : -1.99 
+t-test t value of permutation  7  : -0.728 
+t-test t value of permutation  8  : 0.313
+
 ## >Q.5 Adapt the code to do a real permutation based test
+
+
+```{r}
+set.seed(0)
+
+group2_values <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    pull(gene_11)
+group4_values <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    pull(gene_11)
+
+x <- t.test(x = group2_values, y = group4_values, var.equal = T)
+
+observed <- abs(x$statistic)
+
+t <- rep(NA, 1000)
+for (i in 1:length(t)) {
+    df_khan_2 <- df_khan_2 %>% mutate(perm_group = sample(x = cancer_group))
+    pseudo2 <- df_khan_2 %>%
+        filter(perm_group == "2") %>%
+        pull(gene_11)
+    pseudo4 <- df_khan_2 %>%
+        filter(perm_group == "4") %>%
+        pull(gene_11)
+
+    t[i] <- abs(t.test(x = pseudo2, y = pseudo4)$statistic)
+}
+```
+
+```{r}
+sum(t >= observed)
+```
+
+
+```{r}
+cat("perm-test p-value: ", (2 * (sum(t >= observed) / 1000)), "\n")
+```
+
 
 We want to do 1.000 permutations and, for each shuffle, recompute the t-test statistics,... store the 1.000 statistics in a vector.
 
@@ -293,24 +438,25 @@ HINT for calculating p values from permutations:
 ```{r}
 
 observed <- 3.5
-permute_ts <- c(-10.08, -10.6, -19.16, -9.42, 7.67, -18.61, -17.49, -4.09, 
-                -0.4, 5.24, 8.94, -16.93, -3.14, 18.95, 12.55, -11.05, -0.41, 
-                -19.55, -9.66, -1.82, 9.64, 19.63, -6.71, 17.79, 18.47, 15.97, 
-                -0.29, 11.4, 12.12, 7.11, 3.25, -6.77, -19.95, -17.37, -16.56, 
-                -19.48, -6.57, -15.23, 3.74, -18.51, -19.62, -13.54, 13.28, 10.67,
-                -9.09, -12.47, -10.97, -17.52, -17.6, -13.38)
+permute_ts <- c(
+    -10.08, -10.6, -19.16, -9.42, 7.67, -18.61, -17.49, -4.09,
+    -0.4, 5.24, 8.94, -16.93, -3.14, 18.95, 12.55, -11.05, -0.41,
+    -19.55, -9.66, -1.82, 9.64, 19.63, -6.71, 17.79, 18.47, 15.97,
+    -0.29, 11.4, 12.12, 7.11, 3.25, -6.77, -19.95, -17.37, -16.56,
+    -19.48, -6.57, -15.23, 3.74, -18.51, -19.62, -13.54, 13.28, 10.67,
+    -9.09, -12.47, -10.97, -17.52, -17.6, -13.38
+)
 
 sum(abs(permute_ts) >= abs(observed))
 
 sum(abs(permute_ts) >= abs(observed)) / length(permute_ts)
 
-(sum(abs(permute_ts) >= abs(observed))+1) / (1+length(permute_ts))
-
-
+(sum(abs(permute_ts) >= abs(observed)) + 1) / (1 + length(permute_ts))
 ```
 
 What is your final conclusion about gene 11? Is it significant or not?
 
+it is significant, they is not the same. 
 
 ---
 
@@ -332,29 +478,34 @@ To see the difference we increase to 10.000 permutations
 
 set.seed(0)
 
-g2  <- df_khan_2 %>% filter(cancer_group=="2") %>% pull(gene_11)
-g4  <- df_khan_2 %>% filter(cancer_group=="4") %>% pull(gene_11)
+g2 <- df_khan_2 %>%
+    filter(cancer_group == "2") %>%
+    pull(gene_11)
+g4 <- df_khan_2 %>%
+    filter(cancer_group == "4") %>%
+    pull(gene_11)
 
 n1 <- length(g2)
 n2 <- length(g4)
 
 permute_ts <- rep(NA, 10000)
 
-for(i in 1:length(permute_ts)) {
-  permuted_values <- sample(c(g2,g4)) # Much much faster than before
-  # First n1 permuted values are assigned to the pseudo2 group
-  pseudo2  <- permuted_values[1:n1]           
-  # The remaining value are assigned to pseudo 4 group
-  pseudo4  <- permuted_values[(1+n1):(n1+n2)] 
-  x <- t.test(x = pseudo2, y = pseudo4, alternative = "two.sided")
-  permute_ts[i] <- x$statistic
-  if (i%%100==0){cat(".")}
+for (i in 1:length(permute_ts)) {
+    permuted_values <- sample(c(g2, g4)) # Much much faster than before
+    # First n1 permuted values are assigned to the pseudo2 group
+    pseudo2 <- permuted_values[1:n1]
+    # The remaining value are assigned to pseudo 4 group
+    pseudo4 <- permuted_values[(1 + n1):(n1 + n2)]
+    x <- t.test(x = pseudo2, y = pseudo4, alternative = "two.sided")
+    permute_ts[i] <- x$statistic
+    if (i %% 100 == 0) {
+        cat(".")
+    }
 }
 
 (observed <- t.test(x = g2, y = g4)$statistic)
 
-(sum(abs(permute_ts) >= abs(observed))+1) / (1+length(permute_ts))
-
+(sum(abs(permute_ts) >= abs(observed)) + 1) / (1 + length(permute_ts))
 ```
 
 ## Trick 2 - drop t.test()
@@ -371,39 +522,56 @@ This is so fast that you can quickly run 1.000.000 permutations
 
 set.seed(0)
 
-g2  <- df_khan_2 %>% filter(cancer_group=="2") %>% pull(gene_11)
-g4  <- df_khan_2 %>% filter(cancer_group=="4") %>% pull(gene_11)
+g2 <- df_khan_2 %>%
+    filter(cancer_group == "2") %>%
+    pull(gene_11)
+g4 <- df_khan_2 %>%
+    filter(cancer_group == "4") %>%
+    pull(gene_11)
 
 n1 <- length(g2)
 n2 <- length(g4)
 
-permute_diff <- rep(NA, 1000000) # NOTE NEW NAME
+permute_diff <- rep(NA, 1000000) # NOTE NEW NAME, noted (I lied)
 
 starttime <- Sys.time()
 
-for(i in 1:length(results)) {
-  permuted_values <- sample(c(g2,g4))
-  pseudo2 <- permuted_values[1:n1]
-  pseudo4 <- permuted_values[(1+n1):(n1+n2)]
-  permute_diff[i] <- abs(mean(pseudo2) - mean(pseudo4)) # Note abs()
+for (i in 1:length(permute_diff)) {
+    permuted_values <- sample(c(g2, g4))
+    pseudo2 <- permuted_values[1:n1]
+    pseudo4 <- permuted_values[(1 + n1):(n1 + n2)]
+    permute_diff[i] <- abs(mean(pseudo2) - mean(pseudo4)) # Note abs()
 }
 
 endtime <- Sys.time()
 
-endtime-starttime
+endtime - starttime
 
+
+(observed <- t.test(x = g2, y = g4)$statistic)
 ```
+
+
+
 
 ## >Q.6 What is the estimated p value from 1 million permutations?
 
 NOTE: we are now using the difference in means and our test statistic.
-
-
+```{r}
+cat("perm-test p-value: ", (sum(abs(permute_diff) >= abs(observed)) + 1) / (1 + length(permute_diff)), "\n")
+```
 ---
+
+perm-test p-value:  1e-06 
 
 
 ## >Q7. How long time will it take to permutation test all genes?
 
+```{r}
+(NCOL(df_khan) - 1) * (endtime - starttime)
+```
+
+a few seconds = 24806 if u is not scrub. cant go lower, prolly can go higher. 
 
 ---
 
@@ -414,20 +582,44 @@ NOTE: we are now using the difference in means and our test statistic.
 
 ```{r}
 
-results <- tibble(column = 2:ncol(df_khan),
-       gene_name   = names(df_khan)[column],
-       pval_ttest  = NA,  # the p value from the t.test
-       pval_wilcox = NA)  # the p value from wilcox.test
+results <- tibble(
+    column = 2:ncol(df_khan),
+    gene_name = names(df_khan)[column],
+    pval_ttest = NA, # the p value from the t.test
+    pval_wilcox = NA
+) # the p value from wilcox.test
+starttime <- Sys.time()
 
-# You can get gene_11 with
-gene_name <- "gene_11"
-df_khan %>% filter(cancer_group=="2") %>% pull(gene_name)
+for (i in 1:nrow(results)) {
 
-# We split the data into two groups - one for group2 and one for group4.
+    # You can get gene_11 with
+    (gene_name <- pull(results[i, 2]))
 
-g2  <- df_khan %>% filter(cancer_group=="2")
-g4  <- df_khan %>% filter(cancer_group=="4")
+    cg2 <- df_khan %>%
+        filter(cancer_group == "2") %>%
+        pull(gene_name)
 
+
+
+    cg4 <- df_khan %>%
+        filter(cancer_group == "4") %>%
+        pull(gene_name)
+
+    results[i, 3] <- t.test(x = cg2, y = cg4)$p.value
+    results[i, 4] <- wilcox.test(x = cg2, y = cg4, exact = F)$p.value
+
+    if (i %% 100 == 0) {
+        cat(".")
+    }
+}
+endtime <- Sys.time()
+
+endtime - starttime
+head(results)
+```
+
+```{r}
+write_rds(results, r"(U18\Q8.rds)")
 ```
 
 
@@ -436,10 +628,22 @@ g4  <- df_khan %>% filter(cancer_group=="4")
 
 # >Q9. How many genes are significant with BOTH tests?
 
+```{r}
+results %>% count(pval_ttest < 0.05 & pval_wilcox < 0.05)
+```
+
+  `pval_ttest < 0.05 & .$pval_wilcox < 0.05`     n
+  <lgl>                                      <int>
+1 FALSE                                       1799
+2 TRUE                                         509
 
 ---
 
 # >Q10. Are the p values correlated? (plot them)
+
+```{r}
+"øvelse til læseren, vi skal jo også have noget at lave til TØ"
+```
 
 
 ---
