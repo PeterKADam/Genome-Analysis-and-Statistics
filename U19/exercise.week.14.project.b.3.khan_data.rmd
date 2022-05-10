@@ -1,0 +1,530 @@
+---
+title: "Project B (3)"
+author: "Palle Villesen"
+output: 
+  html_document:
+    code_folding: show
+    theme: cosmo
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Goals for this week 
+
+* Check/read exercise.week.14.project.B.3.compile_all_test_results.rmd
+
+* Simple questions (tidyverse data wrangling)
+
+* Use Bonferroni and FDR correction on all 3 kinds of p values
+
+* Create Vulcano plots of all genes
+
+* Compare the results from the 3 types of test
+
+* Make power simulations for a dataset of similar size. 
+
+# A refresher about the Khan data
+
+The data consists of a number of tissue samples corresponding to four distinct types of small round blue cell tumors.
+
+For each tissue sample, 2308 gene expression measurements are available. 
+
+This data were originally reported in: Khan J, Wei J, Ringner M, Saal L, Ladanyi M, Westermann F, Berthold F, Schwab M, Antonescu C, Peterson C, and Meltzer P. Classification and diagnostic prediction of cancers using gene expression profiling and artificial neural networks. Nature Medicine, v.7, pp.673-679, 2001. 
+
+Here we will consider the subset of the `Khan` dataset where we focus on differences in gene expression between two cancer sub-types: 
+
++ Rhabdomyosarcoma aka group `2` 
+
++ Burkitt’s lymphoma aka group `4`
+
+```{r}
+
+library(tidyverse)
+library(knitr) # required for nice table output
+library(cowplot)
+library(ggsci)
+
+options(digits = 5) # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 5) # number of digits printed by tibbles default.
+
+set.seed(42) # to reproduce the example
+
+text_base_size <- 12 # in pt
+fig.witdh <- 180 # in mm
+fig.height <- 125 # in mm
+
+# Set all text in plots to same size
+theme_set(theme_cowplot(font_size = text_base_size, rel_small = 1, rel_tiny = 1, rel_large = 1))
+
+# Setting output sizes for plots
+knitr::opts_chunk$set(fig.width = fig.witdh / 25.4)
+knitr::opts_chunk$set(fig.height = fig.height / 25.4)
+knitr::opts_chunk$set(dpi = 108) # You need to find your minotors dpi yourself.
+
+# Setting text size inside plots (geom_text, geom_label etc.)
+ggplot_text_size <- text_base_size / ggplot2::.pt
+# Now use: geom_text(..., size = ggplot_text_size)
+
+options(ggplot2.continuous.fill = scale_fill_viridis_c)
+options(ggplot2.discrete.fill = list(ggsci::pal_locuszoom()(7)))
+options(ggplot2.continuous.colour = scale_colour_viridis_c)
+options(ggplot2.discrete.colour = list(ggsci::pal_locuszoom()(7)))
+```
+
+# Loading test results & Khan data
+
+```{r}
+
+FILEPATHRES <- r"(U19\all_test_results.rds)"
+
+
+df_khan <- read_rds(r"(U19\khan_2vs4.tibble2.rds)")
+results <- read_rds(FILEPATHRES)
+```
+
+# Exercise part one - simple questions (thanks)
+
+## >Q1. How many genes are significant at the 0.05 level in the ttest?
+
+```{r}
+results %>% count(pval_ttest < 0.05)
+```
+---
+
+## >Q2. How many genes are significant at the 0.05 level in the permutation test?
+
+```{r}
+results %>% count(pval_perm < 0.05)
+```
+
+---
+
+## >Q3. What is the minimum, median, mean and maximum p value from the permutation test for the first 100 genes (gene_1.. gene_100)?
+
+```{r}
+
+results %>%
+    slice(1:100) %>%
+    summarise(min = min(pval_perm), med = median(pval_perm), mean = mean(pval_perm), max = max(pval_perm))
+```
+
+# A tibble: 1 x 4
+           min     med    mean     max
+         <dbl>   <dbl>   <dbl>   <dbl>
+1 0.0000010000 0.27046 0.33689 0.97605
+
+Hint: check the slice() function.
+
+```{r}
+
+tibble(x = 1:1000) %>% slice(25:35)
+```
+
+
+---
+
+# Part 2 - p value adjustment
+
+## >Q4. Add columns for all test results with both Bonferroni and FDR corrected p values. 
+
+
+```{r}
+results <- results %>% mutate(
+    pval_ttest_b = p.adjust(p = pval_ttest, method = "bonferroni"),
+    pval_ttest_fdr = p.adjust(p = pval_ttest, method = "fdr"),
+    pval_wilcox_b = p.adjust(p = pval_wilcox, method = "bonferroni"),
+    pval_wilcox_fdr = p.adjust(p = pval_wilcox, method = "fdr"),
+    pval_perm_b = p.adjust(p = pval_perm, method = "bonferroni"),
+    pval_perm_fdr = p.adjust(p = pval_perm, method = "fdr")
+)
+
+head(results)
+```
+
+Call them "pval_ttest_b", "pval_ttest_fdr" and so on. 
+
+
+---
+
+## >Q5. Make Vulcano plots for all the results from the wilcox test. (raw p values, Bonferroni and FDR values)
+
+A Vulcano plot is a plot with fold change on X and -log10 p value on the Y axis.
+
+```{r}
+p1 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox, base = 10))) +
+    geom_point()
+p2 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_b, base = 10))) +
+    geom_point()
+p3 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_fdr, base = 10))) +
+    geom_point()
+
+results %>% plot_grid(p1, p2, p3, nrow = 1, ncol = 4)
+```
+
+---
+
+
+# Heatmaps
+
+```{r}
+
+library(pheatmap)
+
+x <- results %>% filter(pval_ttest < 0.05)
+
+mat <- df_khan %>%
+    select(any_of(x$gene_name)) %>%
+    as.data.frame()
+
+rownames(mat) <- 1:nrow(df_khan)
+
+annotation_row <- df_khan %>%
+    select(cancer_group) %>%
+    as.data.frame()
+
+rownames(annotation_row) <- 1:nrow(df_khan)
+
+pheatmap(mat, annotation_row = annotation_row)
+
+pheatmap(mat,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F
+)
+
+pheatmap(mat,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+
+pheatmap(mat,
+    cutree_rows = 3,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+
+pheatmap(mat,
+    cutree_rows = 3,
+    cutree_cols = 4,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+```
+
+## >Q6. Make heatmaps of all adjusted results. Which test and adjustment produces the nicest heatmap?
+
+You should use a cutoff of 0.05 for all adjusted results (Bonferroni and FDR).
+
+```{r}
+x <- results %>% filter(pval_ttest_b < 0.05)
+
+mat <- df_khan %>%
+    select(any_of(x$gene_name)) %>%
+    as.data.frame()
+
+rownames(mat) <- 1:nrow(df_khan)
+
+annotation_row <- df_khan %>%
+    select(cancer_group) %>%
+    as.data.frame()
+
+rownames(annotation_row) <- 1:nrow(df_khan)
+
+pheatmap(mat,
+    main = "pval_ttest_b",
+    cutree_rows = 3,
+    cutree_cols = 4,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+```
+
+```{r}
+x <- results %>% filter(pval_ttest_fdr < 0.05)
+
+mat <- df_khan %>%
+    select(any_of(x$gene_name)) %>%
+    as.data.frame()
+
+rownames(mat) <- 1:nrow(df_khan)
+
+annotation_row <- df_khan %>%
+    select(cancer_group) %>%
+    as.data.frame()
+
+rownames(annotation_row) <- 1:nrow(df_khan)
+
+pheatmap(mat,
+    main = "pval_ttest_fdr",
+    cutree_rows = 3,
+    cutree_cols = 4,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+```
+
+```{r}
+x <- results %>% filter(pval_wilcox_b < 0.05)
+
+mat <- df_khan %>%
+    select(any_of(x$gene_name)) %>%
+    as.data.frame()
+
+rownames(mat) <- 1:nrow(df_khan)
+
+annotation_row <- df_khan %>%
+    select(cancer_group) %>%
+    as.data.frame()
+
+rownames(annotation_row) <- 1:nrow(df_khan)
+
+pheatmap(mat,
+    main = "pval_wilcox_b",
+    cutree_rows = 3,
+    cutree_cols = 4,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+```
+
+```{r}
+x <- results %>% filter(pval_wilcox_fdr < 0.05)
+
+mat <- df_khan %>%
+    select(any_of(x$gene_name)) %>%
+    as.data.frame()
+
+rownames(mat) <- 1:nrow(df_khan)
+
+annotation_row <- df_khan %>%
+    select(cancer_group) %>%
+    as.data.frame()
+
+rownames(annotation_row) <- 1:nrow(df_khan)
+
+pheatmap(mat,
+    main = "pval_wilcox_fdr",
+    cutree_rows = 3,
+    cutree_cols = 4,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+```
+```{r}
+x <- results %>% filter(pval_perm_b < 0.05)
+
+mat <- df_khan %>%
+    select(any_of(x$gene_name)) %>%
+    as.data.frame()
+
+rownames(mat) <- 1:nrow(df_khan)
+
+annotation_row <- df_khan %>%
+    select(cancer_group) %>%
+    as.data.frame()
+
+rownames(annotation_row) <- 1:nrow(df_khan)
+
+pheatmap(mat,
+    main = "pval_perm_b",
+    cutree_rows = 3,
+    cutree_cols = 4,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+```
+
+```{r}
+x <- results %>% filter(pval_perm_fdr < 0.05)
+
+mat <- df_khan %>%
+    select(any_of(x$gene_name)) %>%
+    as.data.frame()
+
+rownames(mat) <- 1:nrow(df_khan)
+
+annotation_row <- df_khan %>%
+    select(cancer_group) %>%
+    as.data.frame()
+
+rownames(annotation_row) <- 1:nrow(df_khan)
+
+pheatmap(mat,
+    main = "pval_perm_fdr",
+    cutree_rows = 3,
+    cutree_cols = 4,
+    annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+    clustering_method = "ward.D2"
+)
+```
+#
+```{r}
+
+# for (i in 1:1) {
+#     y <- c("pval_ttest_b")
+
+#     x <- filter(results, resultsy[i] < 0.05)
+
+#     mat <- df_khan %>%
+#         select(any_of(x$gene_name)) %>%
+#         as.data.frame()
+
+#     rownames(mat) <- 1:nrow(df_khan)
+
+#     annotation_row <- df_khan %>%
+#         select(cancer_group) %>%
+#         as.data.frame()
+
+#     rownames(annotation_row) <- 1:nrow(df_khan)
+
+#     pheatmap(mat,
+#         main = y[i],
+#         cutree_rows = 3,
+#         cutree_cols = 4,
+#         annotation_row = annotation_row, show_rownames = F, show_colnames = F,
+#         clustering_method = "ward.D2"
+#     )
+# }
+```
+
+---
+
+# Power analysis
+
+Now, we want to calculate and compare power of the Two sample t test, Welch t.test() and the wilcox.test(). 
+
+So your job:
+
+1. Simulate 1000 datasets with random sampling under the ALTERNATIVE hypothesis
+2. Run tests on each dataset
+3. Count the number of false negatives
+4. Calculate the power
+
+You should do this for three alternative scenarios.
+
+You are only looking at an effect of 5% difference in means for all scenarios.
+
+## 1. The groups have the same variance.
+
+You should use the following to simulate:
+
+```{r}
+
+
+set.seed(1)
+
+
+
+p <- rep(NA, 1000)
+p2 <- rep(NA, 1000)
+p3 <- rep(NA, 1000)
+
+
+for (i in 1:length(p)) {
+    g1 <- rnorm(n = 25, mean = 100, sd = 15)
+    g2 <- rnorm(n = 29, mean = 105, sd = 15)
+
+    p[i] <- t.test(g1, g2, var.equal = T)$p.value
+    p2[i] <- t.test(g1, g2)$p.value
+    p3[i] <- wilcox.test(g1, g2)$p.value
+}
+cat("same variance t-test power: ", ((sum(p < 0.05) / length(p))), "\n")
+cat("same variance welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n")
+cat("same variance wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n")
+```
+
+## 2. The groups have different variance.
+
+You should use the following to simulate:
+
+```{r}
+
+
+
+set.seed(1)
+
+
+
+p <- rep(NA, 1000)
+p2 <- rep(NA, 1000)
+p3 <- rep(NA, 1000)
+
+
+for (i in 1:length(p)) {
+    g1 <- rnorm(n = 25, mean = 100, sd = 5)
+    g2 <- rnorm(n = 29, mean = 105, sd = 25)
+
+    p[i] <- t.test(g1, g2, var.equal = T)$p.value
+    p2[i] <- t.test(g1, g2)$p.value
+    p3[i] <- wilcox.test(g1, g2)$p.value
+}
+cat("different variance t-test power: ", ((sum(p < 0.05) / length(p))), "\n")
+cat("different variance welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n")
+cat("different variance wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n")
+```
+
+## 3. The groups are not normal.
+
+You should use the following to simulate:
+
+```{r}
+
+set.seed(1)
+
+
+
+p <- rep(NA, 1000)
+p2 <- rep(NA, 1000)
+p3 <- rep(NA, 1000)
+
+
+for (i in 1:length(p)) {
+    g1 <- runif(n = 25, min = 50, max = 150)
+    g2 <- 5 + runif(n = 29, min = 50, max = 150)
+
+    p[i] <- t.test(g1, g2, var.equal = T)$p.value
+    p2[i] <- t.test(g1, g2)$p.value
+    p3[i] <- wilcox.test(g1, g2)$p.value
+}
+cat("not normal t-test power: ", ((sum(p < 0.05) / length(p))), "\n")
+cat("not normal welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n")
+cat("not normal wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n")
+```
+
+## >Q7. Scenario 1. What is the power for each of the tests?
+same variance t-test power:  0.238
+same variance welch t-test power:  0.234
+same variance wilcox test power:  0.215
+---
+
+## >Q8. Scenario 2. What is the power for each of the tests?
+
+different variance welch t-test power:  0.185
+different variance wilcox test power:  0.195
+
+---
+
+## >Q9. Scenario 3. What is the power for each of the tests?
+not normal t-test power:  0.115
+not normal welch t-test power:  0.112
+not normal wilcox test power:  0.107
+---
+
+# BONUS: Power enough ?
+
+Are you happy with the power? Why? Why not?
+
+>#idk what is power? do we 1-power ? who knows? i dont!
+Knowledge is power, and I know very little.
+
+Assume scenario 1 is what we will see in our experiment. 
+Don't make assumptions.
+
+## >Q10. How large a samplesize (both groups will have same size) do I need to get a power of ~80%?
+
+> din mor er nok til begge grupper.
+
+---
+
+
+
+
