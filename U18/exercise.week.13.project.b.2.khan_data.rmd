@@ -406,9 +406,11 @@ observed <- abs(x$statistic)
 t <- rep(NA, 1000)
 for (i in 1:length(t)) {
     df_khan_2 <- df_khan_2 %>% mutate(perm_group = sample(x = cancer_group))
+
     pseudo2 <- df_khan_2 %>%
         filter(perm_group == "2") %>%
         pull(gene_11)
+
     pseudo4 <- df_khan_2 %>%
         filter(perm_group == "4") %>%
         pull(gene_11)
@@ -590,26 +592,23 @@ results <- tibble(
 ) # the p value from wilcox.test
 starttime <- Sys.time()
 
+cg2 <- df_khan %>%
+    filter(cancer_group == "2")
+cg4 <- df_khan %>%
+    filter(cancer_group == "4")
 for (i in 1:nrow(results)) {
 
     # You can get gene_11 with
-    (gene_name <- pull(results[i, 2]))
+    gene_name <- pull(results[i, 2])
 
-    cg2 <- df_khan %>%
-        filter(cancer_group == "2") %>%
-        pull(gene_name)
+    cg2gene <- cg2 %>% pull(gene_name)
+    cg4gene <- cg4 %>% pull(gene_name)
 
-
-
-    cg4 <- df_khan %>%
-        filter(cancer_group == "4") %>%
-        pull(gene_name)
-
-    results[i, 3] <- t.test(x = cg2, y = cg4)$p.value
-    results[i, 4] <- wilcox.test(x = cg2, y = cg4, exact = F)$p.value
+    results[i, 3] <- t.test(x = cg2gene, y = cg4gene)$p.value
+    results[i, 4] <- wilcox.test(x = cg2gene, y = cg4gene, exact = F)$p.value
 
     if (i %% 100 == 0) {
-        cat(".")
+        cat("gene: ", i, " / 2308 \n")
     }
 }
 endtime <- Sys.time()
@@ -642,7 +641,15 @@ results %>% count(pval_ttest < 0.05 & pval_wilcox < 0.05)
 # >Q10. Are the p values correlated? (plot them)
 
 ```{r}
-"øvelse til læseren, vi skal jo også have noget at lave til TØ"
+
+results %>%
+    mutate(log_pval_ttest = -log(pval_ttest, base = 10), log_pval_wilcox = -log(pval_wilcox, base = 10)) %>%
+    ggplot(aes(x = log_pval_ttest, y = log_pval_wilcox, color = log_pval_ttest)) +
+    scale_color_gradientn(colours = rainbow(100)) +
+    geom_point() +
+    xlim(0, 20) +
+    ylim(0, 20) +
+    theme(legend.position = "none")
 ```
 
 
