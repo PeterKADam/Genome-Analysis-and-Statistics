@@ -596,12 +596,12 @@ cg2 <- df_khan %>%
     filter(cancer_group == "2")
 cg4 <- df_khan %>%
     filter(cancer_group == "4")
-	
+
 for (i in 1:nrow(results)) {
 
     # You can get gene_11 with
     gene_name <- pull(results[i, 2])
-
+	
     cg2gene <- cg2 %>% pull(gene_name)
     cg4gene <- cg4 %>% pull(gene_name)
 
