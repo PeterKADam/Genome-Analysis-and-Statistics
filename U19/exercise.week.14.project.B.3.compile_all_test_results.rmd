@@ -1,0 +1,318 @@
+---
+title: "Project B (3)"
+author: "Palle Villesen"
+output: 
+  html_document:
+    code_folding: show
+    theme: cosmo
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Special code
+
+The goal of this code is to run all tests needed for week 3.
+
+We do the following: 
+
+ * shapiro test all genes
+ * t test all genes
+ * wilcox test all genes
+ * permutation test all genes
+
+# Init
+
+```{r}
+
+library(tidyverse)
+library(knitr) # required for nice table output
+library(ggthemes) # required for nice colors
+library(dqrng)
+
+options(digits = 3) # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 3) # number of digits printed by tibbles default.
+
+set.seed(42) # to reproduce the example
+theme_set(theme_minimal(base_size = 18)) # to get homogeneous figs
+FILEPATHRES = r"(U19\all_test_results.rds)"
+FILEPATHLOG = r"(U19\log.txt)"
+
+df_khan <- read_rds(r"(U19\khan_2vs4.tibble2.rds)")
+```
+
+# Creating our output tibble
+
+```{r}
+
+results <- tibble(
+    column = 2:ncol(df_khan),
+    gene_name = names(df_khan)[column],
+    shapiro2 = NA,
+    shapiro4 = NA,
+    log_fc = NA, # log2(fold_change)
+    pval_ttest = NA, # for the p value from the t.test
+    pval_wilcox = NA, # for the p value from the wilcox.test
+    pval_perm = NA # for the p value from the permutation test
+)
+
+write_rds(x = results, file = FILEPATHRES)
+```
+
+# Shapiro test
+
+```{r}
+
+g2 <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    select(starts_with("gene"))
+
+starttime <- Sys.time()
+
+for (i in 1:nrow(results)) {
+    gene_name <- results$gene_name[i]
+    gene_values <- g2 %>% pull(gene_name)
+    x <- shapiro.test(gene_values)
+    results$shapiro2[i] <- x$p.value
+}
+
+endtime <- Sys.time()
+
+endtime - starttime
+
+
+results
+
+g4 <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    select(starts_with("gene"))
+
+starttime <- Sys.time()
+
+for (i in 1:nrow(results)) {
+    gene_name <- results$gene_name[i]
+    gene_values <- g4 %>% pull(gene_name)
+    x <- shapiro.test(gene_values)
+    results$shapiro4[i] <- x$p.value
+}
+
+endtime <- Sys.time()
+
+endtime - starttime
+
+results
+
+write_rds(x = results, file = FILEPATHRES)
+```
+
+# Fold change
+
+The data are already log2() transformed so log2(g2/g4) is the same as:
+
+log2(g2) - log2(g4).
+
+```{r}
+
+g2 <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    select(starts_with("gene"))
+g4 <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    select(starts_with("gene"))
+
+for (i in 1:nrow(results)) {
+    gene_name <- results$gene_name[i]
+    group2_values <- g2 %>% pull(gene_name)
+    group4_values <- g4 %>% pull(gene_name)
+    results$log_fc[i] <- mean(group2_values) - mean(group4_values)
+}
+
+results
+```
+
+# T test
+
+```{r}
+
+g2 <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    select(starts_with("gene"))
+g4 <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    select(starts_with("gene"))
+
+starttime <- Sys.time()
+
+for (i in 1:nrow(results)) {
+    gene_name <- results$gene_name[i]
+    group2_values <- g2 %>% pull(gene_name)
+    group4_values <- g4 %>% pull(gene_name)
+    x <- t.test(x = group2_values, y = group4_values)
+    results$pval_ttest[i] <- x$p.value
+}
+
+endtime <- Sys.time()
+
+endtime - starttime
+
+results
+```
+
+# Wilcox test
+
+```{r}
+
+g2 <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    select(starts_with("gene"))
+g4 <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    select(starts_with("gene"))
+
+starttime <- Sys.time()
+
+for (i in 1:nrow(results)) {
+    gene_name <- results$gene_name[i]
+    group2_values <- g2 %>% pull(gene_name)
+    group4_values <- g4 %>% pull(gene_name)
+    x <- wilcox.test(x = group2_values, y = group4_values)
+    results$pval_wilcox[i] <- x$p.value
+}
+
+endtime <- Sys.time()
+
+endtime - starttime
+
+results
+
+write_rds(x = results, file = FILEPATHRES)
+```
+
+# Permutation test
+
+## About the permutation test
+
+The permutation test needs up to 1.000.000 permutations for each gene in order to get significant results after Bonferroni correction.
+
+The code we used in week 2 could do 1 million permutations in ~10 seconds but it would take ~8 hours to finish. Your computer may be faster or slower - so your estimate may be different.
+
+BUT both my and your computer is too slow for 2300*1.000.000 = 2.3 billion permutations.
+
+So I have optimized it further.
+
+## High speed adaptive permutation test of all genes
+
+### Trick 1 - faster sample() function
+
+Somebody made a sample() function that is faster.
+
+I yes - I found it in stack overflow.
+
+So we use that. It get's us down to ~8 seconds for 1 million permutations.
+
+Still not fast enough.
+
+### Trick 2 - stop permuting if the pvalue is not even close to significant. 
+
+We keep an eye of extreme permutations and stop when we have "enough" extreme permutations to be quite certain of our p value estimate.
+
+We don't care if we have 201/1000 (p ~ 0.201) or 201.345/1.000.000 (p ~0.201345) - we just need the 0.2 and could stop after 1000 permutations.
+
+We DO care if we have 0/1000 after 1000. And only 1/100.000 - then we need more permutations.
+
+So my little trick is to 
+
+1. run 500 permutations
+2. check if we have >20 extreme permutations
+3. If not - continue.
+4. If >20 stop and continue with next gene.
+
+It saves a LOT of time.
+
+The code below will permute up to 1.000.000 times pr gene (at least 500).
+
+# Palles super optimized high speed permutation test.
+
+```{r}
+
+set.seed(0)
+
+g2 <- df_khan %>%
+    filter(cancer_group == "2") %>%
+    select(starts_with("gene"))
+g4 <- df_khan %>%
+    filter(cancer_group == "4") %>%
+    select(starts_with("gene"))
+
+n1 <- nrow(g2)
+n2 <- nrow(g4)
+
+starttime <- Sys.time()
+
+permute_ts <- rep(NA, 500)
+
+for (j in 1:nrow(results)) { # for each gene
+    gene_name <- results$gene_name[j]
+    group2_values <- g2 %>% pull(gene_name)
+    group4_values <- g4 %>% pull(gene_name)
+    observed <- abs(mean(group2_values) - mean(group4_values)) # Observed difference
+    n_extreme <- 0
+    values <- c(group2_values, group4_values)
+    nvalues <- length(values)
+    for (i1 in 1:2000) { # We do at most 5000 chunks
+        for (i2 in 1:500) { # each chunk is 200 permutations
+            # permuted_values <- sample(values)                          # Default sample() (12 sec)
+            permuted_values <- values[dqrng::dqsample.int(n = nvalues)] # high speed sample (8 sec)
+            permute_ts[i2] <- abs(mean(permuted_values[1:n1]) - mean(permuted_values[(1 + n1):(n1 + n2)]))
+        }
+        n_extreme <- n_extreme + sum(permute_ts >= observed)
+        # Check if we have >20 extreme permutations. If so break out of the for loop.
+        if (n_extreme > 20) {
+            break()
+        }
+    }
+    n_permutations <- i1 * 500
+    p_value <- (n_extreme + 1) / (n_permutations + 1)
+    results$pval_perm[j] <- p_value
+    cat(as.character(Sys.time()),
+        gene_name, "done.",
+        n_extreme, "extreme permutations found in", n_permutations, "permutations.",
+        "P value ~", p_value, "\n",
+        file = FILEPATHLOG, append = T
+    )
+}
+
+endtime <- Sys.time()
+
+endtime - starttime
+
+results
+```
+
+# Quick plot of distributions
+
+```{r}
+
+ggplot(results, aes(x = log10(shapiro2))) +
+    geom_histogram()
+
+ggplot(results, aes(x = log10(shapiro4))) +
+    geom_histogram()
+
+ggplot(results, aes(x = log10(pval_ttest))) +
+    geom_histogram()
+
+ggplot(results, aes(x = log10(pval_wilcox))) +
+    geom_histogram()
+
+ggplot(results, aes(x = log10(pval_perm))) +
+    geom_histogram()
+```
+
+# Save the results for the exercises.
+
+```{r}
+
+write_rds(x = results, file = FILEPATHRES)
+```
+
