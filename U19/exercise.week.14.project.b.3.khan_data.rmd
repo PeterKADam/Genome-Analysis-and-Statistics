@@ -159,7 +159,7 @@ p2 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_b, base = 10))) +
 p3 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_fdr, base = 10))) +
     geom_point()
 
-results %>% plot_grid(p1, p2, p3, nrow = 1, ncol = 4)
+plot_grid(p1, p2, p3, nrow = 1, ncol = 3)
 ```
 
 ---
@@ -427,9 +427,12 @@ for (i in 1:length(p)) {
     p2[i] <- t.test(g1, g2)$p.value
     p3[i] <- wilcox.test(g1, g2)$p.value
 }
-cat("same variance t-test power: ", ((sum(p < 0.05) / length(p))), "\n")
-cat("same variance welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n")
-cat("same variance wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n")
+
+cat(
+    "same variance t-test power: ", ((sum(p < 0.05) / length(p))), "\n",
+    "same variance welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n",
+    "same variance wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n"
+)
 ```
 
 ## 2. The groups have different variance.
@@ -457,9 +460,11 @@ for (i in 1:length(p)) {
     p2[i] <- t.test(g1, g2)$p.value
     p3[i] <- wilcox.test(g1, g2)$p.value
 }
-cat("different variance t-test power: ", ((sum(p < 0.05) / length(p))), "\n")
-cat("different variance welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n")
-cat("different variance wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n")
+cat(
+    "different variance t-test power: ", ((sum(p < 0.05) / length(p))), "\n",
+    "different variance welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n",
+    "different variance wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n"
+)
 ```
 
 ## 3. The groups are not normal.
@@ -485,9 +490,12 @@ for (i in 1:length(p)) {
     p2[i] <- t.test(g1, g2)$p.value
     p3[i] <- wilcox.test(g1, g2)$p.value
 }
-cat("not normal t-test power: ", ((sum(p < 0.05) / length(p))), "\n")
-cat("not normal welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n")
-cat("not normal wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n")
+
+cat(
+    "not normal t-test power: ", ((sum(p < 0.05) / length(p))), "\n",
+    "not normal welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n", ,
+    "not normal wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n"
+)
 ```
 
 ## >Q7. Scenario 1. What is the power for each of the tests?
@@ -497,7 +505,7 @@ same variance wilcox test power:  0.215
 ---
 
 ## >Q8. Scenario 2. What is the power for each of the tests?
-
+different variance t-test power:  0.159
 different variance welch t-test power:  0.185
 different variance wilcox test power:  0.195
 
