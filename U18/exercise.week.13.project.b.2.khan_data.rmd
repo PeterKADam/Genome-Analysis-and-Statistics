@@ -596,6 +596,7 @@ cg2 <- df_khan %>%
     filter(cancer_group == "2")
 cg4 <- df_khan %>%
     filter(cancer_group == "4")
+	
 for (i in 1:nrow(results)) {
 
     # You can get gene_11 with
