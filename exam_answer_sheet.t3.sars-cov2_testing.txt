@@ -1,0 +1,8 @@
+# Sars-Cov2 testing
+answer$t3.1 = NA # (1 points)
+answer$t3.2 = NA # (1 points)
+answer$t3.3 = NA # (2 points)
+answer$t3.4 = NA # (3 points)
+answer$t3.5 = NA # (1 points)
+answer$t3.6 = NA # (3 points)
+answer$t3.7 = NA # (3 points)

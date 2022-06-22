@@ -16,27 +16,73 @@ On two different nights I recorded the following data (night A and B)
 
 library(tidyverse)
 
-df <- read_tsv(file = "t4.dataset.bad_data_permutation.tsv")
+df <- read_tsv(file = r"(exam-prep\2020.ordinary_exam.june\t4.dataset.bad_data_permutation.tsv)")
 
 ```
 
 >Q4.1 How many datapoints did I collect in total?
 
+```{r}
+nrow(df) * 2
+```
+590
 >Q4.2 How many datapoints did I collect in group A?
 
+```{r}
+df %>%
+    filter(group == "A") %>%
+    nrow()
+```
+326
 >Q4.3 What is the mean x value in group A?
 
+```{r}
+df %>%
+    filter(group == "A") %>%
+    select(x) %>%
+    colMeans()
+```
+ x-mean
+60.42665
 >Q4.4 What is the absolute difference in means of x in the two groups?
 
+```{r}
+meana <- df %>%
+    filter(group == "A") %>%
+    pull(x) %>%
+    mean()
+meanb <- df %>%
+    filter(group == "B") %>%
+    pull(x) %>%
+    mean()
+
+abs(meana - meanb)
+```
+5.791842
 Hint: abs(-3.5) = 3.5
 
 
 Make a scatterplot of x and y for the two groups separatedly.
 
+
 >Q4.5 What number is hidden in group A?
 
+```{r}
+df %>%
+    filter(group == "A") %>%
+    ggplot() +
+    geom_point(aes(x, y))
+```
+42
 >Q4.6 What number is hidden in group B?
 
+```{r}
+df %>%
+    filter(group == "B") %>%
+    ggplot() +
+    geom_point(aes(x, y))
+```
+33
 
 After looking at the data we can see that the x values are NOT normally distrited.
 
@@ -48,15 +94,22 @@ If we try and do a simple t.test (assuming equal variance in the two groups) we 
 
 ```{r}
 
-groupA <- df %>% filter(group=="A")
-groupB <- df %>% filter(group=="B")
+groupA <- df %>% filter(group == "A")
+groupB <- df %>% filter(group == "B")
 
-t.test(x = groupA$x,y = groupB$x, var.equal = T)
-
+t.test(x = groupA$x, y = groupB$x, var.equal = T)
 ```
 
 >Q4.7 What is the p value we get from this bad test?
 
+```{r}
+
+groupA <- df %>% filter(group == "A")
+groupB <- df %>% filter(group == "B")
+
+t.test(x = groupA$x, y = groupB$x, var.equal = T)$p.value
+```
+0.02728052
 
 I really do not trust my test.
 
@@ -65,23 +118,40 @@ So I go ahead and make a permutation test using the following simple code (only 
 ```{r}
 
 set.seed(0)
-permuted   <- rep(NA, 100)
+permuted <- rep(NA, 100)
 for (i in 1:length(permuted)) {
-  xvalues <- sample(df$x)
-  g1 <- mean(xvalues[df$group=="A"])
-  g2 <- mean(xvalues[df$group=="B"])
-  permuted[i] <- abs(g1 - g2)
+    xvalues <- sample(df$x)
+    g1 <- mean(xvalues[df$group == "A"])
+    g2 <- mean(xvalues[df$group == "B"])
+    permuted[i] <- abs(g1 - g2)
 }
 
 permuted
-
 ```
 
 
 >Q4.8 How many of the 100 permutations were equal to or more extreme than the observed difference?
 
+```{r}
+obsmean <- 5.791842
 
+sum(permuted > obsmean)
+```
+1
 >Q4.9 What is the estimated p value based on 5000 permutations?
+
+```{r}
+set.seed(0)
+permuted <- rep(NA, 5000)
+for (i in 1:length(permuted)) {
+    xvalues <- sample(df$x)
+    g1 <- mean(xvalues[df$group == "A"])
+    g2 <- mean(xvalues[df$group == "B"])
+    permuted[i] <- abs(g1 - g2)
+}
+
+sum(permuted > obsmean) / 5000
+```
 
 
 

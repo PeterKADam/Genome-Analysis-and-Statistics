@@ -35,9 +35,7 @@ Source: https://www.medrxiv.org/content/10.1101/2020.04.14.20064618v1.full.pdf
 Title: Pooling-Based Efficient SARS-CoV-2 Testing (P-BEST): Efficient high throughput SARS-CoV-2 testing to detect asymptomatic carriers
 
 ```{r}
-
 library(tidyverse)
-
 ```
 
 Let's assume that after sample extraction and preparation, an individual that is carrier "injects" on average 50 viral RNA molecules into the PCR mix.
@@ -52,6 +50,14 @@ In that context, a false negative test is the unlucky event that zero molecules 
 
 >Q3.1 What is probability of a carrier testing negative when not pooled? (3 digits scientific)
 
+```{r}
+lambda <- 50
+(exp(1)^-lambda) * (lambda^0)
+
+poisson.test()
+dpois(x = 0, lambda = 50)
+```
+1.92875e-22
 Example of answer formating :
 
 ```{r}
@@ -80,6 +86,11 @@ Imagine now that we use a pool of 48 individuals. We assume perfect pooling and 
 
 >Q3.2 What is the probability for a negative result when testing a pool with 1 carrier mixed with 47 non carriers ?
 
+```{r}
+lambda <- 50 * (1 / 48)
+dpois(x = 0, lambda = lambda)
+```
+Pr= 0.3528661
 
 ## How to work around the false negative problem
 
@@ -91,11 +102,24 @@ So now we will miss this individual only if all three pools are false negatives.
 
 >Q3.3 What is the probability for a negative result in all 3 pools, each containing  1 carrier mixed with 47 other non carriers ?
 
+```{r}
+0.3528661^3
+```
 
 >Q3.4 What is the minimum of replicated pools to use if you want to ensure that the probability of detecting the single carrier is >99% ?
 
-Hint: It means the risk of all pools being negative is smaller than 1% (0.01).
+```{r}
+0.3528661^4
+0.3528661^5
+```
+r$> 0.3528661^4
+[1] 0.01550386
 
+r$> 0.3528661^5
+[1] 0.005470786
+
+
+Hint: It means the risk of all pools being negative is smaller than 1% (0.01).
 
 ## Estimating the  proportion of infected individuals in the populaton from pools data.
 
@@ -108,10 +132,17 @@ Each pool contained 48 individuals sampled randomly.
 No replicates are used.
 
 >Q3.5 How many individuals were tested in total?
-
+```{r}
+(200 + 120) * 48
+```
+15360
 
 >Q3.6 What is the estimated overall porportion of carriers in Denmark ? 
 
+```{r}
+3 / 15360
+```
+0.0001953125
 We assume that the overall proportion of carriers in Denmark is < 0.01 (i.e. less than 1%).
 
 Hint: So we assume we see 0 or 1 carrier in each pool (though this will lead to a slight underestimation and should not be done in real life).
@@ -120,9 +151,16 @@ Hint: So we assume we see 0 or 1 carrier in each pool (though this will lead to 
 
 >Q3.7 What is the probability that more than 1 infected person is found in the same pool
 
+```{r}
+rate <- 0.0001953125
+n <- 48
+
+pbinom(q=1, size=n, prob=rate,lower.tail = F)
+```
+Pr=4.27729e-05
 Assume pools are obtained via randomly sampling people.
 
-Assume that the proportion in the whole population is the one you calculated in Q3.5 above 
+Assume that the proportion in the whole population is the one you calculated in Q3.6 above 
 
 
 

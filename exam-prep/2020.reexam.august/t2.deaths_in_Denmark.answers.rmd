@@ -30,8 +30,7 @@ We have chosen to focus on 3 different causes of death only:
 
 library(tidyverse)
 
-df <- read_tsv(file = "t2.deaths_in_Denmark_dataset.tsv")
-
+df <- read_tsv(file = r"(exam-prep\2020.reexam.august\t2.deaths_in_Denmark_dataset.tsv)")
 ```
 
 >Q2.1 How many deaths from these 3 causes were there in total in 1981 in this dataset?
@@ -43,15 +42,15 @@ df <- read_tsv(file = "t2.deaths_in_Denmark_dataset.tsv")
 answer <- tibble()
 
 df %>% count(year)
-x <- sum(df$year==1981)
+x <- sum(df$year == 1981)
 
-answer <- rbind(answer,tibble(
-  question    = "1", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1))
-
+answer <- rbind(answer, tibble(
+    question    = "1",
+    true_answer = x,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+))
 ```
 ---------!end suggested answer ------------------------
 
@@ -60,17 +59,17 @@ answer <- rbind(answer,tibble(
 ---------!begin suggested answer ------------------------
 ```{r}
 
-df %>% count(sex,year)
+df %>% count(sex, year)
 
-x <- sum(df$sex=="Men" & df$year==2018)
+x <- sum(df$sex == "Men" & df$year == 2018)
 
-answer <- rbind(answer,tibble(
-  question    = "2", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1))
-
+answer <- rbind(answer, tibble(
+    question    = "2",
+    true_answer = x,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+))
 ```
 ---------!end suggested answer ------------------------
 
@@ -81,20 +80,22 @@ Hint: Proportion is a number in the range [0;1]
 ---------!begin suggested answer ------------------------
 ```{r}
 
-df %>% filter(year==1981) %>% count(sex,year, cause)
+df %>%
+    filter(year == 1981) %>%
+    count(sex, year, cause)
 
-men <- sum(df$sex=="Men" & df$year==1981 & df$cause=="Motor vehicle accidents")
-women <- sum(df$sex=="Women" & df$year==1981 & df$cause=="Motor vehicle accidents")
+men <- sum(df$sex == "Men" & df$year == 1981 & df$cause == "Motor vehicle accidents")
+women <- sum(df$sex == "Women" & df$year == 1981 & df$cause == "Motor vehicle accidents")
 
-x <- men / (men+women)
+x <- men / (men + women)
 
-answer <- rbind(answer,tibble(
-  question    = "3", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01))
-
+answer <- rbind(answer, tibble(
+    question    = "3",
+    true_answer = x,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 ```
 ---------!end suggested answer ------------------------
 
@@ -106,19 +107,18 @@ Hint: We assume that the population has a sex ratio of 50:50, i.e. same number o
 
 ```{r}
 
-men <- sum(df$sex=="Men" & df$year==2018 & df$cause=="Motor vehicle accidents")
-women <- sum(df$sex=="Women" & df$year==2018 & df$cause=="Motor vehicle accidents")
+men <- sum(df$sex == "Men" & df$year == 2018 & df$cause == "Motor vehicle accidents")
+women <- sum(df$sex == "Women" & df$year == 2018 & df$cause == "Motor vehicle accidents")
 
-x <- mean(c(men,women))
+x <- mean(c(men, women))
 
 answer <- rbind(answer, tibble(
-  question    = "4", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = x/100)
-  )
-
+    question    = "4",
+    true_answer = x,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = x / 100
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -127,13 +127,12 @@ answer <- rbind(answer, tibble(
 
 ```{r}
 
-tmp <- df %>% 
-  filter(cause=="Mental disorders") %>% 
-  select(sex,year) %>%
-  table()
+tmp <- df %>%
+    filter(cause == "Mental disorders") %>%
+    select(sex, year) %>%
+    table()
 
 tmp
-
 ```
 
 >Q2.5 Test if sex and year are independent for Motor vehicle accidents. Report the p value.
@@ -145,23 +144,22 @@ This is a simple chi square test of independence.
 ```{r}
 unique(df$cause)
 
-tmp <- df %>% 
-  filter(cause=="Motor vehicle accidents") %>% 
-  select(sex,year) %>%
-  table()
+tmp <- df %>%
+    filter(cause == "Motor vehicle accidents") %>%
+    select(sex, year) %>%
+    table()
 
 result <- chisq.test(tmp, correct = F)
 
 x <- result$p.value
 
 answer <- rbind(answer, tibble(
-  question    = "5", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = x/10)
-  )
-
+    question    = "5",
+    true_answer = x,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = x / 10
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -180,13 +178,12 @@ Answer should be a number indicating one of the following statements:
 ```{r}
 
 answer <- rbind(answer, tibble(
-  question    = "6", 
-  true_answer = 1, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-  )
-
+    question    = "6",
+    true_answer = 1,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -199,23 +196,22 @@ This is a simple chi square test of independence.
 
 ```{r}
 
-tmp <- df %>% 
-  filter(year==1981) %>% 
-  select(cause,sex) %>%
-  table()
+tmp <- df %>%
+    filter(year == 1981) %>%
+    select(cause, sex) %>%
+    table()
 
 result <- chisq.test(tmp, correct = F)
 
 x <- result$p.value
 
 answer <- rbind(answer, tibble(
-  question    = "7", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = x/10)
-  )
-
+    question    = "7",
+    true_answer = x,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = x / 10
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -234,13 +230,12 @@ Answer should be a number indicating one of the following statements:
 ```{r}
 
 answer <- rbind(answer, tibble(
-  question    = "8", 
-  true_answer = 1, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-  )
-
+    question    = "8",
+    true_answer = 1,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -253,23 +248,22 @@ This is a simple chi square test of independence.
 
 ```{r}
 
-tmp <- df %>% 
-  filter(year==2018) %>% 
-  select(cause,sex) %>%
-  table()
+tmp <- df %>%
+    filter(year == 2018) %>%
+    select(cause, sex) %>%
+    table()
 
 result <- chisq.test(tmp, correct = F)
 
 x <- result$p.value
 
 answer <- rbind(answer, tibble(
-  question    = "9", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 1e-10)
-  )
-
+    question    = "9",
+    true_answer = x,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 1e-10
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -280,16 +274,15 @@ answer <- rbind(answer, tibble(
 
 ```{r}
 
-x <- sum(df$year==2018)
+x <- sum(df$year == 2018)
 
 answer <- rbind(answer, tibble(
-  question    = "10", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-  )
-
+    question    = "10",
+    true_answer = x,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -301,13 +294,12 @@ answer <- rbind(answer, tibble(
 ```{r}
 
 answer <- rbind(answer, tibble(
-  question    = "11", 
-  true_answer = 2, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-  )
-
+    question    = "11",
+    true_answer = 2,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -338,10 +330,10 @@ We get the chi square from the test
 
 ```{r}
 
-tmp <- df %>% 
-  filter(year==1981) %>% 
-  select(cause,sex) %>%
-  table()
+tmp <- df %>%
+    filter(year == 1981) %>%
+    select(cause, sex) %>%
+    table()
 
 result <- chisq.test(tmp, correct = F)
 
@@ -352,13 +344,12 @@ phi1981 <- sqrt(result$statistic / sum(tmp))
 x <- phi1981
 
 answer <- rbind(answer, tibble(
-  question    = "12", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = x/10)
-  )
-
+    question    = "12",
+    true_answer = x,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = x / 10
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -371,10 +362,10 @@ We get the chi square from the test
 
 ```{r}
 
-tmp <- df %>% 
-  filter(year==2018) %>% 
-  select(cause,sex) %>%
-  table()
+tmp <- df %>%
+    filter(year == 2018) %>%
+    select(cause, sex) %>%
+    table()
 
 result <- chisq.test(tmp, correct = F)
 
@@ -385,13 +376,12 @@ phi2018 <- sqrt(result$statistic / sum(tmp))
 x <- phi2018
 
 answer <- rbind(answer, tibble(
-  question    = "13", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = x/10)
-  )
-
+    question    = "13",
+    true_answer = x,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = x / 10
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -418,16 +408,15 @@ That would indicated the association is a lot stronger in 2018 than 1981 - so it
 phi2018
 phi1981
 
-phi2018/phi1981 
+phi2018 / phi1981
 
 answer <- rbind(answer, tibble(
-  question    = "14", 
-  true_answer = 3, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-  )
-
+    question    = "14",
+    true_answer = 3,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -438,31 +427,29 @@ answer <- rbind(answer, tibble(
 
 ```{r}
 
-topic             <- "t2"
+topic <- "t2"
 topic_description <- "# Deaths in Denmark"
-file_description  <- "deaths_in_denmark"
+file_description <- "deaths_in_denmark"
 
 answer
-
 ```
 
 ## Saving exam files
 
 ```{r}
 
-answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+answer$question <- paste(topic, ".", answer$question, sep = "") # Reformat column
 
 # Save answer sheet for students to fill out (including points)
-x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+x <- paste("answer$", answer$question, " = NA # (", answer$points, " points)", sep = "")
 
-answer_filename <-  paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+answer_filename <- paste("exam_answer_sheet.", topic, ".", file_description, ".txt", sep = "")
 write_lines(topic_description, path = answer_filename)
-write_lines(x, path =answer_filename, append = T)
+write_lines(x, path = answer_filename, append = T)
 
 # Save answer key for grading
-key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+key_filename <- paste("answer.key.", topic, ".", file_description, ".tsv", sep = "")
 write_tsv(x = answer, path = key_filename)
-
 ```
 
 ---------!end suggested answer ------------------------

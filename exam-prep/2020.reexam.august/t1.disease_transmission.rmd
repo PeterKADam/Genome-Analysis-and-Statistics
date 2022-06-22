@@ -23,13 +23,16 @@ Let's assume that in a study we find that 1200 occurences of close contact betwe
 
 >Q1.1 What is the estimated probability of being infected if you are in close contact with an infectious individual? 
 
+```{r}
+312 / 1200
+```
+pr=0.26
 Example of answer formating :
 
 ```{r}
 (probability <- 0.00000001234)
 (probability <- 1.234e-08)
-(probability <- 40/97)
-
+(probability <- 40 / 97)
 ```
 
 
@@ -47,20 +50,32 @@ Now we assume the following:
 
 p1 <- 0.25 # probability of infection pr. contact when not vaccinated
 p2 <- 0.10 # probability of infection pr. contact when vaccinated
-
 ```
 
 >Q1.2 What is probability of NOT becoming infected if you are in close contact with a single infectious individual and you are NOT vaccinated?
 
-
+```{r}
+1 - 0.25
+```
+1-0.25=0.75
 >Q1.3 What is probability of NOT becoming infected if you are in close contact with a single infectious individual and you ARE vaccinated?
-
-
+```{r}
+1 - 0.10
+```
+0.9
 >Q1.4 What is probability of becoming infected if you are in close contact with 5 infectious individuals and you are NOT vaccinated? 
 
-
+```{r}
+1 - (0.75^5)
+```
+0.7626953
 >Q1.5 What is probability of becoming infected if you are in close contact with 5 infectious individuals and you ARE vaccinated? 
 
+
+```{r}
+1 - (0.9^5)
+```
+0.40951
 
 ## Now we assume that YOU are infected.
 
@@ -72,12 +87,24 @@ The probilities of infecting another person when in close contact is still p1 an
 
 >Q1.6 What is probability that you infect 0 of the 20 people (none of them are vaccinated)?
 
-
+```{r}
+0.75^20
+```
+0.003171212
 >Q1.7 What is probability that you infect 5 or more of the 20 people (none of them are vaccinated)?
 
+```{r}
+1 - pbinom(q = 4, size = 20, prob = 0.25)
+pbinom(q = 4, size = 20, prob = 0.25, lower.tail = F)
+```
+0.5851585
 
 >Q1.8 What is probability that you infect 5 or more of the 20 people (ALL of them are vaccinated)?
 
+```{r}
+1 - pbinom(q = 4, size = 20, prob = 0.10)
+```
+0.0431745
 
 ## Are you a superspreader
 
@@ -95,11 +122,29 @@ Now, please test the null hypothesis that you are a "normal" infectious person. 
 
 >Q1.9 What is the p value if you infected 27 guests at a party with 76 unvaccinated guests in total.
 
+```{r}
+binom.test(x = 27, n = 75, p = 0.25)
+```
+p-value = 0.03265
+ Exact binomial test
+
+data:  27 and 75
+number of successes = 27, number of trials = 75, p-value = 0.03265
+alternative hypothesis: true probability of success is not equal to 0.25
+95 percent confidence interval:
+ 0.2523224 0.4791016
+sample estimates:
+probability of success
+                  0.36
 Hint: The 76 guest are you and 75 others.
 
 
 >Q1.10 What is the p value if you infected 7 guests at a party with 55 vaccinated guests in total.
 
+```{r}
+binom.test(x = 7, n = 54, p = 0.1)
+```
+p-value = 0.4916
 Hint: The 55 guest are you and 54 others. All the othes were vaccinated
 
 

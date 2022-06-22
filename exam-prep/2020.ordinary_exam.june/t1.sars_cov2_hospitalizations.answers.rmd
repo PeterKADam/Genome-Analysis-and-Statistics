@@ -23,7 +23,7 @@ We are looking at different age groups and we have the following columns:
 
 library(tidyverse)
 
-df <- read_tsv(file = "t1.dataset.corona_data.20200503.tsv")
+df <- read_tsv(file = r"(exam-prep\2020.ordinary_exam.june\t1.dataset.corona_data.20200503.tsv)")
 
 ```
 

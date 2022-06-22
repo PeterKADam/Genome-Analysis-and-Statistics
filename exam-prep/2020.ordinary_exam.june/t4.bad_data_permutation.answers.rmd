@@ -16,8 +16,7 @@ On two different nights I recorded the following data (night A and B)
 
 library(tidyverse)
 
-df <- read_tsv(file = "t4.dataset.bad_data_permutation.tsv")
-
+df <- read_tsv(file = r"(exam-prep\2020.ordinary_exam.june\t4.dataset.bad_data_permutation.tsv)")
 ```
 
 >Q4.1 How many datapoints did I collect in total?
@@ -43,42 +42,45 @@ Also, Q4.3 is reported with only 1 digit on screen (tidyverse problem/feature). 
 answer <- tibble()
 result <- nrow(df)
 
-answer <- rbind(answer,tibble(
-  question    = "1", 
-  true_answer = nrow(df), 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1))
+answer <- rbind(answer, tibble(
+    question    = "1",
+    true_answer = nrow(df),
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+))
 
-answer <- rbind(answer,tibble(
-  question    = "2", 
-  true_answer = sum(df$group=="A"),
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1))
+answer <- rbind(answer, tibble(
+    question    = "2",
+    true_answer = sum(df$group == "A"),
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+))
 
-df2 <- df %>% filter(group=="A")
+df2 <- df %>% filter(group == "A")
 
-answer <- rbind(answer,tibble(
-  question    = "3", 
-  true_answer = mean(df2$x), 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1))
+answer <- rbind(answer, tibble(
+    question    = "3",
+    true_answer = mean(df2$x),
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+))
 
-g1 <- df %>% filter(group=="A")
-g2 <- df %>% filter(group=="B")
-result <- abs(mean(g1$x)-mean(g2$x))
+g1 <- df %>% filter(group == "A")
+g2 <- df %>% filter(group == "B")
+result <- abs(mean(g1$x) - mean(g2$x))
 
-answer <- rbind(answer,tibble(
-  question    = "4", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01))
+answer <- rbind(answer, tibble(
+    question    = "4",
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 
 answer
-
 ```
 ---------!end suggested answer ------------------------
 
@@ -92,27 +94,26 @@ Make a scatterplot of x and y for the two groups separatedly.
 
 ```{r}
 
-ggplot(df, aes(x=x, y=y)) + 
-  geom_point() +
-  facet_wrap(~group, ncol=1) +
-  NULL
-  
-answer <- rbind(answer, tibble(
-  question    = "5", 
-  true_answer = 42, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01)
-  )
+ggplot(df, aes(x = x, y = y)) +
+    geom_point() +
+    facet_wrap(~group, ncol = 1) +
+    NULL
 
 answer <- rbind(answer, tibble(
-  question    = "6", 
-  true_answer = 33, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01)
-  )
+    question    = "5",
+    true_answer = 42,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 
+answer <- rbind(answer, tibble(
+    question    = "6",
+    true_answer = 33,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -127,11 +128,10 @@ If we try and do a simple t.test (assuming equal variance in the two groups) we 
 
 ```{r}
 
-groupA <- df %>% filter(group=="A")
-groupB <- df %>% filter(group=="B")
+groupA <- df %>% filter(group == "A")
+groupB <- df %>% filter(group == "B")
 
-t.test(x = groupA$x,y = groupB$x, var.equal = T)
-
+t.test(x = groupA$x, y = groupB$x, var.equal = T)
 ```
 
 >Q4.7 What is the p value we get from this bad test?
@@ -142,18 +142,17 @@ This was a simple question. Just to see if you read the output correctly.
 
 ```{r}
 
-groupA <- df %>% filter(group=="A")
-groupB <- df %>% filter(group=="B")
-x <- t.test(x = groupA$x,y = groupB$x, var.equal = T)
+groupA <- df %>% filter(group == "A")
+groupB <- df %>% filter(group == "B")
+x <- t.test(x = groupA$x, y = groupB$x, var.equal = T)
 
 answer <- rbind(answer, tibble(
-  question    = "7", 
-  true_answer = x$p.value, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.01)
-)
-
+    question    = "7",
+    true_answer = x$p.value,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.01
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -165,16 +164,15 @@ So I go ahead and make a permutation test using the following simple code (only 
 ```{r}
 
 set.seed(0)
-permuted   <- rep(NA, 100)
+permuted <- rep(NA, 100)
 for (i in 1:length(permuted)) {
-  xvalues <- sample(df$x)
-  g1 <- mean(xvalues[df$group=="A"])
-  g2 <- mean(xvalues[df$group=="B"])
-  permuted[i] <- abs(g1 - g2)
+    xvalues <- sample(df$x)
+    g1 <- mean(xvalues[df$group == "A"])
+    g2 <- mean(xvalues[df$group == "B"])
+    permuted[i] <- abs(g1 - g2)
 }
 
 permuted
-
 ```
 
 
@@ -187,29 +185,28 @@ This is in order to test if you could correctly sum up and compare the numbers
 ```{r}
 
 xvalues <- df$x
-g1 <- mean(xvalues[df$group=="A"])
-g2 <- mean(xvalues[df$group=="B"])
+g1 <- mean(xvalues[df$group == "A"])
+g2 <- mean(xvalues[df$group == "B"])
 observed <- abs(g1 - g2)
 
 set.seed(0)
-permuted   <- rep(NA, 100)
+permuted <- rep(NA, 100)
 for (i in 1:length(permuted)) {
-  xvalues <- sample(df$x)
-  g1 <- mean(xvalues[df$group=="A"])
-  g2 <- mean(xvalues[df$group=="B"])
-  permuted[i] <- abs(g1 - g2)
+    xvalues <- sample(df$x)
+    g1 <- mean(xvalues[df$group == "A"])
+    g2 <- mean(xvalues[df$group == "B"])
+    permuted[i] <- abs(g1 - g2)
 }
 
 result <- sum(permuted >= observed)
 
 answer <- rbind(answer, tibble(
-  question    = "8", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.1)
-)
-
+    question    = "8",
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -223,29 +220,28 @@ And here we tested if you remeber the "+1" and were able to change my code a lit
 ```{r}
 
 xvalues <- df$x
-g1 <- mean(xvalues[df$group=="A"])
-g2 <- mean(xvalues[df$group=="B"])
+g1 <- mean(xvalues[df$group == "A"])
+g2 <- mean(xvalues[df$group == "B"])
 observed <- abs(g1 - g2)
 
 set.seed(0)
-permuted   <- rep(NA, 5000)
+permuted <- rep(NA, 5000)
 for (i in 1:length(permuted)) {
-  xvalues <- sample(df$x)
-  g1 <- mean(xvalues[df$group=="A"])
-  g2 <- mean(xvalues[df$group=="B"])
-  permuted[i] <- abs(g1 - g2)
+    xvalues <- sample(df$x)
+    g1 <- mean(xvalues[df$group == "A"])
+    g2 <- mean(xvalues[df$group == "B"])
+    permuted[i] <- abs(g1 - g2)
 }
 
-pvalue <- (sum(permuted >= observed) +1 ) / ( length(permuted) +1)
+pvalue <- (sum(permuted >= observed) + 1) / (length(permuted) + 1)
 
 answer <- rbind(answer, tibble(
-  question    = "9", 
-  true_answer = pvalue, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.01)
-)
-
+    question    = "9",
+    true_answer = pvalue,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.01
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -256,10 +252,9 @@ answer <- rbind(answer, tibble(
 
 ```{r}
 
-topic             <- "t4"  # If you change this to e.g. 2 - you should search & replace all >Q4. with >Q2.
+topic <- "t4" # If you change this to e.g. 2 - you should search & replace all >Q4. with >Q2.
 topic_description <- "# Bad data and permutations"
-file_description  <- "bad_data_permutation"
-
+file_description <- "bad_data_permutation"
 ```
 
 ## Answers table
@@ -275,19 +270,18 @@ answer
 
 ```{r}
 
-answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+answer$question <- paste(topic, ".", answer$question, sep = "") # Reformat column
 
 # Save answer sheet for students to fill out (including points)
-x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+x <- paste("answer$", answer$question, " = NA # (", answer$points, " points)", sep = "")
 
-answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+answer_filename <- paste("exam_answer_sheet.", topic, ".", file_description, ".txt", sep = "")
 write_lines(topic_description, path = answer_filename)
-write_lines(x, path =answer_filename, append = T)
+write_lines(x, path = answer_filename, append = T)
 
 # Save answer key for grading
-key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+key_filename <- paste("answer.key.", topic, ".", file_description, ".tsv", sep = "")
 write_tsv(x = answer, path = key_filename)
-
 ```
 
 ---------!end suggested answer ------------------------

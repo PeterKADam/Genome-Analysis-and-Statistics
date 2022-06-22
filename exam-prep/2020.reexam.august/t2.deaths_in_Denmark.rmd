@@ -30,23 +30,50 @@ We have chosen to focus on 3 different causes of death only:
 
 library(tidyverse)
 
-df <- read_tsv(file = "t2.deaths_in_Denmark_dataset.tsv")
+df <- read_tsv(file = r"(exam-prep\2020.reexam.august\t2.deaths_in_Denmark_dataset.tsv)")
 
 ```
 
 >Q2.1 How many deaths from these 3 causes were there in total in 1981 in this dataset?
 
+```{r}
+df %>%
+    filter(year == 1981) %>%
+    nrow()
+```
+2484
 
 >Q2.2 How many men died from these 3 causes in 2018? 
-
+```{r}
+df %>%
+    filter(year == 2018, sex == "Men") %>%
+    nrow()
+```
+2054
 
 >Q2.3 What proportion of deaths from Motor vehicle accidents in 1981 were men?
 
+```{r}
+(df %>%
+    filter(year == 1981, sex == "Men", cause == "Motor vehicle accidents") %>%
+    nrow()) /
+    (df %>%
+        filter(year == 1981, cause == "Motor vehicle accidents") %>%
+        nrow())
+```
+0.7039764
 Hint: Proportion is a number in the range [0;1]
 
 
 >Q2.4 How many male deaths from Motor vehicle accidents would you expect in 2018 if both males and females had the same risk?
 
+```{r}
+
+df %>%
+    filter(cause == "Motor vehicle accidents", year == 2018) %>%
+    nrow() / 2
+```
+93, yay ligestilling.
 Hint: We assume that the population has a sex ratio of 50:50, i.e. same number of males and females.
 
 
@@ -54,19 +81,32 @@ Hint: We assume that the population has a sex ratio of 50:50, i.e. same number o
 
 ```{r}
 
-tmp <- df %>% 
-  filter(cause=="Mental disorders") %>% 
-  select(sex,year) %>%
-  table()
+tmp <- df %>%
+    filter(cause == "Mental disorders") %>%
+    select(sex, year) %>%
+    table()
 
 tmp
-
 ```
 
 >Q2.5 Test if sex and year are independent for Motor vehicle accidents. Report the p value.
 
+```{r}
+tmp <- df %>%
+    filter(cause == "Motor vehicle accidents") %>%
+    select(sex, year) %>%
+    table()
+
+fisher.test(tmp)
+chisq.test(tmp, correct = F)
+```
+
+p-value = 0.5888
+is the categories independent?
+
 
 >Q2.6 What is your conclusion about motor vehicle accidents?
+
 
 Answer should be a number indicating one of the following statements:
 
@@ -74,10 +114,20 @@ Answer should be a number indicating one of the following statements:
 2. Sex and year are weakly significantly associated.  
 3. Sex and year are strong significantly associated.  
 4. It is not possible to conclude anything.
-
+1
 
 >Q2.7 Test if cause of death and sex are independent in 1981. Report the p value.
 
+```{r}
+tmp <- df %>%
+    filter(year == 1981) %>%
+    select(cause, sex) %>%
+    table()
+
+fisher.test(tmp)
+chisq.test(tmp)
+```
+p 1.024e-07
 
 >Q2.8 What is your conclusion?
 
@@ -91,6 +141,11 @@ Answer should be a number indicating one of the following statements:
 
 >Q2.9 Test if cause of death and sex are independent in 2018 Report the p value.
 
+```{r}
+
+
+
+```
 
 >Q2.10 What is the sample size in 2018?
 

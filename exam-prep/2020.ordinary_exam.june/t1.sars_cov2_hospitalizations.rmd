@@ -23,27 +23,61 @@ We are looking at different age groups and we have the following columns:
 
 library(tidyverse)
 
-df <- read_tsv(file = "t1.dataset.corona_data.20200503.tsv")
+df <- read_tsv(file = r"(exam-prep\2020.ordinary_exam.june\t1.dataset.corona_data.20200503.tsv)")
 ```
 
 >Q1.1 How many individuals were confirmed infected in total?
-
+```{r}
+sum(df$confirmed)
+```
+9523
 >Q1.2 How many individuals were hospitalized in total?
-
+```{r}
+sum(df$males) + sum(df$females)
+```
+303
 >Q1.3 What proportion of the confirmed infected (total) were hospitalized (total)?
+
+```{r}
+(sum(df$males) + sum(df$females)) / sum(df$confirmed)
+```
+0.318
 
 Hint: Proportion is a number in the range [0;1]
 
 
 >Q1.4 What proportion of all confirmed infected were in the agegroup 0-39?
+```{r}
+sum(df$confirmed[1]) / sum(df$confirmed)
+```
+0.3223774
 
 >Q1.5 How many hospitalizations would you expect in the 0-39 agegroup if all confirmed infected people have the same risk of hospitalization?
+
+```{r}
+sum(df$confirmed[1]) * ((sum(df$males) + sum(df$females)) / sum(df$confirmed))
+```
+
+97 people and a torso (with head and an arm (or maybe 2 the data is conflicting)).
+97.68035
 
 
 We assume that all confirmed infected people have the same risk of hospitalization.
 
 >Q1.6 If you test this model, what is the p value when you fit the observed data to the expected?
 
+```{r}
+
+df <- df %>% mutate(total = females + males, prop_infected = confirmed / sum(confirmed))
+
+x = chisq.test(x= df$total, p=df$prop_infected)
+
+x$p.value
+
+
+```
+x$p.value
+1.167608e-84
 
 It looks like the risk of hospitalization increase with age, although this can not be concluded from the data, since not all infected persons have been tested and confirmed infected. 
 
@@ -59,6 +93,11 @@ Hint: sex is a categorical variable and agegroup is also a categorical variable.
 
 >Q1.7 For that test, what is the p value?
 
+```{r}
+fisher.test(df  %>% select(males, females))
+
+```
+
 Hint: Notice any warnings and look for violations of assumptions.
 
 
@@ -73,6 +112,6 @@ Hint: Your answer should just be a single number (1,2..5)
 5. All of the above
 6. None of the above
 
-
+4; Independance p value is 0.269 and as such we cannot reject that there is independance.
 
 

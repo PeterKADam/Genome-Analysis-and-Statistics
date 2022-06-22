@@ -1,0 +1,9 @@
+# Sars-cov2 hospitalizations
+answer$t1.1 = NA # (1 points)
+answer$t1.2 = NA # (1 points)
+answer$t1.3 = NA # (2 points)
+answer$t1.4 = NA # (2 points)
+answer$t1.5 = NA # (3 points)
+answer$t1.6 = NA # (3 points)
+answer$t1.7 = NA # (3 points)
+answer$t1.8 = NA # (3 points)

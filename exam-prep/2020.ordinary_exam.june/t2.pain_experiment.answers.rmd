@@ -24,8 +24,7 @@ After waiting for 15 minutes, we gave them another small electric shock and they
 
 library(tidyverse)
 
-df <- read_tsv(file = "t2.dataset.pain_experiment.tsv")
-
+df <- read_tsv(file = r"(exam-prep\2020.ordinary_exam.june\t2.dataset.pain_experiment.tsv)")
 ```
 
 >Q2.1 How many individuals were analyzed in this dataset?
@@ -45,50 +44,55 @@ We have edited all your answers to positive values - and edited the answer key a
 
 ```{r}
 
-df <- df %>% mutate(difference=After-Before)
+df <- df %>% mutate(difference = After - Before)
 
 answer <- tibble()
 result <- nrow(df)
 
 
-answer <- rbind(answer,tibble(
-  question    = "1", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1))
+answer <- rbind(answer, tibble(
+    question    = "1",
+    true_answer = result,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+))
 
 
-result <- df %>% filter(group=="Placebo") %>% nrow()
-
-answer <- rbind(answer,tibble(
-  question    = "2", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1))
-
-
-df2 <- df %>% filter(group=="Placebo")
-
-answer <- rbind(answer,tibble(
-  question    = "3", 
-  true_answer = abs(mean(df2$difference)), 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01))
-
-df2 <- df %>% filter(group=="Drug")
+result <- df %>%
+    filter(group == "Placebo") %>%
+    nrow()
 
 answer <- rbind(answer, tibble(
-  question    = "4", 
-  true_answer = abs(mean(df2$difference)), 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01))
+    question    = "2",
+    true_answer = result,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+))
+
+
+df2 <- df %>% filter(group == "Placebo")
+
+answer <- rbind(answer, tibble(
+    question    = "3",
+    true_answer = abs(mean(df2$difference)),
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
+
+df2 <- df %>% filter(group == "Drug")
+
+answer <- rbind(answer, tibble(
+    question    = "4",
+    true_answer = abs(mean(df2$difference)),
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 
 answer
-
 ```
 ---------!end suggested answer ------------------------
 
@@ -100,7 +104,7 @@ answer
 
 ```{r}
 
-pd <- df %>% filter(group=="Placebo")
+pd <- df %>% filter(group == "Placebo")
 
 # wrong: data are paired - THIS IS NOT COEECT
 (t.test(x = pd$After, y = pd$Before, paired = FALSE))
@@ -113,40 +117,39 @@ pd <- df %>% filter(group=="Placebo")
 (x <- t.test(x = pd$difference))
 
 answer <- rbind(answer, tibble(
-  question    = "5", 
-  true_answer = x$p.value, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 10*x$p.value)
-  )
+    question    = "5",
+    true_answer = x$p.value,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 10 * x$p.value
+))
 
 
 # Test if the reponse in the Drug group is different than in the Placebo group. Report the p value (two tailed test).
-pd1 <- df %>% filter(group=="Placebo")
-pd2 <- df %>% filter(group=="Drug")
+pd1 <- df %>% filter(group == "Placebo")
+pd2 <- df %>% filter(group == "Drug")
 
 #
-# Some students may use the placebo group mean response as null in a t.test. 
+# Some students may use the placebo group mean response as null in a t.test.
 # This is not correct - since it does NOT take sample size of the placebo group into account.
 # Wrong
 (x <- t.test(x = pd2$difference, mu = mean(pd1$difference)))
 
 # Using formula
-(x <- t.test(difference ~ group, data=df))
+(x <- t.test(difference ~ group, data = df))
 
 # Using two vectors
-(x <- t.test(x = pd1$difference, y=pd2$difference))
+(x <- t.test(x = pd1$difference, y = pd2$difference))
 
 answer <- rbind(answer, tibble(
-  question    = "6", 
-  true_answer = x$p.value, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 10*x$p.value)
-  )
+    question    = "6",
+    true_answer = x$p.value,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 10 * x$p.value
+))
 
 answer
-
 ```
 
 ---------!end suggested answer ------------------------
@@ -170,70 +173,65 @@ Now we define a strong response as a decrease in pain level > 10.
 result <- sum(df$Before > 90) / nrow(df)
 
 answer <- rbind(answer, tibble(
-  question    = "7", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01)
-  )
+    question    = "7",
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 
-pd1 <- df %>% filter(group=="Placebo")
+pd1 <- df %>% filter(group == "Placebo")
 
 result <- sum(pd1$difference < -10) / nrow(pd1)
 
 answer <- rbind(answer, tibble(
-  question    = "8", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01)
-  )
+    question    = "8",
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 
-pd2 <- df %>% filter(group=="Drug")
+pd2 <- df %>% filter(group == "Drug")
 
 result <- sum(pd2$difference < -10) / nrow(pd2)
 
 answer <- rbind(answer, tibble(
-  question    = "9", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01)
-  )
+    question    = "9",
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+))
 
 answer
-
-
-
 ```
 
 ## Hard coded information
 
 ```{r}
 
-topic             <- "t2"  # If you change this to e.g. 2 - you should search & replace all >QX. with >QY.
+topic <- "t2" # If you change this to e.g. 2 - you should search & replace all >QX. with >QY.
 topic_description <- "# Pain experiment"
-file_description  <- "pain_experiment"
-
+file_description <- "pain_experiment"
 ```
 
 ## Saving exam files
 
 ```{r}
 
-answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+answer$question <- paste(topic, ".", answer$question, sep = "") # Reformat column
 
 # Save answer sheet for students to fill out (including points)
-x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+x <- paste("answer$", answer$question, " = NA # (", answer$points, " points)", sep = "")
 
-answer_filename <-  paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+answer_filename <- paste("exam_answer_sheet.", topic, ".", file_description, ".txt", sep = "")
 write_lines(topic_description, path = answer_filename)
-write_lines(x, path =answer_filename, append = T)
+write_lines(x, path = answer_filename, append = T)
 
 # Save answer key for grading
-key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+key_filename <- paste("answer.key.", topic, ".", file_description, ".tsv", sep = "")
 write_tsv(x = answer, path = key_filename)
-
 ```
 
 ---------!end suggested answer ------------------------

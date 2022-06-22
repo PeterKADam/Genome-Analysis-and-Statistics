@@ -69,15 +69,15 @@ We calculate the probability of a count of 0 molecules.
 
 answer <- tibble()
 
-x <- dpois(x = 0, lambda = 50 )
+x <- dpois(x = 0, lambda = 50)
 
-answer <- rbind(answer,tibble(
-  question    = "1", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 100*x))
-
+answer <- rbind(answer, tibble(
+    question    = "1",
+    true_answer = x,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 100 * x
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -107,15 +107,15 @@ Then they are diluted 48 times...
 
 ```{r}
 
-(x <- dpois(x = 0, lambda = 50/48))
+(x <- dpois(x = 0, lambda = 50 / 48))
 
-answer <- rbind(answer,tibble(
-  question    = "2", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.001))
-
+answer <- rbind(answer, tibble(
+    question    = "2",
+    true_answer = x,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.001
+))
 ```
 ---------!end suggested answer ------------------------
 
@@ -135,17 +135,17 @@ Since the pools are independent it is the probability^3.
 
 ```{r}
 
-x <- dpois(x = 0, lambda = 50/48) 
-x   # One pool is negative
+x <- dpois(x = 0, lambda = 50 / 48)
+x # One pool is negative
 x^3 # all three pools are negative
 
-answer <- rbind(answer,tibble(
-  question    = "3", 
-  true_answer = x^3, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.001))
-
+answer <- rbind(answer, tibble(
+    question    = "3",
+    true_answer = x^3,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.001
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -158,22 +158,22 @@ Hint: It means the risk of all pools being negative is smaller than 1% (0.01).
 
 ```{r}
 
-x <- dpois(x = 0, lambda = 50/48)  # One pool is negative
+x <- dpois(x = 0, lambda = 50 / 48) # One pool is negative
 
 for (i in 1:10) {
-  cat(i , "replicated pools, false negative " , x^i, "\n" )
+    cat(i, "replicated pools, false negative ", x^i, "\n")
 }
 
-result <- which((x^(1:10) < 0.01)==TRUE)[1] # First result that is below 0.01
+result <- which((x^(1:10) < 0.01) == TRUE)[1] # First result that is below 0.01
 result
 
-answer <- rbind(answer,tibble(
-  question    = "4", 
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.1))
-
+answer <- rbind(answer, tibble(
+    question    = "4",
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -194,13 +194,13 @@ No replicates are used.
 
 ```{r}
 
-answer <- rbind(answer,tibble(
-  question    = "5", 
-  true_answer = 200*48 + 120*48, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1))
-
+answer <- rbind(answer, tibble(
+    question    = "5",
+    true_answer = 200 * 48 + 120 * 48,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -221,17 +221,17 @@ So we say that the 3 positive pools are 3 carriers total.
 ```{r}
 
 n_positive <- 3
-n_total <-(200+120)*48
+n_total <- (200 + 120) * 48
 
-(overall_rate <- n_positive/n_total)
+(overall_rate <- n_positive / n_total)
 
-answer <- rbind(answer,tibble(
-  question    = "6", 
-  true_answer = overall_rate, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = overall_rate*10))
-
+answer <- rbind(answer, tibble(
+    question    = "6",
+    true_answer = overall_rate,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = overall_rate * 10
+))
 ```
 ---------!end suggested answer ------------------------
 
@@ -248,27 +248,27 @@ Assume that the proportion in the whole population is the one you calculated in 
 
 
 n_positive <- 3
-n_total <-(200+120)*48
+n_total <- (200 + 120) * 48
 
-(overall_rate <- n_positive/n_total)
+(overall_rate <- n_positive / n_total)
 
 # You can use pbinom
-1-pbinom(q = 1,size = 48, prob = overall_rate)  # 1 - (1 or less )
-pbinom(q = 1,size = 48, prob = overall_rate, lower.tail = F) # More than 1 
+1 - pbinom(q = 1, size = 48, prob = overall_rate) # 1 - (1 or less )
+pbinom(q = 1, size = 48, prob = overall_rate, lower.tail = F) # More than 1
 
 # Or calculate probablity of 0 and 1 first
-d0 <- dbinom(x = 0,size = 48, prob = overall_rate)  # 0 persons found
-d1 <- dbinom(x = 1,size = 48, prob = overall_rate)  # 1 person found
-(x <- 1 - (d0+d1))
+d0 <- dbinom(x = 0, size = 48, prob = overall_rate) # 0 persons found
+d1 <- dbinom(x = 1, size = 48, prob = overall_rate) # 1 person found
+(x <- 1 - (d0 + d1))
 
 
-answer <- rbind(answer,tibble(
-  question    = "7", 
-  true_answer = x, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = x*10))
-
+answer <- rbind(answer, tibble(
+    question    = "7",
+    true_answer = x,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = x * 10
+))
 ```
 
 ---------!end suggested answer ------------------------
@@ -280,10 +280,9 @@ answer <- rbind(answer,tibble(
 
 ```{r}
 
-topic             <- "t3"  # If you change this to e.g. 2 - you should search & replace all >Q1. with >Q2.
+topic <- "t3" # If you change this to e.g. 2 - you should search & replace all >Q1. with >Q2.
 topic_description <- "# Sars-Cov2 testing"
-file_description  <- "sars-cov2_testing"
-
+file_description <- "sars-cov2_testing"
 ```
 
 ## Answers table
@@ -291,7 +290,6 @@ file_description  <- "sars-cov2_testing"
 ```{r}
 
 answer
-
 ```
 
 
@@ -299,19 +297,18 @@ answer
 
 ```{r}
 
-answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+answer$question <- paste(topic, ".", answer$question, sep = "") # Reformat column
 
 # Save answer sheet for students to fill out (including points)
-x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+x <- paste("answer$", answer$question, " = NA # (", answer$points, " points)", sep = "")
 
-answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+answer_filename <- paste("exam_answer_sheet.", topic, ".", file_description, ".txt", sep = "")
 write_lines(topic_description, path = answer_filename)
-write_lines(x, path =answer_filename, append = T)
+write_lines(x, path = answer_filename, append = T)
 
 # Save answer key for grading
-key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+key_filename <- paste("answer.key.", topic, ".", file_description, ".tsv", sep = "")
 write_tsv(x = answer, path = key_filename)
-
 ```
 
 ---------!end suggested answer ------------------------
