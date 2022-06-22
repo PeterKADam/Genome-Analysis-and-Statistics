@@ -24,7 +24,6 @@ We are looking at different age groups and we have the following columns:
 library(tidyverse)
 
 df <- read_tsv(file = "t1.dataset.corona_data.20200503.tsv")
-
 ```
 
 >Q1.1 How many individuals were confirmed infected in total?
