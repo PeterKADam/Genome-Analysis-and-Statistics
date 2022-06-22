@@ -1,0 +1,86 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Cocaine in sewage water in European cities
+
+The European Centre for Drugs and Drug Addiction is monitoring drug use in European cities.
+
+Analyzing communal wastewaters for drugs and their metabolic products in order to estimate their consumption in the community is a developing field, involving scientists working in different research areas, including analytical chemistry, physiology and biochemistry, sewage engineering, spatial epidemiology and statistics, and conventional drug epidemiology.
+
+The collaboration have collected data from several drugs over the years and here we will focus on cocaine in sewage water in 2019 and 2018 (where there are most data points).
+
+Data are originally found here: https://www.emcdda.europa.eu/topics/wastewater
+
+The measured concentration is normalized to mg cocaine pr. 1000 persons pr. day in order to account for differences in population size of the city.
+
+If the amount was below the detection limit the value is indicated as 0.
+
+If a city didn't collect any data a given year, the value is indicated as NA (= missing data).
+
+To help you get started, we remove all cities with missing value in either year.
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+df <- read_tsv(file = "t3.cocaine_in_sewage_water.dataset.tsv")
+
+# We remove all cities with missing observations
+df <- df %>% filter(!is.na(y2018) & !is.na(y2019))
+
+head(df)
+
+```
+
+>Q3.1 How many different cities do we have data from?
+
+
+>Q3.2 What is the observed mean consumption in germany (DE) in 2019?
+
+
+>Q3.3 What is the observed median consumption in germany (DE) in 2019?
+
+
+>Q3.4 In how many cities were the measured cocaine consumption > 100 mg pr. 1000 people pr. day in 2019? 
+
+
+>Q3.5 In how many cities did the measured cocaine consumption increase in 2019 relative to 2018 ? 
+
+Hint: Create a new variable "change" that quantifies the difference in consumption between 2018 amd 2019. Count how many cities have a positive change, i.e. change = 2019-2018.
+
+
+>Q3.6 If we assume that every city had equal probability (50:50) of going up/down in consumption from 2018 to 2019, what is the probability of observing "just by chance" as many or more increases than the number of cities with increased consumption observed.
+
+
+>Q3.7 Using the city as an observation unit, compare the mean consumption in 2018 and 2019 using the appropriate type of t.test. Report the p value of the test. 
+
+Our null hypothesis: the mean consumption were the same in the two years. 
+
+Our alternative hypothesis: the mean consumption were different in the two years.
+
+
+
+>Q3.8 Which statement do you agree most with? 
+
+Answer should be a number indicating one of the following statements:
+
+1. In more than two thirds of the cities surveyed, cocaine consumption went up in 2109, relative to 2018. The trend is significant (at the alpha=0.01 level).
+
+2. In more than two thirds of the cities surveyed, cocaine consumption went up in 2019, relative to 2018. The trend is significant (at the alpha=0.05 level).
+
+3. Mean cocaine consumption in Europe was significantly higher in 2019 relative to 2018. 
+
+4. Mean cocaine consumption in Europe was higher in 2019 relative to 2018, but the trend observed is not statistically significant. 
+
+5. None of the above.
+
+
+
+
+
+

@@ -1,0 +1,419 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Births in Denmark
+
+## Background
+
+The use of IVF (in vitro fertilization) has changed dramatically in Denmark. 
+
+Over the years, the implantation success has increased. At some point this meant that implanting three eggs nearly always resulted in either twins or triplets.
+
+You will work on a dataset with the number of births of different types for different years.
+
+The type can be "Case of single" (1 child), "Case of twins" (2 children) and so on. 
+
+The data were downloaded directly from https://www.statistikbanken.dk/fod8 using R and are made available as `t3.birth_data.tsv`.
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+df <- read_tsv("t3.birth_data.tsv")
+
+```
+
+>Q3.1 How many different years have we collected data for?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer_list <- list()
+
+# Many ways to get this
+# df %>% distinct(year)
+# unique(df$year)
+# max(df$year)-min(df$year)+1
+# range(df$year)
+(result <- df %>% count(year) %>% nrow())
+
+answer_list[["1"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.2 What is the highest number of babies ever born in Denmark at the same time?
+
+Hint: If the most children ever born in a single event were twins (i.e. 2 children born at the same time), then the answer would be 2.
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+table(df$type)
+
+(result <- 4)
+
+answer_list[["2"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+
+```
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.3 What year was the first quadruplets (firlinger) recorded ?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df2 <- df %>% filter(type=="Cases of quadruplets" & n > 0)
+(result <- min(df2$year))
+rm(df2)
+
+answer_list[["3"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.4 How many children were born as twins in the period 2000-2018 (both years included)?
+
+---------!begin suggested answer ------------------------
+
+Hver gang der fødes tvillinger fødes der to børn.
+
+```{r}
+
+df2 <- df %>% filter(year >= 2000 & year <= 2018) %>% filter(type=="Cases of twins")
+(result <- 2*sum(df2$n))
+rm(df2)
+
+answer_list[["4"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.5 How many children were born as triplets in the period 2000-2018 (both years included)?
+
+---------!begin suggested answer ------------------------
+
+Hver gang der sker en trillingefødsel fødes der 3 børn.
+
+```{r}
+
+df2 <- df %>% filter(year >= 2000 & year <= 2018) %>% filter(type=="Cases of triplets")
+(result <- 3*sum(df2$n))
+rm(df2)
+
+answer_list[["5"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.6 How many children were born as quadruplets (across all years)?
+
+---------!begin suggested answer ------------------------
+
+Hver gang der sker en firlingefødsel fødes der 4 børn.
+
+
+```{r}
+
+df2 <- df %>% filter(type=="Cases of quadruplets")
+(result <- 4*sum(df2$n))
+rm(df2)
+
+answer_list[["6"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+## Testing different years
+
+IVF treatment (with the horrible Danish name "reagensglasbørn") was invented in the UK in 1978, and the first baby ever recorded where the fertilization happened outside the body was Louise Brown. 
+
+The first IVF baby was born in Denmark in 1983. So we know that all babies born before 1982 were the result of internal fertilization.
+
+We know that IVF treatment often leads to multiple babies (because more than one egg is implanted). Now we want to compare three time periods: 1978-1982 (5 years before IVF), 1983-1987 (early IVF) and 2014-2018 (last 5 years).
+
+Please note, that IVF treatment was probably rare in the 1980s and now it's really common. In 2019 we performed ~12.000 IVF treatments and ~2500 IVF children were born. (Source: https://sundhedsdatastyrelsen.dk/da/tal-og-analyser/analyser-og-rapporter/andre-analyser-og-rapporter/assisteret-reproduktion)
+
+First, we reformat the data so we pool so a birt is either a single birth (1 child), twins (2 children) or more than two children (3+ or "flerfoldsfødsler" in Danish). 
+
+This is done here:
+
+```{r}
+
+(df2 <- df %>% 
+  mutate(type2 = ifelse(type=="Cases of single", "1", "3+")) %>%
+  mutate(type2 = ifelse(type=="Cases of twins", "2", type2)) %>%
+  group_by(year,type2) %>%
+  summarise(n=sum(n)) %>%
+  ungroup()
+)
+
+```
+
+Now the rest is up to you. You must calculate the numbers for each period and do the correct testing.
+
+You can NOT use fisher.test() for this, since the numbers are too high.
+
+So you should use a chi square test to test if there is an association between period and birth type.
+
+Hint: How to create a table from numbers - or from a tibble with counts.
+
+```{r}
+
+# Build a table from numbers
+x <- matrix(c(20,69,16,157),ncol=2,byrow=FALSE)
+colnames(x) <- c("Infected","Uninfected")
+rownames(x) <- c("Multiple", "Single")
+x
+
+# From table to tibble and back
+(x2 <- as_tibble(x) %>% mutate(parasites = rownames(x)))
+(x3 <- x2 %>% pivot_longer(-parasites)) # counts
+(x4 <- x3 %>% uncount(value)) # one row pr. observation
+x4 %>% group_by(parasites, name) %>% count() # Check numbers are still correct
+
+# From tibble to table
+table(x4$parasites, x4$name)
+
+```
+
+>Q3.7: What is the p value when you compare 1978-1982 with 1983-1987?
+
+H0: There is no association between the period and the type of births  
+Ha: There is an association between the period and the type of births  
+
+---------!begin suggested answer ------------------------
+
+So you could build your table using the hint above (filter + summarise).
+
+Here I do it by extending the ifelse() trick to also add period information
+
+```{r}
+
+(df2 <- df %>% 
+  mutate(period = ifelse(year >= 1978 & year <= 1982, "1978-1982", "Other period")) %>%
+  mutate(period = ifelse(year >= 1983 & year <= 1987, "1983-1987", period)) %>%
+  mutate(period = ifelse(year >= 2014 & year <= 2018, "2014-2018", period)) %>%
+  mutate(type2 = ifelse(type=="Cases of single", "1", "3+")) %>%
+  mutate(type2 = ifelse(type=="Cases of twins", "2", type2)) %>%
+  filter(!is.na(period)) %>%
+  group_by(period,type2) %>%
+  summarise(n=sum(n)) %>%
+  ungroup()
+)
+
+(df3 <- df2 %>% uncount(n) %>% filter(period %in% c("1978-1982", "1983-1987")))
+(df4 <- table(df3$period, df3$type2))
+(x <- chisq.test(x = df4))
+(result <- x$p.value)
+rm(x,df4,df3)
+
+answer_list[["7"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.8: What is your conclusion if the p value is 0.06 for this test?
+
+1. We can't reject H0, so there is no association at all.
+2. It's not significant, but it's pretty close, so there could be an association.
+3. It's significant, so we are sure there is an association
+4. It's around the significance threshold, so we can't say anything.
+5. It's significant, so it's unlikely that there is no association.
+
+The answer should be given as a single number: 1, 2, 3..
+
+---------!begin suggested answer ------------------------
+
+1. Is wrong. Failure to reject H0 doesn't mean that H0 is true.
+2. correct
+3. Nope - it could by a type I error
+4. Nope - then we wouldn't have a significance threshold (alfa).
+5. Nope, since the pvalue > 0.05.
+
+```{r}
+
+(result <- 2)
+
+answer_list[["8"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.9: What is the p value when you compare 1978-1982 with 2014-2018?
+
+H0: There is no association between the period and the type of births  
+Ha: THere is an association between the period and the type of births  
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+(df3 <- df2 %>% uncount(n) %>% filter(period %in% c("1978-1982", "2014-2018")))
+(df4 <- table(df3$period, df3$type2))
+(x <- chisq.test(x = df4))
+x$expected
+x$observed
+(result <- x$p.value)
+rm(x,df4,df3)
+
+answer_list[["9"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 1/1000000)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q3.10: What is your overall conclusion from the data and test results?
+
+I define "multi births" as twins, triplets, quadruplets etc.
+
+1. IVF treatment gave rise to more multi-births.
+2. IVF treatment didn't influence the number of multi-births.
+3. IVF treatment only influenced multi births in the 1980s.
+4. IVF treatment resulted in fewer multibirths in the 2010-s.
+5. Our two tests gave opposite results, I can't conclude anything
+
+The answer should be given as a single number: 1, 2, 3..
+
+---------!begin suggested answer ------------------------
+
+You should pick number 1.
+
+In the 1980s very few babies were born with IVF, so we probably have very low power to detect the effect.
+
+In the 2010s we see many IVF babies (2005: 10.000 IVF treatments yearly). 
+
+If you look at the expected and observed in the previous answer you can also see that we still have many more multi births than expected. 
+
+```{r}
+
+(result <- 1)
+
+answer_list[["10"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t3"  # If you change this to e.g. 2 - you should search & replace all >Q3. with >Q2.
+topic_description <- "# Births in Denmark"
+file_description  <- "births_in_denmark"
+
+```
+
+## Answers table
+
+```{r}
+
+(
+answer <- bind_rows(answer_list) %>%
+  mutate(question = paste(topic, ".", names(answer_list), sep="")) %>%
+  select(question, everything())
+)
+
+```
+
+## Saving exam files
+
+```{r}
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, answer_filename)
+write_lines(x, answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(answer, key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+

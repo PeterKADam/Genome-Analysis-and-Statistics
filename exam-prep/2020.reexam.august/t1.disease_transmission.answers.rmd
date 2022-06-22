@@ -1,0 +1,361 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Probability and disease
+
+The world is presently facing the worst pandemic in more than 100 years.
+
+All numbers presented here are completely fictional, but illustrate some points about disease transmission and the effect of vaccines.
+
+
+```{r}
+
+library(tidyverse)
+
+```
+
+Let's assume that in a study we find that 1200 occurences of close contact between a infected and uninfected individual resulted in 312 new infections.
+
+>Q1.1 What is the estimated probability of being infected if you are in close contact with an infectious individual? 
+
+Example of answer formating :
+
+```{r}
+(probability <- 0.00000001234)
+(probability <- 1.234e-08)
+(probability <- 40/97)
+
+```
+
+---------!begin suggested answer ------------------------
+
+We calculate the probability
+
+```{r}
+
+answer <- tibble()
+
+(x <- 322/1200)
+
+answer <- rbind(answer,tibble(
+  question    = "1", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.01))
+
+```
+
+---------!end suggested answer ------------------------
+
+## Vaccines
+
+Vaccines are known to give partial immunity against many diseases, but rarely perfect protection.
+
+Now we assume the following:
+
+1. The  probablity of being infected upon close contact is 0.25
+
+2. If you are vaccinated against the disease, the probability drops to 0.10
+
+```{r}
+
+p1 <- 0.25 # probability of infection pr. contact when not vaccinated
+p2 <- 0.10 # probability of infection pr. contact when vaccinated
+
+```
+
+>Q1.2 What is probability of NOT becoming infected if you are in close contact with a single infectious individual and you are NOT vaccinated?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+(x <- 1-p1)
+
+answer <- rbind(answer,tibble(
+  question    = "2", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.001))
+
+```
+---------!end suggested answer ------------------------
+
+>Q1.3 What is probability of NOT becoming infected if you are in close contact with a single infectious individual and you ARE vaccinated?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+(x <- 1-p2)
+
+answer <- rbind(answer,tibble(
+  question    = "3", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.001))
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q1.4 What is probability of becoming infected if you are in close contact with 5 infectious individuals and you are NOT vaccinated? 
+
+---------!begin suggested answer ------------------------
+
+It is easiest to calculate to probability of NOT becoming infected at all.
+
+Then to say 1-that.
+
+```{r}
+
+p_not_infected <- (1-p1)^5
+x <- 1 - p_not_infected
+
+answer <- rbind(answer,tibble(
+  question    = "4", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.01))
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q1.5 What is probability of becoming infected if you are in close contact with 5 infectious individuals and you ARE vaccinated? 
+
+---------!begin suggested answer ------------------------
+
+It is easiest to calculate to probability of NOT becoming infected at all.
+
+Then to say 1-that.
+
+Because you may actually be infected by more than one of the infectious individuals.
+
+```{r}
+
+p_not_infected <- (1-p2)^5
+x <- 1 - p_not_infected
+
+answer <- rbind(answer,tibble(
+  question    = "5", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/50))
+
+```
+
+---------!end suggested answer ------------------------
+
+## Now we assume that YOU are infected.
+
+Now we turn things around a little bit and look at your role as an infectious individual.
+
+Let us assume that you meet 20 people on a day where you are actually infectious (but asymptomatic).
+
+The probilities of infecting another person when in close contact is still p1 and p2.
+
+>Q1.6 What is probability that you infect 0 of the 20 people (none of them are vaccinated)?
+
+---------!begin suggested answer ------------------------
+
+It is easiest to calculate to probability of NOT infection anyone, since there is only one combination where that happens.
+
+```{r}
+
+(x <- (1-p1)^20)
+
+answer <- rbind(answer,tibble(
+  question    = "6", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/50))
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q1.7 What is probability that you infect 5 or more of the 20 people (none of them are vaccinated)?
+
+---------!begin suggested answer ------------------------
+
+You can infect 5,6,7..20 people in total.
+
+So we need to use the binomial distribution.
+
+```{r}
+
+p_4_or_less <- pbinom(q = 4, size = 20, prob = p1, lower.tail = T)
+
+pbinom(q = 4, size = 20, prob = p1, lower.tail = T)
+# This gives p for 0,1,2,3,4 
+# From ?pbinom
+# lower.tail	logical; if TRUE (default), probabilities are P[X ≤ x], otherwise, P[X > x].
+
+x <- 1-p_4_or_less
+
+# Another way is simply to say
+(pbinom(q = 4, size = 20, prob = p1, lower.tail = F))
+
+answer <- rbind(answer,tibble(
+  question    = "7", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/50))
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q1.8 What is probability that you infect 5 or more of the 20 people (ALL of them are vaccinated)?
+
+---------!begin suggested answer ------------------------
+
+You can infect 5,6,7..20 people in total.
+
+So we need to use the binomial distribution.
+
+```{r}
+
+(x <- pbinom(q = 4, size = 20, prob = p2, lower.tail = F))
+
+answer <- rbind(answer,tibble(
+  question    = "8", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/50))
+
+```
+
+---------!end suggested answer ------------------------
+
+## Are you a superspreader
+
+Some infected people are known to infect more easily than others. 
+
+Now, lets imagine you attended two parties on two different days and later you test positive for the disease.
+
+We also assume the following:
+
+* No other people at the parties were infected. So all new infections were caused by you.
+
+* You had close contact with everyone at the party. So you could potentially have infected everyone.
+
+Now, please test the null hypothesis that you are a "normal" infectious person. The alternative hypothesis is that your probability of infecting another person is different from the hypothetical one.
+
+>Q1.9 What is the p value if you infected 27 guests at a party with 76 unvaccinated guests in total.
+
+Hint: The 76 guest are you and 75 others.
+
+---------!begin suggested answer ------------------------
+
+We need to test if your probability really is 0.25
+
+The maximum number you could infect is 75
+
+```{r}
+
+(result <- binom.test(x = 27, n = 75, p = 0.25))
+
+x <- result$p.value
+
+answer <- rbind(answer,tibble(
+  question    = "9", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/50))
+
+```
+
+You are a super spreader.
+
+---------!end suggested answer ------------------------
+
+>Q1.10 What is the p value if you infected 7 guests at a party with 55 vaccinated guests in total.
+
+Hint: The 55 guest are you and 54 others. All the othes were vaccinated
+
+---------!begin suggested answer ------------------------
+
+We need to test if your probability really is 0.15
+
+The maximum number you could infect is 54
+
+```{r}
+
+(result <- binom.test(x = 7, n = 54, p = 0.15))
+
+x <- result$p.value
+
+answer <- rbind(answer,tibble(
+  question    = "10", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/50))
+
+```
+
+You are not a superspreader when people are vaccinated.
+
+---------!end suggested answer ------------------------
+
+
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t1"  # If you change this to e.g. 2 - you should search & replace all >Q1. with >Q2.
+topic_description <- "# Disease transmission"
+file_description  <- "disease_transmission"
+
+```
+
+## Answers table
+
+```{r}
+
+answer
+
+```
+
+
+## Saving exam files
+
+```{r}
+
+answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, path = answer_filename)
+write_lines(x, path =answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(x = answer, path = key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+
+

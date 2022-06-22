@@ -1,0 +1,110 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Models for goals scored in a football match
+
+## Background
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+df <- read_csv("t2.fifa_results_data.csv")
+
+head(df)
+
+table(df$tournament)
+
+```
+
+>Q2.1 How many registered matches where Denmark was playing at home do we have data for?
+
+
+---
+
+>Q2.2 What is the highest number of goals scored by Denmark at home?
+
+
+---
+
+## A model for the distribution of number of goals
+
+Lets focus on matches where Denmark played at home in the category `Friendly` matches 
+
+(check that you have n = 183). 
+
+>Q2.3  what is the mean of the number of goals scored in these 183 matches ?
+
+
+---
+
+>Q2.4 What is the probability that Denmark scores 6 goals or more in a friendly match at home ?
+
+Hint: If we assume that goals have a constant probability of occurring per unit time during a football match, then we expect the number of goals in a match scored by a team to follow a Poisson probability distribution.
+
+
+---
+
+>Q2.5 What is the probability of Denmark scoring exactly 1 goal during the first 45 mins of a friendly match at home ?
+
+Hint: We still assume that goals have a constant probability of occurring per unit time.
+
+
+---
+
+## Poisson distributed goals?
+
+If the number of goals scored by a team is Poisson distributed (our null hypothesis), we expect the variance to mean of scores to be close to 1. 
+
+Now we will focus on Spain playing in "FIFA World Cup qualification" at home.
+
+>Q2.6 Calculate the variance to mean ratio of scorings when Spain playing in "FIFA World Cup qualification" at home
+
+
+---
+
+## Simulating datasets
+
+Here is a small R code snippet to simulate distribution of that statistic using pseudo datasets of $n=50$ observations from a Poisson with mean  $\lambda = 1.2$ .
+
+```{r}
+
+var_to_mean <- rep(NA, 100) # A vector for storing the ratios simulated under H0
+
+set.seed(0) # random seed init
+for (i in 1:100) {
+  pseudo_data <- rpois(n = 50, lambda = 1.2)
+  var_to_mean[i] <- var(pseudo_data)/mean(pseudo_data)
+}
+
+summary(var_to_mean)
+
+```
+
+Adapt the code above to generate the distribution using 10.000 pseudo datasets of the same size as the observed Spanish data under the null hypothesis that the data is Poisson distributed. 
+
+>Q2.7 Calculate and report the probability that the variance to mean ratio is equal or above the observed value in the actual data for Spain playing at home in the "FIFA World Cup qualification"?
+
+
+---
+
+>Q2.8: What is your conclusion for the p value of this test (if you use 0.05 as significance threshold)?
+
+1. We can't reject H0, so the Poisson model is probably correct.
+2. The p value is just below 0.05 so the Poisson model is probably incorrect but we need more data.
+3. No simulation produced a dataset with variance to mean ratio as extreme as the observed. So we can say that p < 0.001.
+4. It's around the significance threshold, so we can't say anything.
+
+The answer should be given as a single number: 1, 2, 3..
+
+
+---
+
+

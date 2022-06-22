@@ -1,0 +1,411 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Designing an experiment
+
+## Background
+
+We are going to apply for money to investigate the effect of a new drug on fatigue.
+
+We are going to score fatigue on a scale from 0 - 20, where 0 means "Not tired at all" and 20 means "as tired as possible".
+
+We plan to run the experiment as a random shuffle of two treatments: placebo and drug. Every participant will either get placebo followed by drug or drug followed by placebo. We record the fatigueness after each treatment and compare the placebo and drug using a paired test.
+
+So our design is paired observations. Note that the most extreme case is going from 20 to 0 or from 0 to 20. 
+
+## Hypotheses
+
+You should assume that our modeling is fine and our choice of test is also OK. 
+
+We want to test the following NULL hypothesis:
+
+H0: The drug does NOT change fatigue when compared to placebo.
+
+## Modeling
+
+We used different versions of the following code to simulate data and test different effect sizes and sample sizes.
+
+We used a different number of simulations and different values of effect sizes and sample sizes.
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+r <- rep(NA,10)
+
+set.seed(0)
+
+for (i in 1:length(r)) {
+  x <- tibble(placebo = round(runif(n = 50, min = 0, max = 20))) %>%
+    mutate(effect = rnorm(n = n(), mean=0.97, sd = 0.1)) %>%
+    mutate(drug = round(placebo * effect))
+  tr <- wilcox.test(x = x$drug, y=x$placebo, paired = TRUE)
+  r[i] <- tr$p.value
+}
+
+tibble(p=r, effect="0.97", size=50)
+
+```
+
+## The code above outputs
+
+          p effect  size
+      <dbl> <chr>  <dbl>
+ 1 0.00289  0.97      50
+ 2 0.00486  0.97      50
+ 3 0.361    0.97      50
+ 4 0.0308   0.97      50
+ 5 0.0299   0.97      50
+ 6 0.00519  0.97      50
+ 7 0.453    0.97      50
+ 8 0.135    0.97      50
+ 9 0.0545   0.97      50
+10 0.000662 0.97      50
+
+# Your job
+
+Your job is now to look at all our simulations results and answer some questions about false positives, power and sample sizes.
+
+# Reading simulation results
+
+```{r}
+
+df <- read_tsv(file = "t4.data.tsv")
+
+```
+
+>Q4.1 How many different sample sizes did I simulate?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer_list <- list()
+
+df %>% count(size)
+
+(result <- df %>% count(size) %>% nrow())
+
+answer_list[["1"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.2 How many different effect sizes did I simulate?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df %>% count(effect)
+
+(result <- df %>% count(effect) %>% nrow())
+
+answer_list[["2"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.3 How many statistical tests did I run in total for sample size=30?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df %>% filter(size==30)
+
+(result <- df %>% filter(size==30) %>% nrow())
+
+answer_list[["3"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.4 How many statistical tests did I run for sample size=40 and effect size=0.96?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df %>% filter(size==40 & effect==0.96)
+
+(result <- df %>% filter(size==40 & effect==0.96) %>% nrow())
+
+answer_list[["4"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.5 What is the simulated/observed Type I error (false positive rate) across all sample sizes (alfa=0.05)?
+
+NOTE: The rate is a number [0;1]. So your answer should be between 0 and 1.
+
+---------!begin suggested answer ------------------------
+
+False positives only occur when H0 is true.
+
+So we should ONLY USE the simulations for effect size = 1 (where drug = placebo)
+
+Then we will calculate the proportion of these that are significant. 
+
+For all other simulation we know that H0 is false (i.e. drug != placebo).
+
+```{r}
+
+df2 <- df %>% filter(effect==1.0)
+
+sum(df2$p <= 0.05) # significant = TRUE positives
+sum(df2$p > 0.05) # not significant = FALSE NEGATIVES
+nrow(df2) # All the positives
+
+(result <- sum(df2$p <= 0.05) / nrow(df2))
+
+answer_list[["5"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.6 How many tests were significant at the 0.05 level for sample size=10 and effect size=0.98?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df2 <- df %>% filter(size==10 & effect==0.98)
+
+(result <- sum(df2$p <= 0.05))
+
+answer_list[["6"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.7: What is the estimated power for alfa=0.05 using sample_size=10 and effect size=0.98?
+
+Power is a number [0;1] 
+
+---------!begin suggested answer ------------------------
+
+Power is the proportion of test that are really significant when they should be.
+
+Or: 1 - false negative rate
+
+```{r}
+
+df2 <- df %>% filter(size==10 & effect==0.98) # <-- these should all be significant.
+
+
+nrow(df2) # they should all be significant since effect = 0.98
+sum(df2$p <= 0.05) # significant ones = true positives
+sum(df2$p > 0.05)  # not significant = false negatives
+sum(df2$p <= 0.05) / nrow(df2)  # power
+1 - (sum(df2$p > 0.05) / nrow(df2)) # power (same result)
+(result <- sum(df2$p <= 0.05) / nrow(df2))
+
+answer_list[["7"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.8: What is the estimated power for the more conservative significance threshold alfa=0.01 using sample_size=20 and effect size=0.98?
+
+Power is a number [0;1] 
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df2 <- df %>% filter(size==20 & effect==0.98) 
+
+(result <- sum(df2$p <= 0.01) / nrow(df2))
+
+answer_list[["8"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+# A bad drug
+
+Imagine our drug actually made things worse. We also want to have a reasonable power to detect this.
+
+>Q4.9: What is the estimated power to detect a 4% increase in fatigueness from the drug at 5% significance level and sample_size=50?
+
+Power is a number [0;1] 
+
+---------!begin suggested answer ------------------------
+
+Power is the proportion of test that are really significant when they should be.
+
+Or: 1 - false negative rate
+
+```{r}
+
+df %>% 
+  group_by(size,effect) %>% 
+  summarise(power_005 = sum(p <=0.05)/n(),
+            power_001 = sum(p <=0.01)/n(),
+            negative_rate = sum(p > 0.05)/n())
+
+df2 <- df %>% filter(size==50 & effect ==1.04) # <-- these should all be significant.
+
+(result <- sum(df2$p <= 0.05) / nrow(df2))
+
+answer_list[["9"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.01)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q4.10: Which one of the following statements is most WRONG:
+
+1. Power changes with sample size
+2. Power increases with sample size
+3. If you change alfa (significance threshold) from 0.05 to 0.01,  power decreases
+4. If you change alfa (significance threshold) from 0.05 to 0.01,  power increases
+5. A high power means a low type II error
+6. A high power is better than a low power.
+
+The answer should be given as a single number: 1, 2, 3..
+
+NOTE: We ask for the most WRONG statement.
+
+---------!begin suggested answer ------------------------
+
+1. it's correct, but not very precise
+2. correct
+3. correct: lower alfa makes it HARDER to reject H0 = less power. So alfa descrease --> power decrease.
+4. wrong. The power does NOT increase so THIS IS THE MOST WRONG STATEMENT
+5. correct. Type II error is the false negative rate = 1 - power
+6. correct
+
+```{r}
+
+(result <- 4)
+
+answer_list[["10"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t4"  # If you change this to e.g. 2 - you should search & replace all >Q4. with >Q2.
+topic_description <- "# Designing an experiment"
+file_description  <- "designing_an_experiment"
+
+```
+
+## Answers table
+
+```{r}
+
+(
+answer <- bind_rows(answer_list) %>%
+  mutate(question = paste(topic, ".", names(answer_list), sep="")) %>%
+  select(question, everything())
+)
+
+```
+
+## Saving exam files
+
+```{r}
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, answer_filename)
+write_lines(x, answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(answer, key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+

@@ -1,0 +1,130 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Alien radio signal
+
+## Background
+
+Imagine we have obtained a USB thumb drive from a top secret project from Area 51 in Nevada.
+
+After hours of decryption and cracking passwords we ended up with a data table with sensor data.
+
+It is not clear what kind of sensor we are talking about.
+
+Your job will be to analyze the file and look for hidden messages in the file.
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+df <- read_tsv("t2.alien_radio_signal.tsv")
+
+```
+
+>Q2.1 How many columns do we have in the data?
+
+
+---
+
+Look at the "group" variable.
+
+>Q2.2 How many groups do we have in the data?
+
+
+---
+
+>Q2.3 What is the mean signal strength?
+
+
+---
+
+>Q2.4 Which of the following statements is true?
+
+Hint: plot the distribution of values for each group
+
+1. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group B
+2. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group C
+3. Sensor 1 show a normal distribution of values in Group B and a uniform (flat) distribution of values in Group A
+4. Sensor 1 show a normal distribution of values in Group B and a uniform (flat) distribution of values in Group C
+5. Sensor 1 show a normal distribution of values in Group C and a uniform (flat) distribution of values in Group A
+6. Sensor 1 show a normal distribution of values in Group C and a uniform (flat) distribution of values in Group B
+
+The answer should be given as a single number: 1, 2, 3..
+
+
+---
+
+>Q2.5 What is the mean sensor 2 value in group A?
+
+
+---
+
+For the next question, we will focus on group C.
+
+We assume that the sensor1 and sensor2 both are normally distributed and with the same variance.
+
+Our questions is if sensor1 and sensor2 measures the same, i.e. that mean(sensor1)==mean(sensor2)
+
+We want to test this with a simple t.test assuming the same variance/standard variation for the two sensors. 
+
+>Q2.6 What is the p value when you do the correct t.test()
+
+
+---
+
+One thing is the result of a statistical test. Another question is the effect size.
+
+Now we define the effect size as the absolute (i.e. positive) difference in means.
+
+>Q2.7: What is the absolute difference in means for sensor1 and sensor2 in group C?
+
+Hint: absolute difference = abs(difference)
+
+
+---
+
+>Q2.8: What is your conclusion from the two previous questions?
+
+1. We can't reject H0, so there is no difference between the sensors.
+2. It's not significant, but it's pretty close, so there could be a difference.
+3. It's significant but the effect size is small.
+4. It's significant and the effect size is huge.
+5. It's extremely significant (p <<< 0.05) but the effect size is small.
+6. It's extremely significant (p <<< 0.05) and the effect size is huge.
+
+The answer should be given as a single number: 1, 2, 3..
+
+
+---
+
+Now we will look for patterns in the noise. 
+
+1. Identify which group has a bimodal distribution of signal strength.
+2. For this group, use the distribution of signal strength to split the data into two smaller sets (one for each peak)
+3. Make a scatterplot of the sensor1, sensor2 data columns for each of these data sets
+
+>Q2.9: Which two people are hidden in the data?
+
+1. Barack Obama & Michelle Obama
+2. Barack Obama & Joe Biden
+3. Barack Obama & Donald Trump
+4. Donald Trump & Melania Trump
+5. Donald Trump & Mike Pence
+6. Donald Trump & Joe Biden
+7. Joe Biden & Jill Biden
+8. Joe Biden & Kamala Harris
+9. Palle & Thomas
+
+The answer should be given as a single number: 1, 2, 3..
+
+
+---
+
+

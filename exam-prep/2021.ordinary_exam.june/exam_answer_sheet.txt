@@ -1,0 +1,59 @@
+#########
+#
+# Please fill in your answers into this sheet
+# All answers should be given as numbers that can be understood by R.
+#
+# After each answer the points awarded for a correct answer is indicated.
+#
+# Examples of answers
+#
+# answer$t1.1 = 42         # (1 points)
+# answer$t1.2 = 1.3e-10    # (it's a very small number)
+# answer$t1.3 = 0.00000047 # (1 points) - Maybe I should have used more digits?
+#
+# 
+############ 
+#
+#
+# World happiness
+answer$t1.1 = NA # (1 points)
+answer$t1.2 = NA # (1 points)
+answer$t1.3 = NA # (1 points)
+answer$t1.4 = NA # (2 points)
+answer$t1.5 = NA # (3 points)
+answer$t1.6 = NA # (3 points)
+answer$t1.7 = NA # (2 points)
+answer$t1.8 = NA # (3 points)
+answer$t1.9 = NA # (3 points)
+answer$t1.10 = NA # (3 points)
+# Fifa goals
+answer$t2.1 = NA # (1 points)
+answer$t2.2 = NA # (1 points)
+answer$t2.3 = NA # (1 points)
+answer$t2.4 = NA # (2 points)
+answer$t2.5 = NA # (3 points)
+answer$t2.6 = NA # (3 points)
+answer$t2.7 = NA # (3 points)
+answer$t2.8 = NA # (1 points)
+# Births in Denmark
+answer$t3.1 = NA # (1 points)
+answer$t3.2 = NA # (1 points)
+answer$t3.3 = NA # (1 points)
+answer$t3.4 = NA # (2 points)
+answer$t3.5 = NA # (2 points)
+answer$t3.6 = NA # (2 points)
+answer$t3.7 = NA # (3 points)
+answer$t3.8 = NA # (3 points)
+answer$t3.9 = NA # (3 points)
+answer$t3.10 = NA # (3 points)
+# Designing an experiment
+answer$t4.1 = NA # (1 points)
+answer$t4.2 = NA # (1 points)
+answer$t4.3 = NA # (1 points)
+answer$t4.4 = NA # (2 points)
+answer$t4.5 = NA # (3 points)
+answer$t4.6 = NA # (3 points)
+answer$t4.7 = NA # (3 points)
+answer$t4.8 = NA # (3 points)
+answer$t4.9 = NA # (3 points)
+answer$t4.10 = NA # (2 points)

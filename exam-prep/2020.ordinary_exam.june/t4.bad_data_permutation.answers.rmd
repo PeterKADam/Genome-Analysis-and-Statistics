@@ -1,0 +1,294 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# A really bad experiment
+
+Imagine that I have a machine that records static noise from the atmosphere and convert it to two values (x and y).
+
+On two different nights I recorded the following data (night A and B)
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+df <- read_tsv(file = "t4.dataset.bad_data_permutation.tsv")
+
+```
+
+>Q4.1 How many datapoints did I collect in total?
+
+>Q4.2 How many datapoints did I collect in group A?
+
+>Q4.3 What is the mean x value in group A?
+
+>Q4.4 What is the absolute difference in means of x in the two groups?
+
+Hint: abs(-3.5) = 3.5
+
+---------!begin suggested answer ------------------------
+
+Data points are confused. Some say x and y are two data points pr. observation. My bad.
+
+We accept both answers (nrow() and nrow()*2) as correct in Q4.1 and Q4.2
+
+Also, Q4.3 is reported with only 1 digit on screen (tidyverse problem/feature). So we accept this answer as well.
+
+```{r}
+
+answer <- tibble()
+result <- nrow(df)
+
+answer <- rbind(answer,tibble(
+  question    = "1", 
+  true_answer = nrow(df), 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+answer <- rbind(answer,tibble(
+  question    = "2", 
+  true_answer = sum(df$group=="A"),
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+df2 <- df %>% filter(group=="A")
+
+answer <- rbind(answer,tibble(
+  question    = "3", 
+  true_answer = mean(df2$x), 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1))
+
+g1 <- df %>% filter(group=="A")
+g2 <- df %>% filter(group=="B")
+result <- abs(mean(g1$x)-mean(g2$x))
+
+answer <- rbind(answer,tibble(
+  question    = "4", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01))
+
+answer
+
+```
+---------!end suggested answer ------------------------
+
+Make a scatterplot of x and y for the two groups separatedly.
+
+>Q4.5 What number is hidden in group A?
+
+>Q4.6 What number is hidden in group B?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+ggplot(df, aes(x=x, y=y)) + 
+  geom_point() +
+  facet_wrap(~group, ncol=1) +
+  NULL
+  
+answer <- rbind(answer, tibble(
+  question    = "5", 
+  true_answer = 42, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01)
+  )
+
+answer <- rbind(answer, tibble(
+  question    = "6", 
+  true_answer = 33, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+After looking at the data we can see that the x values are NOT normally distrited.
+
+Despite the peculiar results above we try and look for other patterns in the data.
+
+We specifically try to test if mean(x) is different in night A versus night B.
+
+If we try and do a simple t.test (assuming equal variance in the two groups) we get:
+
+```{r}
+
+groupA <- df %>% filter(group=="A")
+groupB <- df %>% filter(group=="B")
+
+t.test(x = groupA$x,y = groupB$x, var.equal = T)
+
+```
+
+>Q4.7 What is the p value we get from this bad test?
+
+---------!begin suggested answer ------------------------
+
+This was a simple question. Just to see if you read the output correctly.
+
+```{r}
+
+groupA <- df %>% filter(group=="A")
+groupB <- df %>% filter(group=="B")
+x <- t.test(x = groupA$x,y = groupB$x, var.equal = T)
+
+answer <- rbind(answer, tibble(
+  question    = "7", 
+  true_answer = x$p.value, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.01)
+)
+
+```
+
+---------!end suggested answer ------------------------
+
+I really do not trust my test.
+
+So I go ahead and make a permutation test using the following simple code (only 100 permutations)
+
+```{r}
+
+set.seed(0)
+permuted   <- rep(NA, 100)
+for (i in 1:length(permuted)) {
+  xvalues <- sample(df$x)
+  g1 <- mean(xvalues[df$group=="A"])
+  g2 <- mean(xvalues[df$group=="B"])
+  permuted[i] <- abs(g1 - g2)
+}
+
+permuted
+
+```
+
+
+>Q4.8 How many of the 100 permutations were equal to or more extreme than the observed difference?
+
+---------!begin suggested answer ------------------------
+
+This is in order to test if you could correctly sum up and compare the numbers
+
+```{r}
+
+xvalues <- df$x
+g1 <- mean(xvalues[df$group=="A"])
+g2 <- mean(xvalues[df$group=="B"])
+observed <- abs(g1 - g2)
+
+set.seed(0)
+permuted   <- rep(NA, 100)
+for (i in 1:length(permuted)) {
+  xvalues <- sample(df$x)
+  g1 <- mean(xvalues[df$group=="A"])
+  g2 <- mean(xvalues[df$group=="B"])
+  permuted[i] <- abs(g1 - g2)
+}
+
+result <- sum(permuted >= observed)
+
+answer <- rbind(answer, tibble(
+  question    = "8", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.1)
+)
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q4.9 What is the estimated p value based on 5000 permutations?
+
+---------!begin suggested answer ------------------------
+
+And here we tested if you remeber the "+1" and were able to change my code a little bit.
+
+```{r}
+
+xvalues <- df$x
+g1 <- mean(xvalues[df$group=="A"])
+g2 <- mean(xvalues[df$group=="B"])
+observed <- abs(g1 - g2)
+
+set.seed(0)
+permuted   <- rep(NA, 5000)
+for (i in 1:length(permuted)) {
+  xvalues <- sample(df$x)
+  g1 <- mean(xvalues[df$group=="A"])
+  g2 <- mean(xvalues[df$group=="B"])
+  permuted[i] <- abs(g1 - g2)
+}
+
+pvalue <- (sum(permuted >= observed) +1 ) / ( length(permuted) +1)
+
+answer <- rbind(answer, tibble(
+  question    = "9", 
+  true_answer = pvalue, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.01)
+)
+
+```
+
+---------!end suggested answer ------------------------
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t4"  # If you change this to e.g. 2 - you should search & replace all >Q4. with >Q2.
+topic_description <- "# Bad data and permutations"
+file_description  <- "bad_data_permutation"
+
+```
+
+## Answers table
+
+```{r}
+
+answer
+
+```
+
+
+## Saving exam files
+
+```{r}
+
+answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, path = answer_filename)
+write_lines(x, path =answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(x = answer, path = key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+

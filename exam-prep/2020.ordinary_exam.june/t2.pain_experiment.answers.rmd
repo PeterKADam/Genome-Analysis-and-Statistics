@@ -1,0 +1,240 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Pain killer experiment
+
+Imagine that we have tested the effect of weak painkillers in a randomized controlled trial.
+
+The setup was simple:
+
+We randomly divided people into two group: "Placebo" and "Drug".
+
+First we gave them a small electric shock and they reported the pain level they experienced (0-100). 
+
+Then they got a pill (placebo pill or active pill).
+
+After waiting for 15 minutes, we gave them another small electric shock and they reported the pain level they experienced (0-100).
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+df <- read_tsv(file = "t2.dataset.pain_experiment.tsv")
+
+```
+
+>Q2.1 How many individuals were analyzed in this dataset?
+
+>Q2.2 How many placebo pills did we give out?
+
+>Q2.3 What was the mean change in pain level (change = After-Before) in the placebo group?
+
+>Q2.4 What was the mean change in pain level (change = After-Before) in the drug group?
+
+---------!begin suggested answer ------------------------
+
+A few students calculate correctly but report a negative change as positive. (q2.3 and q2.4)
+
+We have edited all your answers to positive values - and edited the answer key as well.
+
+
+```{r}
+
+df <- df %>% mutate(difference=After-Before)
+
+answer <- tibble()
+result <- nrow(df)
+
+
+answer <- rbind(answer,tibble(
+  question    = "1", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+
+result <- df %>% filter(group=="Placebo") %>% nrow()
+
+answer <- rbind(answer,tibble(
+  question    = "2", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+
+df2 <- df %>% filter(group=="Placebo")
+
+answer <- rbind(answer,tibble(
+  question    = "3", 
+  true_answer = abs(mean(df2$difference)), 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01))
+
+df2 <- df %>% filter(group=="Drug")
+
+answer <- rbind(answer, tibble(
+  question    = "4", 
+  true_answer = abs(mean(df2$difference)), 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01))
+
+answer
+
+```
+---------!end suggested answer ------------------------
+
+>Q2.5 Test if the treatment reponse is different from 0 (no response) in the Placebo group, report the p value (two tailed test).
+
+>Q2.6 Test if the treatment reponse in the Drug group is different than in the Placebo group. Report the p value (two tailed test).
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+pd <- df %>% filter(group=="Placebo")
+
+# wrong: data are paired - THIS IS NOT COEECT
+(t.test(x = pd$After, y = pd$Before, paired = FALSE))
+
+
+# Correct, data are paired
+(t.test(x = pd$After, y = pd$Before, paired = TRUE))
+
+# The paired test is identical to test if the difference is 0)
+(x <- t.test(x = pd$difference))
+
+answer <- rbind(answer, tibble(
+  question    = "5", 
+  true_answer = x$p.value, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 10*x$p.value)
+  )
+
+
+# Test if the reponse in the Drug group is different than in the Placebo group. Report the p value (two tailed test).
+pd1 <- df %>% filter(group=="Placebo")
+pd2 <- df %>% filter(group=="Drug")
+
+#
+# Some students may use the placebo group mean response as null in a t.test. 
+# This is not correct - since it does NOT take sample size of the placebo group into account.
+# Wrong
+(x <- t.test(x = pd2$difference, mu = mean(pd1$difference)))
+
+# Using formula
+(x <- t.test(difference ~ group, data=df))
+
+# Using two vectors
+(x <- t.test(x = pd1$difference, y=pd2$difference))
+
+answer <- rbind(answer, tibble(
+  question    = "6", 
+  true_answer = x$p.value, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 10*x$p.value)
+  )
+
+answer
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.7 How large a proportion of all individuals had a pain level > 90 before treatment? 
+
+Hint: Proportion is a number in the range [0;1]
+
+Now we define a strong response as a decrease in pain level > 10.
+
+>Q2.8 How large a proportion of individuals in the placebo group showed a strong reponse?
+
+>Q2.9 How large a proportion of individuals in the drug group showed a strong reponse?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+# proportion
+
+result <- sum(df$Before > 90) / nrow(df)
+
+answer <- rbind(answer, tibble(
+  question    = "7", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01)
+  )
+
+pd1 <- df %>% filter(group=="Placebo")
+
+result <- sum(pd1$difference < -10) / nrow(pd1)
+
+answer <- rbind(answer, tibble(
+  question    = "8", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01)
+  )
+
+pd2 <- df %>% filter(group=="Drug")
+
+result <- sum(pd2$difference < -10) / nrow(pd2)
+
+answer <- rbind(answer, tibble(
+  question    = "9", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01)
+  )
+
+answer
+
+
+
+```
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t2"  # If you change this to e.g. 2 - you should search & replace all >QX. with >QY.
+topic_description <- "# Pain experiment"
+file_description  <- "pain_experiment"
+
+```
+
+## Saving exam files
+
+```{r}
+
+answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <-  paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, path = answer_filename)
+write_lines(x, path =answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(x = answer, path = key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+

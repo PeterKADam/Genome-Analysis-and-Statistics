@@ -152,11 +152,11 @@ Call them "pval_ttest_b", "pval_ttest_fdr" and so on.
 A Vulcano plot is a plot with fold change on X and -log10 p value on the Y axis.
 
 ```{r}
-p1 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox, base = 10))) +
+p1 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox, base = 10), color = pval_wilcox < 0.05)) +
     geom_point()
-p2 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_b, base = 10))) +
+p2 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_b, base = 10), color = pval_wilcox_b < 0.05)) +
     geom_point()
-p3 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_fdr, base = 10))) +
+p3 <- results %>% ggplot(aes(x = log_fc, y = -log(pval_wilcox_fdr, base = 10), color = pval_wilcox_fdr < 0.05)) +
     geom_point()
 
 plot_grid(p1, p2, p3, nrow = 1, ncol = 3)
@@ -483,8 +483,8 @@ p3 <- rep(NA, 1000)
 
 
 for (i in 1:length(p)) {
-    g1 <- runif(n = 25, min = 50, max = 150)
-    g2 <- 5 + runif(n = 29, min = 50, max = 150)
+    g1 <- runif(n = 700, min = 50, max = 150)
+    g2 <- 5 + runif(n = 700, min = 50, max = 150)
 
     p[i] <- t.test(g1, g2, var.equal = T)$p.value
     p2[i] <- t.test(g1, g2)$p.value
@@ -493,7 +493,7 @@ for (i in 1:length(p)) {
 
 cat(
     "not normal t-test power: ", ((sum(p < 0.05) / length(p))), "\n",
-    "not normal welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n", ,
+    "not normal welch t-test power: ", ((sum(p2 < 0.05) / length(p2))), "\n",
     "not normal wilcox test power: ", ((sum(p3 < 0.05) / length(p3))), "\n"
 )
 ```
@@ -528,6 +528,57 @@ Assume scenario 1 is what we will see in our experiment.
 Don't make assumptions.
 
 ## >Q10. How large a samplesize (both groups will have same size) do I need to get a power of ~80%?
+
+
+
+```{r}
+
+
+size_vec <- seq(10, 200, 5)
+
+peas <- rep(NA, length(size_vec))
+peas2 <- rep(NA, length(size_vec))
+peas3 <- rep(NA, length(size_vec))
+
+for (y in 1:length(size_vec))
+{
+    p <- rep(NA, 1000)
+    p2 <- rep(NA, 1000)
+    p3 <- rep(NA, 1000)
+
+
+    for (i in 1:length(p)) {
+        g1 <- rnorm(n = size_vec[y], mean = 100, sd = 15)
+        g2 <- rnorm(n = size_vec[y], mean = 105, sd = 15)
+
+        p[i] <- t.test(g1, g2, var.equal = T)$p.value
+        p2[i] <- t.test(g1, g2)$p.value
+        p3[i] <- wilcox.test(g1, g2)$p.value
+    }
+
+    peas[y] <- ((sum(p < 0.05) / length(p)))
+    peas2[y] <- ((sum(p2 < 0.05) / length(p)))
+    peas3[y] <- ((sum(p3 < 0.05) / length(p)))
+}
+```
+
+```{r}
+
+POWERDF <- tibble(n = size_vec, t_test = peas, welch = peas2, wilcox = peas3)
+head(POWERDF)
+
+```
+
+```{r}
+POWERDF %>%
+    gather("t_test", "welch", "wilcox", key = test, value = power) %>%
+    ggplot(aes(x = n, y = power, color = test)) +
+    geom_line() +
+    geom_hline(aes(yintercept = 0.8))
+
+```
+
+
 
 > din mor er nok til begge grupper.
 

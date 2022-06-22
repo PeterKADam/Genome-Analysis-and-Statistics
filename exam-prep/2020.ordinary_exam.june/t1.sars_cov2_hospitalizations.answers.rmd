@@ -1,0 +1,247 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Hospitalizations of people in Denmark infected with Sars-cov2
+
+We have downloaded data in early may 2020 from the danish health authorities.
+
+Url: https://www.sst.dk/da/corona/tal-og-overvaagning
+
+We are looking at different age groups and we have the following columns:
+
+ * the number of confirmed cases ("confirmed")
+ * the number of hospitalized females ("females")
+ * the number of hospitalized males ("males")
+
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+df <- read_tsv(file = "t1.dataset.corona_data.20200503.tsv")
+
+```
+
+>Q1.1 How many individuals were confirmed infected in total?
+
+>Q1.2 How many individuals were hospitalized in total?
+
+>Q1.3 What proportion of the confirmed infected (total) were hospitalized (total)?
+
+Hint: Proportion is a number in the range [0;1]
+
+---------!begin suggested answer ------------------------
+```{r}
+answer <- tibble()
+result <- nrow(df)
+
+answer <- rbind(answer,tibble(
+  question    = "1", 
+  true_answer = sum(df$confirmed), 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+answer <- rbind(answer,tibble(
+  question    = "2", 
+  true_answer = sum(df$males) + sum(df$females), 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+
+total_hospitalized <- (sum(df$males) + sum(df$females))
+total_infected <- sum(df$confirmed)
+
+answer <- rbind(answer,tibble(
+  question    = "3", 
+  true_answer = total_hospitalized/total_infected, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01))
+
+answer
+
+```
+---------!end suggested answer ------------------------
+
+>Q1.4 What proportion of all confirmed infected were in the agegroup 0-39?
+
+>Q1.5 How many hospitalizations would you expect in the 0-39 agegroup if all confirmed infected people have the same risk of hospitalization?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df$total         <- df$males+df$females
+df$prop_infected <- df$confirmed / sum(df$confirmed)
+df$expected      <- sum(df$total) * df$prop_infected
+
+answer <- rbind(answer, tibble(
+  question    = "4", 
+  true_answer = df$prop_infected[1], 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01)
+  )
+
+answer <- rbind(answer, tibble(
+  question    = "5", 
+  true_answer = df$expected[1], 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 1)
+  )
+
+
+```
+
+---------!end suggested answer ------------------------
+
+We assume that all confirmed infected people have the same risk of hospitalization.
+
+>Q1.6 If you test this model, what is the p value when you fit the observed data to the expected?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+x <- chisq.test(x = df$total, p=df$prop_infected)
+
+x
+
+answer <- rbind(answer, tibble(
+  question    = "6", 
+  true_answer = x$p.value, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 2.2e-16)
+)
+
+
+```
+
+---------!end suggested answer ------------------------
+
+It looks like the risk of hospitalization increase with age, although this can not be concluded from the data, since not all infected persons have been tested and confirmed infected. 
+
+Now we only focus on the hospitalized males and females. Can we tell if the risk of hospitalization increase in the same way for males and females?
+
+If we add the simplifying (and actually false) assumption that the ratio of males to females in the population is constant, and then assume that the risk of hospitalization increase the same way for males and females, we would expect the proportion of hospitalized males to be independent of agegroup.
+
+I.e. we would expect that the numbers for males follow the same pattern as for females.
+
+Now test if the number of hospitalized males and females are independent of agegroup.
+
+Hint: sex is a categorical variable and agegroup is also a categorical variable.
+
+>Q1.7 For that test, what is the p value?
+
+Hint: Notice any warnings and look for violations of assumptions.
+
+---------!begin suggested answer ------------------------
+
+This is a simple chi square test. So we use row and column totals to calculate expected and compare with observed.
+
+You can also use fisher.test
+
+```{r}
+
+df2 <- df %>% select(females, males)
+
+df2
+
+x1 <- fisher.test(df2) # This is ok
+x2 <- chisq.test(x = df2, simulate.p.value = T, B = 100000) # This is also ok
+x3 <- chisq.test(x = df2) # This is actually not ok - assumptions are violated
+
+x1
+x2
+x3
+
+answer <- rbind(answer, tibble(
+  question    = "7", 
+  true_answer = x1$p.value,  # We use fisher as "most correct"
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 2*diff(c(x1$p.value, x2$p.value))) # So we allow some slack around the p value
+)
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q1.8  Which one of the following statements is most correct?
+
+Hint: Your answer should just be a single number (1,2..5)
+
+1. The number of hospitalizations do not differ between males and females.
+2. Sex and agegroup are weakly associated.
+3. Sex and agegroup are strongly associated.
+4. Sex and agegroup are not significantly associated.
+5. All of the above
+6. None of the above
+
+---------!begin suggested answer ------------------------
+
+There was an error in the list above. The number 2 were there twice.
+
+The statement 4. Sex and agegroup are not significantly associated is the correct one.
+
+It had number 3 in the wrong list, so we accept 3 and 4 as correct answers.
+
+```{r}
+
+answer <- rbind(answer, tibble(
+  question    = "8", 
+  true_answer = 3.6,
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.6))
+
+```
+
+---------!end suggested answer ------------------------
+
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t1"
+topic_description <- "# Sars-cov2 hospitalizations"
+file_description  <- "sars_cov2_hospitalizations"
+
+answer
+
+
+```
+
+## Saving exam files
+
+```{r}
+
+answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <-  paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, path = answer_filename)
+write_lines(x, path =answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(x = answer, path = key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+

@@ -1,0 +1,383 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Alien radio signal
+
+## Background
+
+Imagine we have obtained a USB thumb drive from a top secret project from Area 51 in Nevada.
+
+After hours of decryption and cracking passwords we ended up with a data table with sensor data.
+
+It is not clear what kind of sensor we are talking about.
+
+Your job will be to analyze the file and look for hidden messages in the file.
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+df <- read_tsv("t2.alien_radio_signal.tsv")
+
+```
+
+>Q2.1 How many columns do we have in the data?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer_list <- list()
+
+(result <- ncol(df))
+
+answer_list[["1"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+Look at the "group" variable.
+
+>Q2.2 How many groups do we have in the data?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+table(df$group)
+
+(result <- 3)
+
+answer_list[["2"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+
+```
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.3 What is the mean signal strength?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+(result <- mean(df$signal_strength))
+
+answer_list[["3"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.4 Which of the following statements is true?
+
+Hint: plot the distribution of values for each group
+
+1. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group B
+2. Sensor 1 show a normal distribution of values in Group A and a uniform (flat) distribution of values in Group C
+3. Sensor 1 show a normal distribution of values in Group B and a uniform (flat) distribution of values in Group A
+4. Sensor 1 show a normal distribution of values in Group B and a uniform (flat) distribution of values in Group C
+5. Sensor 1 show a normal distribution of values in Group C and a uniform (flat) distribution of values in Group A
+6. Sensor 1 show a normal distribution of values in Group C and a uniform (flat) distribution of values in Group B
+
+The answer should be given as a single number: 1, 2, 3..
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+ggplot(df, aes(x=sensor1)) +
+  geom_histogram() +
+  facet_wrap(~group)
+
+```
+
+Gruppe A er underlig (bimodal?)
+Gruppe B er uniform
+Gruppe C er normal
+
+Så svaret må være:
+
+6. Sensor 1 show a normal distribution of values in Group C and a uniform (flat) distribution of values in Group B
+
+```{r}
+
+(result <- 6)
+
+answer_list[["4"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.5 What is the mean sensor 2 value in group A?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df %>% group_by(group) %>% summarise(m = mean(sensor2))
+
+df2 <- df %>% filter(group=="A")
+
+(result <- mean(df2$sensor2))
+rm(df2)
+
+answer_list[["5"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+For the next question, we will focus on group C.
+
+We assume that the sensor1 and sensor2 both are normally distributed and with the same variance.
+
+Our questions is if sensor1 and sensor2 measures the same, i.e. that mean(sensor1)==mean(sensor2)
+
+We want to test this with a simple t.test assuming the same variance/standard variation for the two sensors. 
+
+>Q2.6 What is the p value when you do the correct t.test()
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df2 <- df %>% filter(group=="C")
+
+# WRONG (but same answer)
+(x <- t.test(x = df2$sensor1, y = df2$sensor2, var.equal = F))
+
+# Correct
+(x <- t.test(x = df2$sensor1, y = df2$sensor2, var.equal = T))
+(result <- x$p.value)
+rm(df2,x)
+
+answer_list[["6"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.0001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+One thing is the result of a statistical test. Another question is the effect size.
+
+Now we define the effect size as the absolute (i.e. positive) difference in means.
+
+>Q2.7: What is the absolute difference in means for sensor1 and sensor2 in group C?
+
+Hint: absolute difference = abs(difference)
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+(df2 <- df %>% filter(group=="C"))
+mean(df2$sensor1)
+mean(df2$sensor2)
+(x <- mean(df2$sensor1) - mean(df2$sensor2))
+(result <- abs(x))
+rm(df2, x)
+
+answer_list[["7"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.8: What is your conclusion from the two previous questions?
+
+1. We can't reject H0, so there is no difference between the sensors.
+2. It's not significant, but it's pretty close, so there could be a difference.
+3. It's significant but the effect size is small.
+4. It's significant and the effect size is huge.
+5. It's extremely significant (p <<< 0.05) but the effect size is small.
+6. It's extremely significant (p <<< 0.05) and the effect size is huge.
+
+The answer should be given as a single number: 1, 2, 3..
+
+---------!begin suggested answer ------------------------
+
+We find a p < 0.05 (but pretty close to the significance threshold)
+
+The effect size is small, both means are close to 200.
+
+So it's significant but the effect size is small (3)
+
+```{r}
+
+(result <- 3)
+
+answer_list[["8"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+Now we will look for patterns in the noise. 
+
+1. Identify which group has a bimodal distribution of signal strength.
+2. For this group, use the distribution of signal strength to split the data into two smaller sets (one for each peak)
+3. Make a scatterplot of the sensor1, sensor2 data columns for each of these data sets
+
+>Q2.9: Which two people are hidden in the data?
+
+1. Barack Obama & Michelle Obama
+2. Barack Obama & Joe Biden
+3. Barack Obama & Donald Trump
+4. Donald Trump & Melania Trump
+5. Donald Trump & Mike Pence
+6. Donald Trump & Joe Biden
+7. Joe Biden & Jill Biden
+8. Joe Biden & Kamala Harris
+9. Palle & Thomas
+
+The answer should be given as a single number: 1, 2, 3..
+
+---------!begin suggested answer ------------------------
+
+First we plot the distribution of signal strength
+
+```{r}
+
+ggplot(df, aes(x=signal_strength)) +
+  geom_histogram() + 
+  facet_wrap( ~group, scales = "free")
+
+```
+
+It's clear that group A is bimodal and we can split the two peaks at signal_strength ~20
+
+```{r}
+
+pd <- df %>% 
+  filter(group=="A") %>% 
+  filter(signal_strength > 20)
+ggplot(pd, aes(x=sensor1, y=sensor2)) + geom_point()
+
+pd <- df %>% filter(group=="A") %>% filter(signal_strength < 20)
+ggplot(pd, aes(x=sensor1, y=sensor2)) + geom_point()
+rm(pd)
+
+# Or simply
+ggplot(df, aes(x=sensor1,y=sensor2)) + 
+  geom_point() + 
+  facet_grid(signal_strength > 20 ~ group)
+
+```
+
+That is Barack Obama and Donald Trump.
+
+```{r}
+
+(result <- 3)
+
+answer_list[["9"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t2"  # If you change this to e.g. 2 - you should search & replace all >Q3. with >Q2.
+topic_description <- "# Alien radio signals"
+file_description  <- "alien_radio"
+
+```
+
+## Answers table
+
+```{r}
+
+(
+answer <- bind_rows(answer_list) %>%
+  mutate(question = paste(topic, ".", names(answer_list), sep="")) %>%
+  select(question, everything())
+)
+
+```
+
+## Saving exam files
+
+```{r}
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, answer_filename)
+write_lines(x, answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(answer, key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+

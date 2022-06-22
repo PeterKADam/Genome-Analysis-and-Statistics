@@ -1,0 +1,319 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# A PCR test for SARS-Cov2
+
+The world is racing to put out some quick - and reliable ! -  test for detecting the presence of the SARS-Cov2 virus (the virus causing the pandemic known under the name Covid19). 
+
+This is especially important at the beginning of a pandemic if you suspect many "asymptomatic carriers" (i.e. people who are infected but do not show any symptoms).
+
+PCR tests can be made on single persons - one at a time - or they can be made in pools where samples for several persons are mixed before testing.
+
+The idea behind pooling - proposed but not operational in current practices - is powerful.
+
+If your goal is to test 10.000 persons a day (sounds familiar ?) you can do the following:
+
+### Single testing 
+
+You do 10.000 single tests (one PCR reaction pr. sample) - that is expensive and cumbersome.
+
+### Pooled testing
+
+You could say "Let's do 1000 tests on 10 pools (where 1 pool contains 10 samples)".
+
+If a pool is "positive" for the virus then you test individually all 10 samples in the pool. If the number of carriers is initially rare it magnifies your screening power 10 fold!
+
+Here we explore the feasibility of pooled testing using some probability calculations.
+
+Source: https://www.medrxiv.org/content/10.1101/2020.04.14.20064618v1.full.pdf
+
+Title: Pooling-Based Efficient SARS-CoV-2 Testing (P-BEST): Efficient high throughput SARS-CoV-2 testing to detect asymptomatic carriers
+
+```{r}
+
+library(tidyverse)
+
+```
+
+Let's assume that after sample extraction and preparation, an individual that is carrier "injects" on average 50 viral RNA molecules into the PCR mix.
+
+It is not always 50 viral molecules. Sometimes it's less, sometimes is more - but on average we assume it's 50 molecules from a carrier.
+
+We use a Poisson distribution with mean lambda = 50 to model this number.
+
+We assume that if just a single molecule makes it into the PCR mix, the PCR will amplify it and the PCR result will be positive.
+
+In that context, a false negative test is the unlucky event that zero molecules make it to the PCR mix.
+
+>Q3.1 What is probability of a carrier testing negative when not pooled? (3 digits scientific)
+
+Example of answer formating :
+
+```{r}
+false_negative <- 0.00000001234
+false_negative
+false_negative <- 1.234e-08
+false_negative
+```
+
+---------!begin suggested answer ------------------------
+
+We calculate the probability of a count of 0 molecules.
+
+```{r}
+
+answer <- tibble()
+
+x <- dpois(x = 0, lambda = 50 )
+
+answer <- rbind(answer,tibble(
+  question    = "1", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 100*x))
+
+```
+
+---------!end suggested answer ------------------------
+
+## False negative in pooled samples
+
+We then turn to what happens when samples from different persones are pooled together before PCR testing.
+
+We still want to calculate the probability that the RNA from a carrier is being missed by the initial PCR reaction mix (a False Negative).
+
+The pooling dilutes the contribution of each individual sample to the PCR reaction mix.
+
+We assume perfect pooling: every individual contributes the same amount to the PCR mix. 
+
+So for instance if 24 out 48 individuals are carriers, we use a Poisson distribution with mean lambda = 25 to model the number of viral molecules that make it to the PCR mix.
+
+If at least 1 physical viral RNA copy is present in the PCR mix, it will be amplified and "bingo!" the test for this pool will be positive (as it should). 
+
+Imagine now that we use a pool of 48 individuals. We assume perfect pooling and focus on the situation where only one individual is a carrier, the 47 others are not infected.
+
+>Q3.2 What is the probability for a negative result when testing a pool with 1 carrier mixed with 47 non carriers ?
+
+---------!begin suggested answer ------------------------
+
+So the infected individual contributes 50 molecules.
+Then they are diluted 48 times...
+
+```{r}
+
+(x <- dpois(x = 0, lambda = 50/48))
+
+answer <- rbind(answer,tibble(
+  question    = "2", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.001))
+
+```
+---------!end suggested answer ------------------------
+
+## How to work around the false negative problem
+
+To ensure reproducibility, each tested individual is put in three different pools.
+
+Now we assume that, because they are very few carriers, that a carrier individual will still be the only carrier in all three independent pools.
+
+So now we will miss this individual only if all three pools are false negatives. 
+
+>Q3.3 What is the probability for a negative result in all 3 pools, each containing  1 carrier mixed with 47 other non carriers ?
+
+---------!begin suggested answer ------------------------
+
+Since the pools are independent it is the probability^3.
+
+```{r}
+
+x <- dpois(x = 0, lambda = 50/48) 
+x   # One pool is negative
+x^3 # all three pools are negative
+
+answer <- rbind(answer,tibble(
+  question    = "3", 
+  true_answer = x^3, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.001))
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q3.4 What is the minimum of replicated pools to use if you want to ensure that the probability of detecting the single carrier is >99% ?
+
+Hint: It means the risk of all pools being negative is smaller than 1% (0.01).
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+x <- dpois(x = 0, lambda = 50/48)  # One pool is negative
+
+for (i in 1:10) {
+  cat(i , "replicated pools, false negative " , x^i, "\n" )
+}
+
+result <- which((x^(1:10) < 0.01)==TRUE)[1] # First result that is below 0.01
+result
+
+answer <- rbind(answer,tibble(
+  question    = "4", 
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.1))
+
+```
+
+---------!end suggested answer ------------------------
+
+## Estimating the  proportion of infected individuals in the populaton from pools data.
+
+In region Hovestaden, 200 pools were tested and 3 pools where tested "positive".
+
+In region Midtjylland, 120 pools were tested and 0 pools where "positive". 
+
+Each pool contained 48 individuals sampled randomly. 
+
+No replicates are used.
+
+>Q3.5 How many individuals were tested in total?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer <- rbind(answer,tibble(
+  question    = "5", 
+  true_answer = 200*48 + 120*48, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q3.6 What is the estimated overall porportion of carriers in Denmark ? 
+
+We assume that the overall proportion of carriers in Denmark is < 0.01 (i.e. less than 1%).
+
+Hint: So we assume we see 0 or 1 carrier in each pool (though this will lead to a slight underestimation and should not be done in real life).
+
+---------!begin suggested answer ------------------------
+
+The hint just means that we assume that a pool never have more than 1 carrier.
+
+So we say that the 3 positive pools are 3 carriers total.
+
+
+```{r}
+
+n_positive <- 3
+n_total <-(200+120)*48
+
+(overall_rate <- n_positive/n_total)
+
+answer <- rbind(answer,tibble(
+  question    = "6", 
+  true_answer = overall_rate, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = overall_rate*10))
+
+```
+---------!end suggested answer ------------------------
+
+
+>Q3.7 What is the probability that more than 1 infected person is found in the same pool
+
+Assume pools are obtained via randomly sampling people.
+
+Assume that the proportion in the whole population is the one you calculated in Q3.5 above 
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+
+n_positive <- 3
+n_total <-(200+120)*48
+
+(overall_rate <- n_positive/n_total)
+
+# You can use pbinom
+1-pbinom(q = 1,size = 48, prob = overall_rate)  # 1 - (1 or less )
+pbinom(q = 1,size = 48, prob = overall_rate, lower.tail = F) # More than 1 
+
+# Or calculate probablity of 0 and 1 first
+d0 <- dbinom(x = 0,size = 48, prob = overall_rate)  # 0 persons found
+d1 <- dbinom(x = 1,size = 48, prob = overall_rate)  # 1 person found
+(x <- 1 - (d0+d1))
+
+
+answer <- rbind(answer,tibble(
+  question    = "7", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x*10))
+
+```
+
+---------!end suggested answer ------------------------
+
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t3"  # If you change this to e.g. 2 - you should search & replace all >Q1. with >Q2.
+topic_description <- "# Sars-Cov2 testing"
+file_description  <- "sars-cov2_testing"
+
+```
+
+## Answers table
+
+```{r}
+
+answer
+
+```
+
+
+## Saving exam files
+
+```{r}
+
+answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, path = answer_filename)
+write_lines(x, path =answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(x = answer, path = key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+
+

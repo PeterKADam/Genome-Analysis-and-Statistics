@@ -1,0 +1,157 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Designing an experiment
+
+## Background
+
+We are going to apply for money to investigate the effect of a new drug on fatigue.
+
+We are going to score fatigue on a scale from 0 - 20, where 0 means "Not tired at all" and 20 means "as tired as possible".
+
+We plan to run the experiment as a random shuffle of two treatments: placebo and drug. Every participant will either get placebo followed by drug or drug followed by placebo. We record the fatigueness after each treatment and compare the placebo and drug using a paired test.
+
+So our design is paired observations. Note that the most extreme case is going from 20 to 0 or from 0 to 20. 
+
+## Hypotheses
+
+You should assume that our modeling is fine and our choice of test is also OK. 
+
+We want to test the following NULL hypothesis:
+
+H0: The drug does NOT change fatigue when compared to placebo.
+
+## Modeling
+
+We used different versions of the following code to simulate data and test different effect sizes and sample sizes.
+
+We used a different number of simulations and different values of effect sizes and sample sizes.
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+r <- rep(NA,10)
+
+set.seed(0)
+
+for (i in 1:length(r)) {
+  x <- tibble(placebo = round(runif(n = 50, min = 0, max = 20))) %>%
+    mutate(effect = rnorm(n = n(), mean=0.97, sd = 0.1)) %>%
+    mutate(drug = round(placebo * effect))
+  tr <- wilcox.test(x = x$drug, y=x$placebo, paired = TRUE)
+  r[i] <- tr$p.value
+}
+
+tibble(p=r, effect="0.97", size=50)
+
+```
+
+## The code above outputs
+
+          p effect  size
+      <dbl> <chr>  <dbl>
+ 1 0.00289  0.97      50
+ 2 0.00486  0.97      50
+ 3 0.361    0.97      50
+ 4 0.0308   0.97      50
+ 5 0.0299   0.97      50
+ 6 0.00519  0.97      50
+ 7 0.453    0.97      50
+ 8 0.135    0.97      50
+ 9 0.0545   0.97      50
+10 0.000662 0.97      50
+
+# Your job
+
+Your job is now to look at all our simulations results and answer some questions about false positives, power and sample sizes.
+
+# Reading simulation results
+
+```{r}
+
+df <- read_tsv(file = "t4.data.tsv")
+
+```
+
+>Q4.1 How many different sample sizes did I simulate?
+
+
+---
+
+>Q4.2 How many different effect sizes did I simulate?
+
+
+---
+
+>Q4.3 How many statistical tests did I run in total for sample size=20?
+
+
+---
+
+>Q4.4 How many statistical tests did I run for sample size=20 and effect size=0.98?
+
+
+---
+
+>Q4.5 What is the simulated/observed Type I error (false positive rate) across all sample sizes?
+
+NOTE: The rate is a number [0;1]. So your answer should be between 0 and 1.
+
+
+---
+
+>Q4.6 How many tests were significant at the 0.05 level for sample size=10 and effect size=0.98?
+
+
+---
+
+>Q4.7: What is the estimated power for alfa=0.05 using sample_size=10 and effect size=0.98?
+
+Power is a number [0;1] 
+
+
+---
+
+>Q4.8: What is the estimated power for the more conservative alfa=0.01 using sample_size=20 and effect size=0.98?
+
+Power is a number [0;1] 
+
+
+---
+
+# A bad drug
+
+Imagine our drug actually made things worse. We also want to have a reasonable power to detect this.
+
+>Q4.9: What is the estimated power to detect a 4% increase in fatiguness from the drug at 5% significance level and sample_size=50?
+
+Power is a number [0;1] 
+
+
+---
+
+>Q4.10: Which one of the following statements is most WRONG:
+
+1. Power changes with sample size
+2. Power increases with sample size
+3. If you change alfa (significance threshold) from 0.05 to 0.01,  power decreases
+4. If you change alfa (significance threshold) from 0.05 to 0.01,  power increases
+5. A high power means a low type II error
+6. A high power is better than a low power.
+
+The answer should be given as a single number: 1, 2, 3..
+
+NOTE: We ask for the most WRONG statement.
+
+
+---
+
+

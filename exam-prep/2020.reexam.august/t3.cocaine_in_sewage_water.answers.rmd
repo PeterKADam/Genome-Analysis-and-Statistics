@@ -1,0 +1,272 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Cocaine in sewage water in European cities
+
+The European Centre for Drugs and Drug Addiction is monitoring drug use in European cities.
+
+Analyzing communal wastewaters for drugs and their metabolic products in order to estimate their consumption in the community is a developing field, involving scientists working in different research areas, including analytical chemistry, physiology and biochemistry, sewage engineering, spatial epidemiology and statistics, and conventional drug epidemiology.
+
+The collaboration have collected data from several drugs over the years and here we will focus on cocaine in sewage water in 2019 and 2018 (where there are most data points).
+
+Data are originally found here: https://www.emcdda.europa.eu/topics/wastewater
+
+The measured concentration is normalized to mg cocaine pr. 1000 persons pr. day in order to account for differences in population size of the city.
+
+If the amount was below the detection limit the value is indicated as 0.
+
+If a city didn't collect any data a given year, the value is indicated as NA (= missing data).
+
+To help you get started, we remove all cities with missing value in either year.
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+df <- read_tsv(file = "t3.cocaine_in_sewage_water.dataset.tsv")
+
+# We remove all cities with missing observations
+df <- df %>% filter(!is.na(y2018) & !is.na(y2019))
+
+head(df)
+
+```
+
+>Q3.1 How many different cities do we have data from?
+
+---------!begin suggested answer ------------------------
+```{r}
+
+answer <- tibble()
+
+x <- nrow(df)
+
+answer <- rbind(answer,tibble(
+  question    = "1", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+>Q3.2 What is the observed mean consumption in germany (DE) in 2019?
+
+---------!begin suggested answer ------------------------
+```{r}
+
+(x <- mean(df$y2018))
+
+answer <- rbind(answer,tibble(
+  question    = "2", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+>Q3.3 What is the observed median consumption in germany (DE) in 2019?
+
+---------!begin suggested answer ------------------------
+```{r}
+
+(x <- median(df$y2018))
+
+answer <- rbind(answer,tibble(
+  question    = "3", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+>Q3.4 In how many cities were the measured cocaine consumption > 100 mg pr. 1000 people pr. day in 2019? 
+
+---------!begin suggested answer ------------------------
+```{r}
+
+(x <- df %>% filter(y2019 > 100) %>% nrow())
+
+answer <- rbind(answer,tibble(
+  question    = "4", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+>Q3.5 In how many cities did the measured cocaine consumption increase in 2019 relative to 2018 ? 
+
+Hint: Create a new variable "change" that quantifies the difference in consumption between 2018 amd 2019. Count how many cities have a positive change, i.e. change = 2019-2018.
+
+---------!begin suggested answer ------------------------
+```{r}
+
+df <- df %>% mutate(change=y2019-y2018)
+
+(x <- sum( df$change >0))
+
+answer <- rbind(answer,tibble(
+  question    = "5", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+>Q3.6 If we assume that every city had equal probability (50:50) of going up/down in consumption from 2018 to 2019, what is the probability of observing "just by chance" as many or more increases than the number of cities with increased consumption observed.
+
+---------!begin suggested answer ------------------------
+
+It is actually a binomial one tailed test.
+
+Since we ask for the same or MORE cities.
+
+We observe 31 cities going up out of 45.
+
+Our null hypothesis is that the chance of going up is 0.5
+
+```{r}
+
+(result <- binom.test(x = 31, n = 45, p = 0.5, alternative = "greater"))
+
+x <- result$p.value
+
+answer <- rbind(answer,tibble(
+  question    = "6", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = x/10))
+
+```
+---------!end suggested answer ------------------------
+
+>Q3.7 Using the city as an observation unit, compare the mean consumption in 2018 and 2019 using the appropriate type of t.test. Report the p value of the test. 
+
+Our null hypothesis: the mean consumption were the same in the two years. 
+
+Our alternative hypothesis: the mean consumption were different in the two years.
+
+
+---------!begin suggested answer ------------------------
+
+It is a paired t test. Since each data point is two different years from the same city.
+
+Since our alternative hypothesis is that the mean is different, then it is a two tailed test.
+
+
+```{r}
+
+(result <- t.test(x = df$y2019, y = df$y2018, paired = TRUE))
+
+(t.test(x = df$change))
+
+x <- result$p.value
+
+answer <- rbind(answer,tibble(
+  question    = "7", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = x/10))
+
+```
+---------!end suggested answer ------------------------
+
+>Q3.8 Which statement do you agree most with? 
+
+Answer should be a number indicating one of the following statements:
+
+1. In more than two thirds of the cities surveyed, cocaine consumption went up in 2109, relative to 2018. The trend is significant (at the alpha=0.01 level).
+
+2. In more than two thirds of the cities surveyed, cocaine consumption went up in 2019, relative to 2018. The trend is significant (at the alpha=0.05 level).
+
+3. Mean cocaine consumption in Europe was significantly higher in 2019 relative to 2018. 
+
+4. Mean cocaine consumption in Europe was higher in 2019 relative to 2018, but the trend observed is not statistically significant. 
+
+5. None of the above.
+
+---------!begin suggested answer ------------------------
+
+It is a paired t test. Since each data point is two different years from the same city.
+
+```{r}
+
+answer <- rbind(answer,tibble(
+  question    = "8", 
+  true_answer = 2, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+
+---------!begin suggested answer ------------------------
+
+Just a plot to illustrate what's happening.
+
+```{r}
+
+pd <- df %>% pivot_longer(c(-country, -city, -change))
+
+ggplot(pd, aes(x=name, y=value, group=city)) + 
+  geom_point() + 
+  geom_line(aes(color=change > 0)) 
+
+```
+---------!end suggested answer ------------------------
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t3" 
+topic_description <- "# Cocaine in sewage water"
+file_description  <- "cocaine_in_sewage_water"
+
+answer
+
+```
+
+## Saving exam files
+
+```{r}
+
+answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <-  paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, path = answer_filename)
+write_lines(x, path =answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(x = answer, path = key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+
+

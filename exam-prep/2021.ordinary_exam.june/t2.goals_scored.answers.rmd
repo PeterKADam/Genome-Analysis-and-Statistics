@@ -1,0 +1,353 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Models for goals scored in a football match
+
+## Background
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+df <- read_csv("t2.fifa_results_data.csv")
+
+head(df)
+
+table(df$tournament)
+
+```
+
+>Q2.1 How many registered matches where Denmark was playing at home do we have data for?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer_list <- list()
+
+df_dk <- df %>%
+  filter(home_team == "Denmark")
+
+(result1 <- nrow(df_dk))
+
+answer_list[["1"]] <- tibble(
+  true_answer = result1, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+rm(df_dk, result1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.2 What is the highest number of goals scored by Denmark at home?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df_home <- df %>%
+  filter(home_team == "Denmark")  
+
+summary(df_home)
+
+(result2 <- max(df_home$home_score))
+
+answer_list[["2"]] <- tibble(
+  true_answer = result2, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+rm(df_home, result2)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+## A model for the distribution of number of goals
+
+Lets focus on matches where Denmark played at home in the category `Friendly` matches 
+
+(check that you have n = 183). 
+
+>Q2.3  what is the mean of the number of goals scored in these 183 matches ?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+df2 <- df %>%
+  filter(home_team == "Denmark") %>%
+  filter(tournament == "Friendly")
+           
+dim(df2)
+
+(result <- mean(df2$home_score))
+
+var(df2$home_score)
+
+answer_list[["3"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.01)
+
+rm(df2)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.4 What is the probability that Denmark scores 6 goals or more in a friendly match at home ?
+
+Hint: If we assume that goals have a constant probability of occurring per unit time during a football match, then we expect the number of goals in a match scored by a team to follow a Poisson probability distribution.
+
+---------!begin suggested answer ------------------------
+
+We asssume that scores S follow a Poisson distribution with a mean X.
+
+Then our best estimate of X is the observed mean in Denmark's friendly matches at home.
+
+Using that, we can then calculate  P[S >= 6]
+
+```{r}
+
+df2 <- df %>%
+  filter(home_team == "Denmark") %>%
+  filter(tournament == "Friendly")
+           
+X <- mean(df2$home_score)
+
+# Summing by hand, 6,7...up to 100 goals
+probs <- dpois(x = 6:100, lambda = X) # the observed mean
+sum(probs)
+
+# We can also use ppois()
+1-ppois(q = 5,lambda = X, lower.tail = T ) # 1 - lower tail
+ppois(q = 5,lambda = X, lower.tail = F )   # upper tail
+
+(result <- ppois(q = 5,lambda = X, lower.tail = F ))
+
+answer_list[["4"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.001)
+
+rm(df2,X,probs,result)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.5 What is the probability of Denmark scoring exactly 1 goal during the first 45 mins of a friendly match at home ?
+
+Hint: We still assume that goals have a constant probability of occurring per unit time.
+
+---------!begin suggested answer ------------------------
+
+Under the Poisson assumption, we can "slice" the scores into smaller time intervals. So the mean of the first 45 minutes must be exactly 0.5 * mean(90 minutes).
+
+So for half of a game we adjust the mean accordingly (to 0.5 og the value before).
+
+```{r}
+
+df2 <- df %>%
+  filter(home_team == "Denmark") %>%
+  filter(tournament == "Friendly")
+           
+X <- 0.5*mean(df2$home_score)
+
+(result <- dpois(x = 1 ,lambda = X))
+
+answer_list[["5"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+## Poisson distributed goals?
+
+If the number of goals scored by a team is Poisson distributed (our null hypothesis), we expect the variance to mean of scores to be close to 1. 
+
+Now we will focus on Spain playing in "FIFA World Cup qualification" at home.
+
+>Q2.6 Calculate the variance to mean ratio of scorings when Spain playing in "FIFA World Cup qualification" at home
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+table(df$tournament)
+
+dfspain <- df %>%
+  filter(home_team == "Spain") %>%
+  filter(tournament == "FIFA World Cup qualification")
+
+(obsVtoM <- var(dfspain$home_score)/ mean(dfspain$home_score))
+
+answer_list[["6"]] <- tibble(
+  true_answer = obsVtoM, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.001)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+## Simulating datasets
+
+Here is a small R code snippet to simulate distribution of that statistic using pseudo datasets of $n=50$ observations from a Poisson with mean  $\lambda = 1.2$ .
+
+```{r}
+
+var_to_mean <- rep(NA, 100) # A vector for storing the ratios simulated under H0
+
+set.seed(0) # random seed init
+for (i in 1:100) {
+  pseudo_data <- rpois(n = 50, lambda = 1.2)
+  var_to_mean[i] <- var(pseudo_data)/mean(pseudo_data)
+}
+
+summary(var_to_mean)
+
+```
+
+Adapt the code above to generate the distribution using 10.000 pseudo datasets of the same size as the observed Spanish data under the null hypothesis that the data is Poisson distributed. 
+
+>Q2.7 Calculate and report the probability that the variance to mean ratio is equal or above the observed value in the actual data for Spain playing at home in the "FIFA World Cup qualification"?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+sample_size = nrow(dfspain)
+X <- mean(dfspain$home_score)
+
+var_to_mean <- rep(NA, 10000) # A vector storing the ratios simulated under H0
+set.seed(0)
+for (i in 1:10000) {
+  pseudo_data <- rpois(n = sample_size, lambda = X)
+  var_to_mean[i] <- var(pseudo_data)/mean(pseudo_data)
+}
+
+sum(var_to_mean >= obsVtoM)
+
+# The +1 or not do not change the result. 
+# We can debate whether you should have the +1 or not when we have 10000 simulations.
+(result <- (1+sum(var_to_mean >= obsVtoM)) / (10000 + 1) )
+
+answer_list[["7"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 0.01)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+>Q2.8: What is your conclusion for the p value of this test (if you use 0.05 as significance threshold)?
+
+1. We can't reject H0, so the Poisson model is probably correct.
+2. The p value is just below 0.05 so the Poisson model is probably incorrect but we need more data.
+3. No simulation produced a dataset with variance to mean ratio as extreme as the observed. So we can say that p < 0.001.
+4. It's around the significance threshold, so we can't say anything.
+
+The answer should be given as a single number: 1, 2, 3..
+
+---------!begin suggested answer ------------------------
+
+1. correct 
+2. pvalue is much higher than 0.05
+3. no
+4. no
+
+```{r}
+
+(result <- 1)
+
+answer_list[["8"]] <- tibble(
+  true_answer = result, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1)
+
+```
+
+---------!end suggested answer ------------------------
+
+---
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t2"  # If you change this to e.g. 2 - you should search & replace all >Q3. with >Q2.
+topic_description <- "# Fifa goals"
+file_description  <- "fifa_goals"
+
+```
+
+## Answers table
+
+```{r}
+
+(
+answer <- bind_rows(answer_list) %>%
+  mutate(question = paste(topic, ".", names(answer_list), sep="")) %>%
+  select(question, everything())
+)
+
+```
+
+## Saving exam files
+
+```{r}
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, answer_filename)
+write_lines(x, answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(answer, key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+

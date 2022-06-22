@@ -1,0 +1,79 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Hospitalizations of people in Denmark infected with Sars-cov2
+
+We have downloaded data in early may 2020 from the danish health authorities.
+
+Url: https://www.sst.dk/da/corona/tal-og-overvaagning
+
+We are looking at different age groups and we have the following columns:
+
+ * the number of confirmed cases ("confirmed")
+ * the number of hospitalized females ("females")
+ * the number of hospitalized males ("males")
+ 
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+df <- read_tsv(file = "t1.dataset.corona_data.20200503.tsv")
+
+```
+
+>Q1.1 How many individuals were confirmed infected in total?
+
+>Q1.2 How many individuals were hospitalized in total?
+
+>Q1.3 What proportion of the confirmed infected (total) were hospitalized (total)?
+
+Hint: Proportion is a number in the range [0;1]
+
+
+>Q1.4 What proportion of all confirmed infected were in the agegroup 0-39?
+
+>Q1.5 How many hospitalizations would you expect in the 0-39 agegroup if all confirmed infected people have the same risk of hospitalization?
+
+
+We assume that all confirmed infected people have the same risk of hospitalization.
+
+>Q1.6 If you test this model, what is the p value when you fit the observed data to the expected?
+
+
+It looks like the risk of hospitalization increase with age, although this can not be concluded from the data, since not all infected persons have been tested and confirmed infected. 
+
+Now we only focus on the hospitalized males and females. Can we tell if the risk of hospitalization increase in the same way for males and females?
+
+If we add the simplifying (and actually false) assumption that the ratio of males to females in the population is constant, and then assume that the risk of hospitalization increase the same way for males and females, we would expect the proportion of hospitalized males to be independent of agegroup.
+
+I.e. we would expect that the numbers for males follow the same pattern as for females.
+
+Now test if the number of hospitalized males and females are independent of agegroup.
+
+Hint: sex is a categorical variable and agegroup is also a categorical variable.
+
+>Q1.7 For that test, what is the p value?
+
+Hint: Notice any warnings and look for violations of assumptions.
+
+
+>Q1.8  Which one of the following statements is most correct?
+
+Hint: Your answer should just be a single number (1,2..5)
+
+1. The number of hospitalizations do not differ between males and females.
+2. Sex and agegroup are weakly associated.
+3. Sex and agegroup are strongly associated.
+4. Sex and agegroup are not significantly associated.
+5. All of the above
+6. None of the above
+
+
+
+

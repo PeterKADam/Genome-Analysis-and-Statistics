@@ -1,0 +1,469 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Deaths in Denmark, 1981 and 2018
+
+We have downloaded data in early august from statistikbanken in the table DOD1
+
+Url: http://www.statistikbanken.dk/DOD1
+
+We are looking at sex differences and changes from 1981 to 2018. 
+
+The data consist of 3 columns:
+
+ * the sex of the deceased person
+ * the cause of death
+ * the year of death
+ 
+We have chosen to focus on 3 different causes of death only:
+
+ * Mental disorders
+ * Motor vehicle accidents
+ * Suicide and self inflicted injury
+ 
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+df <- read_tsv(file = "t2.deaths_in_Denmark_dataset.tsv")
+
+```
+
+>Q2.1 How many deaths from these 3 causes were there in total in 1981 in this dataset?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer <- tibble()
+
+df %>% count(year)
+x <- sum(df$year==1981)
+
+answer <- rbind(answer,tibble(
+  question    = "1", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+>Q2.2 How many men died from these 3 causes in 2018? 
+
+---------!begin suggested answer ------------------------
+```{r}
+
+df %>% count(sex,year)
+
+x <- sum(df$sex=="Men" & df$year==2018)
+
+answer <- rbind(answer,tibble(
+  question    = "2", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 1,
+  tolerance   = 0.1))
+
+```
+---------!end suggested answer ------------------------
+
+>Q2.3 What proportion of deaths from Motor vehicle accidents in 1981 were men?
+
+Hint: Proportion is a number in the range [0;1]
+
+---------!begin suggested answer ------------------------
+```{r}
+
+df %>% filter(year==1981) %>% count(sex,year, cause)
+
+men <- sum(df$sex=="Men" & df$year==1981 & df$cause=="Motor vehicle accidents")
+women <- sum(df$sex=="Women" & df$year==1981 & df$cause=="Motor vehicle accidents")
+
+x <- men / (men+women)
+
+answer <- rbind(answer,tibble(
+  question    = "3", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.01))
+
+```
+---------!end suggested answer ------------------------
+
+>Q2.4 How many male deaths from Motor vehicle accidents would you expect in 2018 if both males and females had the same risk?
+
+Hint: We assume that the population has a sex ratio of 50:50, i.e. same number of males and females.
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+men <- sum(df$sex=="Men" & df$year==2018 & df$cause=="Motor vehicle accidents")
+women <- sum(df$sex=="Women" & df$year==2018 & df$cause=="Motor vehicle accidents")
+
+x <- mean(c(men,women))
+
+answer <- rbind(answer, tibble(
+  question    = "4", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/100)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+## How to convert our data to a table
+
+```{r}
+
+tmp <- df %>% 
+  filter(cause=="Mental disorders") %>% 
+  select(sex,year) %>%
+  table()
+
+tmp
+
+```
+
+>Q2.5 Test if sex and year are independent for Motor vehicle accidents. Report the p value.
+
+---------!begin suggested answer ------------------------
+
+This is a simple chi square test of independence.
+
+```{r}
+unique(df$cause)
+
+tmp <- df %>% 
+  filter(cause=="Motor vehicle accidents") %>% 
+  select(sex,year) %>%
+  table()
+
+result <- chisq.test(tmp, correct = F)
+
+x <- result$p.value
+
+answer <- rbind(answer, tibble(
+  question    = "5", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/10)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.6 What is your conclusion about motor vehicle accidents?
+
+Answer should be a number indicating one of the following statements:
+
+1. Sex and year are not significantly associated.  
+2. Sex and year are weakly significantly associated.  
+3. Sex and year are strong significantly associated.  
+4. It is not possible to conclude anything.
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer <- rbind(answer, tibble(
+  question    = "6", 
+  true_answer = 1, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.7 Test if cause of death and sex are independent in 1981. Report the p value.
+
+---------!begin suggested answer ------------------------
+
+This is a simple chi square test of independence.
+
+```{r}
+
+tmp <- df %>% 
+  filter(year==1981) %>% 
+  select(cause,sex) %>%
+  table()
+
+result <- chisq.test(tmp, correct = F)
+
+x <- result$p.value
+
+answer <- rbind(answer, tibble(
+  question    = "7", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/10)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.8 What is your conclusion?
+
+Answer should be a number indicating one of the following statements:
+
+1. The cause of deaths is not associated to sex.  
+2. The cause of deaths is weakly associated to sex.  
+3. The cause of deaths is higly associated to sex.  
+4. It is not possible to conclude anything.
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer <- rbind(answer, tibble(
+  question    = "8", 
+  true_answer = 1, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.9 Test if cause of death and sex are independent in 2018 Report the p value.
+
+---------!begin suggested answer ------------------------
+
+This is a simple chi square test of independence.
+
+```{r}
+
+tmp <- df %>% 
+  filter(year==2018) %>% 
+  select(cause,sex) %>%
+  table()
+
+result <- chisq.test(tmp, correct = F)
+
+x <- result$p.value
+
+answer <- rbind(answer, tibble(
+  question    = "9", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = 1e-10)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.10 What is the sample size in 2018?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+x <- sum(df$year==2018)
+
+answer <- rbind(answer, tibble(
+  question    = "10", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.11 What are the degrees of freedom for the last test you did?
+
+---------!begin suggested answer ------------------------
+
+```{r}
+
+answer <- rbind(answer, tibble(
+  question    = "11", 
+  true_answer = 2, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+## Comparing associations
+
+We can’t directly say if the association between cause of death and sex is strongest in 1981 or 2018, since we have different sample sizes for the two years.
+
+Because of differences in samples size, we expect the year with highest sample size to have higher chi square values.
+
+If we want to find the "strongest" effect, we need to correct for this difference in sample size.
+
+A way of correcting for sample size is by calculating the phi coefficient. You have never heard of it before, so here comes the simple definition:
+
+Phi^2 is defined as the chi square value divided by the sample size. 
+
+Phi is then the square root of the Phi^2 value.
+
+Definition of phi: https://en.wikipedia.org/wiki/Phi_coefficient
+
+In statistics, the phi coefficient (also called mean square contingency coefficient) is a measure of association for two binary variables.
+
+>Q2.12 What is the phi coefficient for 1981?
+
+---------!begin suggested answer ------------------------
+
+We get the chi square from the test
+
+```{r}
+
+tmp <- df %>% 
+  filter(year==1981) %>% 
+  select(cause,sex) %>%
+  table()
+
+result <- chisq.test(tmp, correct = F)
+
+result$statistic
+sum(tmp)
+
+phi1981 <- sqrt(result$statistic / sum(tmp))
+x <- phi1981
+
+answer <- rbind(answer, tibble(
+  question    = "12", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/10)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.13 What is the phi coefficient for 1981?
+
+---------!begin suggested answer ------------------------
+
+We get the chi square from the test
+
+```{r}
+
+tmp <- df %>% 
+  filter(year==2018) %>% 
+  select(cause,sex) %>%
+  table()
+
+result <- chisq.test(tmp, correct = F)
+
+result$statistic
+sum(tmp)
+
+phi2018 <- sqrt(result$statistic / sum(tmp))
+x <- phi2018
+
+answer <- rbind(answer, tibble(
+  question    = "13", 
+  true_answer = x, 
+  type        = "numeric",
+  points      = 3,
+  tolerance   = x/10)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+>Q2.14 What is your final conclusion?
+
+Answer should be a number indicating one of the following statements:
+
+1. It is not possible to conclude anything.
+2. The association has decreased from 1981 to 2018.
+3. The association has increased from 1981 to 2018.
+4. The association is the same in 1981 and 2018
+
+---------!begin suggested answer ------------------------
+
+phi2018 is bigger than for 1981.
+
+It is approximately twice as big.
+
+That would indicated the association is a lot stronger in 2018 than 1981 - so it has INCREASED
+
+```{r}
+
+phi2018
+phi1981
+
+phi2018/phi1981 
+
+answer <- rbind(answer, tibble(
+  question    = "14", 
+  true_answer = 3, 
+  type        = "numeric",
+  points      = 2,
+  tolerance   = 0.1)
+  )
+
+```
+
+---------!end suggested answer ------------------------
+
+---------!begin suggested answer ------------------------
+
+## Hard coded information
+
+```{r}
+
+topic             <- "t2"
+topic_description <- "# Deaths in Denmark"
+file_description  <- "deaths_in_denmark"
+
+answer
+
+```
+
+## Saving exam files
+
+```{r}
+
+answer$question   <- paste(topic, ".", answer$question, sep="") # Reformat column
+
+# Save answer sheet for students to fill out (including points)
+x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+
+answer_filename <-  paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+write_lines(topic_description, path = answer_filename)
+write_lines(x, path =answer_filename, append = T)
+
+# Save answer key for grading
+key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+write_tsv(x = answer, path = key_filename)
+
+```
+
+---------!end suggested answer ------------------------
+
