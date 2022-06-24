@@ -21,7 +21,7 @@ library(tidyverse)
 options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-df <- readRDS("t1.happy_integrated_2019_2020.rds")
+df <- readRDS(r"(exam-prep\2021.ordinary_exam.june\t1.happy_integrated_2019_2020.rds)")
 head(df) 
 
 ```

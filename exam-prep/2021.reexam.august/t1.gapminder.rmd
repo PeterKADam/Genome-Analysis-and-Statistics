@@ -7,13 +7,12 @@ editor_options:
 ---
 
 
-```{r message=FALSE, warning=FALSE}
+```{r}
 
 library(tidyverse)
 
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
-
 ```
 
 # World-wide life expectancy and income
@@ -26,48 +25,40 @@ Here the data was obtained from the gapminder R package and a subset of this dat
 
 We used the following code to get the data and save it.
 
-```r
-
-library(gapminder)
-data("gapminder")
-summary(gapminder)
-
-#Transforming data for the sake of the exam 
-years_to_keep <-c("1992", "2002")
-
-gap10 <- gapminder %>%
-  select(-c(pop, gdpPercap))  %>%
-  filter( year %in%  years_to_keep)
- 
-widegap10 <- gap10 %>%
-  pivot_wider(names_from = year, values_from = lifeExp)
- 
-names(widegap10) <- c("country", "continent", "life_expec_1992", "life_expec_2002")
-
-saveRDS(object = widegap10, file = "t1.gap_minder.rds")
-
-```
 The rds file `t1.gap_minder.rds` is made available below in R as the tibble `df`
 
 ```{r}
 
-df <- readRDS("t1.gap_minder.rds")
-head(df) 
+df <- readRDS(r"(exam-prep\2021.reexam.august\t1.gap_minder.rds)")
+head(df)
 
+library(tidyverse)
 ```
 
 >Q1.1 How many countries have a reported life expectancy in 1992 ?
 
 
+```{r}
+nrow(df)
+```
+142
 ---
 
 >Q1.2 How many Asian countries had a life expectancy of more than 60 years in 2002?
 
-
+```{r}
+df %>% count(life_expec_2002 > 60 & continent == "Asia")
+```
+29
 ---
 
 >Q1.3 In how many countries did life expectancy increase from 1992 to 2002?
 
+```{r}
+df %>% count(life_expec_1992 < life_expec_2002)
+```
+
+117
 
 ---
 
@@ -75,6 +66,13 @@ head(df)
 
 NOTE: A proportion should be reported as a number between 0 and 1 [0, 1]. So 42% should be written as 0.42 or 42/100.
 
+```{r}
+df %>%
+    group_by(continent) %>%
+    summarise(proportion = sum(life_expec_2002 > 60) / n())
+```
+
+0.08788
 
 ---
 
@@ -93,12 +91,30 @@ Calculate the probability under $H_0$ that as many countries as observed or more
 >Q1.5 What is the calculated probability? (this also the one tailed p value)
 
 
+```{r}
+df %>%
+    filter(continent == "Asia") %>%
+    count(life_expec_1992 < life_expec_2002)
+higher <- 31
+nothigher <- 2
+total <- higher + nothigher
+
+binom.test(x = higher, n = total, p = 0.5, alternative = "greater")
+```
+
+p-value = 6.543e-08
 ---
 
 >Q1.6 Use the appropriate type of t-test to test whether life expectancy has changed significantly from 1992 to 2002 in Asia. Report the p value as your answer.
 
 We assume that all the assumptions of the t-test are met.
 
+```{r}
+df_asia <- df %>% filter(continent == "Asia")
+
+t.test(x = df_asia$life_expec_1992, y = df_asia$life_expec_2002, paired = T)
+```
+p-value = 1.542e-08
 
 ---
 
@@ -112,6 +128,7 @@ We assume that all the assumptions of the t-test are met.
 
 The answer should be given as a single number: 1, 2, 3..
 
+3
 
 ---
 
@@ -120,6 +137,17 @@ The answer should be given as a single number: 1, 2, 3..
 Now we want you to use your plotting skills to answer the following:
 
 >Q1.8: If you plot 2002 vs. 1992 how would you describe the Americas when compared to other regions:
+
+```{r}
+ggplot(df, aes(x = life_expec_1992, y = life_expec_2002)) +
+    geom_point()
+
+ggplot(df, aes(x = life_expec_1992, y = life_expec_2002)) +
+    geom_point() +
+    geom_abline(slope = 1) +
+    facet_wrap(~continent) +
+    NULL
+```
 
 1. The data are very spread out around a line with slope 1
 2. The data are very spread out around a line that is nearly flat
@@ -130,6 +158,13 @@ Now we want you to use your plotting skills to answer the following:
 
 The answer should be given as a single number: 1, 2, 3..
 
+least wrong is probably 3
+
+```{r}
+df %>%
+    filter(continent == "Asia") %>%
+    arrange(life_expec_2002)
+```
 
 ---
 
@@ -137,6 +172,13 @@ The answer should be given as a single number: 1, 2, 3..
 
 >Q1.9: Use your plotting skills and find the correct statement below.
 
+```{r}
+ggplot(df, aes(x = life_expec_1992, y = life_expec_2002 - life_expec_1992)) +
+    geom_point() +
+    geom_abline(slope = 0) +
+    facet_wrap(~continent) +
+    NULL
+```
 Hint: one of the years on X, the change on Y.
 
 1. Generally, life expectancy increased most for countries where life expectancy was lowest (below 55) scores in 1992.
@@ -149,6 +191,14 @@ Hint: one of the years on X, the change on Y.
 The answer should be given as a single number: 1, 2, 3..
 
 
+```{r}
+df %>%
+    filter(continent == "Africa") %>%
+    arrange(life_expec_1992)
+```
+
+2
+
 ---
 
 >Q1.10: Which continent improved most? 
@@ -159,11 +209,22 @@ We define "improved most" as the continent where the highest proportion of count
 2. Europe
 3. Africa
 4. Americas 
-5. Antartica
+5. Antarctica
 
 The answer should be given as a single number: 1, 2, 3..
 
+```{r}
+df %>%
+    group_by(continent) %>%
+    summarise(
+        up = sum(life_expec_2002 > life_expec_1992),
+        n = n(),
+        p = up / n
+    ) %>%
+    arrange(desc(p))
+```
 
+2
 ---
 
 

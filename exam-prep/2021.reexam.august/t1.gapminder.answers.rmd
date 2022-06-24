@@ -11,9 +11,8 @@ editor_options:
 
 library(tidyverse)
 
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
-
 ```
 
 # World-wide life expectancy and income
@@ -26,34 +25,34 @@ Here the data was obtained from the gapminder R package and a subset of this dat
 
 We used the following code to get the data and save it.
 
-```r
 
-library(gapminder)
-data("gapminder")
-summary(gapminder)
+
+#library(gapminder)
+#data("gapminder")
+#summary(gapminder)
 
 #Transforming data for the sake of the exam 
-years_to_keep <-c("1992", "2002")
+# years_to_keep <-c("1992", "2002")
 
-gap10 <- gapminder %>%
-  select(-c(pop, gdpPercap))  %>%
-  filter( year %in%  years_to_keep)
+# gap10 <- gapminder %>%
+#   select(-c(pop, gdpPercap))  %>%
+#   filter( year %in%  years_to_keep)
  
-widegap10 <- gap10 %>%
-  pivot_wider(names_from = year, values_from = lifeExp)
+# widegap10 <- gap10 %>%
+#   pivot_wider(names_from = year, values_from = lifeExp)
  
-names(widegap10) <- c("country", "continent", "life_expec_1992", "life_expec_2002")
+# names(widegap10) <- c("country", "continent", "life_expec_1992", "life_expec_2002")
 
-saveRDS(object = widegap10, file = "t1.gap_minder.rds")
+# saveRDS(object = widegap10, file = "t1.gap_minder.rds")
 
-```
+
+
 The rds file `t1.gap_minder.rds` is made available below in R as the tibble `df`
 
 ```{r}
 
-df <- readRDS("t1.gap_minder.rds")
-head(df) 
-
+df <- readRDS(r"(exam-prep\2021.reexam.august\t1.gap_minder.rds)")
+head(df)
 ```
 
 >Q1.1 How many countries have a reported life expectancy in 1992 ?
@@ -71,11 +70,11 @@ df %>% filter(life_expec_1992 > 0)
 (result <- df %>% filter(life_expec_1992 > 0) %>% nrow())
 
 answer_list[["1"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -89,20 +88,19 @@ answer_list[["1"]] <- tibble(
 ```{r}
 
 (df2 <- df %>%
-   filter(continent =="Asia") %>%
-   filter(life_expec_2002 > 60)
+    filter(continent == "Asia") %>%
+    filter(life_expec_2002 > 60)
 )
 
-(result <-  df2 %>% nrow() )
+(result <- df2 %>% nrow())
 rm(df2)
 
 answer_list[["2"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1)
-
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -117,7 +115,9 @@ So lifeExp should be strictly HIGHER in 2002 than in 1992
 
 ```{r}
 
-df %>% filter(life_expec_2002 > life_expec_1992) %>% nrow()
+df %>%
+    filter(life_expec_2002 > life_expec_1992) %>%
+    nrow()
 
 # or
 
@@ -126,11 +126,11 @@ sum(df$life_expec_2002 > df$life_expec_1992)
 result <- sum(df$life_expec_2002 > df$life_expec_1992)
 
 answer_list[["3"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -150,23 +150,27 @@ table(df$continent)
 df$life_expec_1992
 
 df %>%
-  group_by(continent) %>% 
-  summarise(score_higher = sum( life_expec_2002> 60),
-            n_total = n(),
-            proportion = score_higher/n_total)
+    group_by(continent) %>%
+    summarise(
+        score_higher = sum(life_expec_2002 > 60),
+        n_total = n(),
+        proportion = score_higher / n_total
+    )
 
-(df2 <- df %>% filter(continent=="Asia") )
-df2 %>% filter(life_expec_2002 > 60) %>% nrow()
+(df2 <- df %>% filter(continent == "Asia"))
+df2 %>%
+    filter(life_expec_2002 > 60) %>%
+    nrow()
 df2 %>% nrow()
-(result <- sum(df2$life_expec_2002 > 60)/nrow(df2))
+(result <- sum(df2$life_expec_2002 > 60) / nrow(df2))
 rm(df2)
 
 answer_list[["4"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.01)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.01
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -191,20 +195,20 @@ Calculate the probability under $H_0$ that as many countries as observed or more
 
 ```{r}
 
-(df_ssa <- df %>%  filter(continent == "Asia") )
+(df_ssa <- df %>% filter(continent == "Asia"))
 
 dim(df_ssa)
-sum(df_ssa$life_expec_2002 > df_ssa$life_expec_1992) #31 out of 33
+sum(df_ssa$life_expec_2002 > df_ssa$life_expec_1992) # 31 out of 33
 df_ssa %>% count(life_expec_2002 > life_expec_1992) # 31 up, 2 down
 rm(df_ssa)
 
 # You can do this in a number of ways
-binom.test(x = 31, n = 33, p=0.5, alternative = "less") # one tailed, but wrong Ha: p < 0.5 - WRONG
+binom.test(x = 31, n = 33, p = 0.5, alternative = "less") # one tailed, but wrong Ha: p < 0.5 - WRONG
 
-(x <- binom.test(x = 31, n = 33, p=0.5)) # two tailed test - so remember to divide by 2.
-x$p.value/2 # This is ok
+(x <- binom.test(x = 31, n = 33, p = 0.5)) # two tailed test - so remember to divide by 2.
+x$p.value / 2 # This is ok
 
-(x <- binom.test(x = 31, n = 33, p=0.5, alternative = "greater")) # one tailed, Ha: p > 0.5
+(x <- binom.test(x = 31, n = 33, p = 0.5, alternative = "greater")) # one tailed, Ha: p > 0.5
 (result <- x$p.value) # This is also ok
 
 # Or you could use pbinom but remember that when you specify lower.tail = F, it reports p(X >x)
@@ -212,11 +216,11 @@ x$p.value/2 # This is ok
 pbinom(q = 30, size = 33, prob = 0.5, lower.tail = F)
 
 answer_list[["5"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = result/10)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = result / 10
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -236,7 +240,7 @@ The NULL hypothesis is that it didn't change - so that the change for each count
 ```{r}
 
 df_ssa <- df %>%
-  filter(continent == "Asia") 
+    filter(continent == "Asia")
 
 t.test(x = df_ssa$life_expec_1992, y = df_ssa$life_expec_2002) # Wrong
 t.test(x = df_ssa$life_expec_1992, y = df_ssa$life_expec_2002, var.equal = T) # Wrong
@@ -246,11 +250,11 @@ t.test(x = df_ssa$life_expec_1992, y = df_ssa$life_expec_2002, var.equal = T) # 
 (result <- x$p.value)
 
 answer_list[["6"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = result/10)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = result / 10
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -280,11 +284,11 @@ The answer should be given as a single number: 1, 2, 3..
 (result <- 3)
 
 answer_list[["7"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.001)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.001
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -312,20 +316,20 @@ For Americas the datapoints follow a line with slope 1 pretty well.
 
 ```{r}
 
-ggplot(df, aes(x = life_expec_1992, y = life_expec_2002)) + 
-  geom_point()+ 
-  geom_abline(slope=1) +
-  facet_wrap(~continent) +
-  NULL
+ggplot(df, aes(x = life_expec_1992, y = life_expec_2002)) +
+    geom_point() +
+    geom_abline(slope = 1) +
+    facet_wrap(~continent) +
+    NULL
 
 (result <- 3)
 
 answer_list[["8"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -358,19 +362,19 @@ The answer should be given as a single number: 1, 2, 3..
 
 ```{r}
 
-ggplot(df, aes(x = life_expec_1992, y = life_expec_2002-life_expec_1992, color = continent)) + 
-  geom_point()+ 
-  geom_abline(slope=0) +
-  NULL
+ggplot(df, aes(x = life_expec_1992, y = life_expec_2002 - life_expec_1992, color = continent)) +
+    geom_point() +
+    geom_abline(slope = 0) +
+    NULL
 
 (result <- 2)
 
 answer_list[["9"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -393,30 +397,32 @@ The answer should be given as a single number: 1, 2, 3..
 
 ```{r}
 
-ggplot(df, aes(x = life_expec_1992, y = life_expec_2002-life_expec_1992)) + 
-  geom_point()+ 
-  geom_abline(slope=0) +
-  facet_wrap( ~ continent) +
-  NULL
+ggplot(df, aes(x = life_expec_1992, y = life_expec_2002 - life_expec_1992)) +
+    geom_point() +
+    geom_abline(slope = 0) +
+    facet_wrap(~continent) +
+    NULL
 
-df %>% 
-  filter(continent!="Oceania") %>%
-  group_by(continent) %>%
-  summarise(up = sum(life_expec_2002 > life_expec_1992),
-            n = n(),
-            p = up/n) %>%
-  arrange(desc(p))
+df %>%
+    filter(continent != "Oceania") %>%
+    group_by(continent) %>%
+    summarise(
+        up = sum(life_expec_2002 > life_expec_1992),
+        n = n(),
+        p = up / n
+    ) %>%
+    arrange(desc(p))
 
 # It's Europe with 29/30
 
 (result <- 2)
 
 answer_list[["10"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -429,10 +435,9 @@ answer_list[["10"]] <- tibble(
 
 ```{r}
 
-topic             <- "t1"  # If you change this to e.g. 2 - you should search & replace all >Q3. with >Q2.
+topic <- "t1" # If you change this to e.g. 2 - you should search & replace all >Q3. with >Q2.
 topic_description <- "# Life expectancy"
-file_description  <- "life_expectancy"
-
+file_description <- "life_expectancy"
 ```
 
 ## Answers table
@@ -440,11 +445,10 @@ file_description  <- "life_expectancy"
 ```{r}
 
 (
-answer <- bind_rows(answer_list) %>%
-  mutate(question = paste(topic, ".", names(answer_list), sep="")) %>%
-  select(question, everything())
+    answer <- bind_rows(answer_list) %>%
+        mutate(question = paste(topic, ".", names(answer_list), sep = "")) %>%
+        select(question, everything())
 )
-
 ```
 
 ## Saving exam files
@@ -452,16 +456,15 @@ answer <- bind_rows(answer_list) %>%
 ```{r}
 
 # Save answer sheet for students to fill out (including points)
-x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+x <- paste("answer$", answer$question, " = NA # (", answer$points, " points)", sep = "")
 
-answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+answer_filename <- paste("exam_answer_sheet.", topic, ".", file_description, ".txt", sep = "")
 write_lines(topic_description, answer_filename)
 write_lines(x, answer_filename, append = T)
 
 # Save answer key for grading
-key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+key_filename <- paste("answer.key.", topic, ".", file_description, ".tsv", sep = "")
 write_tsv(answer, key_filename)
-
 ```
 
 ---------!end suggested answer ------------------------

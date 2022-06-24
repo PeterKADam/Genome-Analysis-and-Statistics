@@ -28,34 +28,66 @@ To help you get started, we remove all cities with missing value in either year.
 
 library(tidyverse)
 
-df <- read_tsv(file = "t3.cocaine_in_sewage_water.dataset.tsv")
+df <- read_tsv(file = r"(exam-prep\2020.reexam.august\t3.cocaine_in_sewage_water.dataset.tsv)")
 
 # We remove all cities with missing observations
 df <- df %>% filter(!is.na(y2018) & !is.na(y2019))
 
 head(df)
-
 ```
 
 >Q3.1 How many different cities do we have data from?
 
+```{r}
+n_distinct(df$city)
+```
+
+45 cities
 
 >Q3.2 What is the observed mean consumption in germany (DE) in 2019?
 
-
+```{r}
+df %>%
+    filter(country == "DE") %>%
+    select(y2019) %>%
+    colMeans()
+```
+ y2019
+143.661
 >Q3.3 What is the observed median consumption in germany (DE) in 2019?
 
-
+```{r}
+df %>%
+    filter(country == "DE") %>%
+    pull(y2019) %>%
+    median()
+```
+129.5546
 >Q3.4 In how many cities were the measured cocaine consumption > 100 mg pr. 1000 people pr. day in 2019? 
 
+```{r}
+df %>% count(y2019 > 100)
+```
+30
 
 >Q3.5 In how many cities did the measured cocaine consumption increase in 2019 relative to 2018 ? 
+
+```{r}
+df %>% count(y2019 > y2018)
+```
+
 
 Hint: Create a new variable "change" that quantifies the difference in consumption between 2018 amd 2019. Count how many cities have a positive change, i.e. change = 2019-2018.
 
 
 >Q3.6 If we assume that every city had equal probability (50:50) of going up/down in consumption from 2018 to 2019, what is the probability of observing "just by chance" as many or more increases than the number of cities with increased consumption observed.
 
+```{r}
+qbinom(p = 31, 45, prob = rep(0.5, 45), lower.tail = FALSE)
+
+binom.test(x = 31, n = 45, p = 0.5, alternative = "greater")
+```
+p-value = 0.008047
 
 >Q3.7 Using the city as an observation unit, compare the mean consumption in 2018 and 2019 using the appropriate type of t.test. Report the p value of the test. 
 
@@ -63,7 +95,21 @@ Our null hypothesis: the mean consumption were the same in the two years.
 
 Our alternative hypothesis: the mean consumption were different in the two years.
 
+```{r}
 
+t.test(x = df$y2019, y = df$y2018, paired = T)
+```
+p-value = 0.01794
+
+```{r}
+#df  %>% select(y2019,y2018) %>% colMeans()
+pd <- df %>% pivot_longer(c(-country, -city, -change))
+
+ggplot(pd, aes(x=name, y=value, group=city)) + 
+  geom_point() + 
+  geom_line(aes(color=change > 0)) 
+
+```
 
 >Q3.8 Which statement do you agree most with? 
 

@@ -1,8 +1,5 @@
 {
 	"r.bracketedPaste": true,
 	"editor.bracketPairColorization.enabled": true,
-	"r.alwaysUseActiveTerminal": true,
-	"r.plot.defaults.colorTheme": "vscode",
-	"r.plot.useHttpgd": true,
-	"r.rmarkdown.knit.openOutputFile": true
+	"r.plot.defaults.colorTheme": "original"
 }

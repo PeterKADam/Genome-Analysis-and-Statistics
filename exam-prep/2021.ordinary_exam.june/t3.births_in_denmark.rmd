@@ -23,43 +23,74 @@ The data were downloaded directly from https://www.statistikbanken.dk/fod8 using
 ```{r message=FALSE, warning=FALSE}
 
 library(tidyverse)
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-df <- read_tsv("t3.birth_data.tsv")
-
+df <- read_tsv(r"(exam-prep\2021.ordinary_exam.june\t3.birth_data.tsv)")
 ```
 
 >Q3.1 How many different years have we collected data for?
 
-
+```{r}
+n_distinct(df$year)
+```
+169
 ---
 
 >Q3.2 What is the highest number of babies ever born in Denmark at the same time?
 
-Hint: If the most children ever born in a single event were twins (i.e. 2 children born at the same time), then the answer would be 2.
+```{r}
 
+df %>% filter(type == "Cases of quadruplets")
+```
+Hint: If the most children ever born in a single event were twins (i.e. 2 children born at the same time), then the answer would be 2.
+4
 
 ---
 
 >Q3.3 What year was the first quadruplets (firlinger) recorded ?
 
+```{r}
+df %>%
+    filter(type == "Cases of quadruplets") %>%
+    pull(year) %>%
+    min()
+```
+1866
 
 ---
 
 >Q3.4 How many children were born as twins in the period 2000-2018 (both years included)?
 
-
+```{r}
+df %>%
+    filter(type == "Cases of twins", year >= 2000 & year <= 2018) %>%
+    pull(n) %>%
+    sum() * 2
+```
+47484
 ---
 
 >Q3.5 How many children were born as triplets in the period 2000-2018 (both years included)?
 
-
+```{r}
+df %>%
+    filter(type == "Cases of triplets", year >= 2000 & year <= 2018) %>%
+    pull(n) %>%
+    sum() * 3
+```
+843
 ---
 
 >Q3.6 How many children were born as quadruplets (across all years)?
 
-
+```{r}
+df %>%
+    filter(type == "Cases of quadruplets") %>%
+    pull(n) %>%
+    sum() * 4
+```
+156
 ---
 
 ## Testing different years
@@ -78,14 +109,13 @@ This is done here:
 
 ```{r}
 
-(df2 <- df %>% 
-  mutate(type2 = ifelse(type=="Cases of single", "1", "3+")) %>%
-  mutate(type2 = ifelse(type=="Cases of twins", "2", type2)) %>%
-  group_by(year,type2) %>%
-  summarise(n=sum(n)) %>%
-  ungroup()
+(df2 <- df %>%
+    mutate(type2 = ifelse(type == "Cases of single", "1", "3+")) %>%
+    mutate(type2 = ifelse(type == "Cases of twins", "2", type2)) %>%
+    group_by(year, type2) %>%
+    summarise(n = sum(n)) %>%
+    ungroup()
 )
-
 ```
 
 Now the rest is up to you. You must calculate the numbers for each period and do the correct testing.
@@ -99,8 +129,8 @@ Hint: How to create a table from numbers - or from a tibble with counts.
 ```{r}
 
 # Build a table from numbers
-x <- matrix(c(20,69,16,157),ncol=2,byrow=FALSE)
-colnames(x) <- c("Infected","Uninfected")
+x <- matrix(c(20, 69, 16, 157), ncol = 2, byrow = FALSE)
+colnames(x) <- c("Infected", "Uninfected")
 rownames(x) <- c("Multiple", "Single")
 x
 
@@ -108,14 +138,20 @@ x
 (x2 <- as_tibble(x) %>% mutate(parasites = rownames(x)))
 (x3 <- x2 %>% pivot_longer(-parasites)) # counts
 (x4 <- x3 %>% uncount(value)) # one row pr. observation
-x4 %>% group_by(parasites, name) %>% count() # Check numbers are still correct
+x4 %>%
+    group_by(parasites, name) %>%
+    count() # Check numbers are still correct
 
 # From tibble to table
 table(x4$parasites, x4$name)
-
 ```
 
 >Q3.7: What is the p value when you compare 1978-1982 with 1983-1987?
+
+```{r}
+
+
+```
 
 H0: There is no association between the period and the type of births  
 Ha: There is an association between the period and the type of births  
@@ -132,7 +168,7 @@ Ha: There is an association between the period and the type of births
 5. It's significant, so it's unlikely that there is no association.
 
 The answer should be given as a single number: 1, 2, 3..
-
+2 is least wrong?
 
 ---
 
@@ -156,7 +192,7 @@ I define "multi births" as twins, triplets, quadruplets etc.
 
 The answer should be given as a single number: 1, 2, 3..
 
-
+1
 ---
 
 

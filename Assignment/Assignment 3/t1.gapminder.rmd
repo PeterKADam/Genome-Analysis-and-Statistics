@@ -27,7 +27,9 @@ Here the data was obtained from the gapminder R package and a subset of this dat
 
 We used the following code to get the data and save it.
 
+```{r}
 
+```
 
 ```{r}
 

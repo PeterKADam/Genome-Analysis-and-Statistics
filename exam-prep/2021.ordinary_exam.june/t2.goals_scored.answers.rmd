@@ -16,7 +16,7 @@ library(tidyverse)
 options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-df <- read_csv("t2.fifa_results_data.csv")
+df <- read_csv(r"(exam-prep\2021.ordinary_exam.june\t2.fifa_results_data.csv)")
 
 head(df)
 

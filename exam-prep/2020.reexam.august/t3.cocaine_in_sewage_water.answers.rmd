@@ -28,7 +28,7 @@ To help you get started, we remove all cities with missing value in either year.
 
 library(tidyverse)
 
-df <- read_tsv(file = "t3.cocaine_in_sewage_water.dataset.tsv")
+df <- read_tsv(file = r"(exam-prep\2020.reexam.august\t3.cocaine_in_sewage_water.dataset.tsv)")
 
 # We remove all cities with missing observations
 df <- df %>% filter(!is.na(y2018) & !is.na(y2019))
@@ -95,7 +95,7 @@ answer <- rbind(answer,tibble(
 ---------!begin suggested answer ------------------------
 ```{r}
 
-(x <- df %>% filter(y2019 > 100) %>% nrow())
+(x <- df %>% filter(y2019 > 100) %>% nrow())	
 
 answer <- rbind(answer,tibble(
   question    = "4", 

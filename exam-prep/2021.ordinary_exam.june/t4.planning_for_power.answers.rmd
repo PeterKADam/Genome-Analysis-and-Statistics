@@ -77,7 +77,7 @@ Your job is now to look at all our simulations results and answer some questions
 
 ```{r}
 
-df <- read_tsv(file = "t4.data.tsv")
+df <- read_tsv(file = r"(exam-prep\2021.ordinary_exam.june\t4.data.tsv)")
 
 ```
 

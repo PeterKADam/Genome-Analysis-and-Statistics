@@ -65,7 +65,7 @@ Lets focus on matches where Spain played at home in the category `Friendly` matc
 Hint: If we assume that goals have a constant probability of occurring per unit time during a football match, then we expect the number of goals in a match scored by a team to follow a Poisson probability distribution.
 
 ```{r}
-ppois(q=6-1, meangoals_friendly_home, lower.tail = F)
+ppois(q = 6 - 1, meangoals_friendly_home, lower.tail = F)
 ```
 
 ---

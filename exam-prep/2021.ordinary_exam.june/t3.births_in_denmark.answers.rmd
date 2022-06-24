@@ -26,8 +26,7 @@ library(tidyverse)
 options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-df <- read_tsv("t3.birth_data.tsv")
-
+df <- read_tsv(r"(exam-prep\2021.ordinary_exam.june\t3.birth_data.tsv)")
 ```
 
 >Q3.1 How many different years have we collected data for?

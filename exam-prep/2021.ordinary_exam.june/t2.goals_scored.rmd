@@ -13,25 +13,33 @@ editor_options:
 ```{r message=FALSE, warning=FALSE}
 
 library(tidyverse)
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-df <- read_csv("t2.fifa_results_data.csv")
+df <- read_csv(r"(exam-prep\2021.ordinary_exam.june\t2.fifa_results_data.csv)")
 
-head(df)
+# head(df)
 
-table(df$tournament)
-
+# table(df$tournament)
 ```
 
 >Q2.1 How many registered matches where Denmark was playing at home do we have data for?
 
-
+```{r}
+sum(df$home_team == "Denmark")
+```
+409
 ---
 
 >Q2.2 What is the highest number of goals scored by Denmark at home?
 
-
+```{r}
+df %>%
+    filter(home_team == "Denmark") %>%
+    pull(home_score) %>%
+    max()
+```
+14
 ---
 
 ## A model for the distribution of number of goals
@@ -41,22 +49,35 @@ Lets focus on matches where Denmark played at home in the category `Friendly` ma
 (check that you have n = 183). 
 
 >Q2.3  what is the mean of the number of goals scored in these 183 matches ?
-
-
+```{r}
+# sum(df$home_team == "Denmark" & df$tournament == "Friendly")
+df %>%
+    filter(home_team == "Denmark" & tournament == "Friendly") %>%
+    pull(home_score) %>%
+    mean()
+```
+2.213115
 ---
 
 >Q2.4 What is the probability that Denmark scores 6 goals or more in a friendly match at home ?
 
 Hint: If we assume that goals have a constant probability of occurring per unit time during a football match, then we expect the number of goals in a match scored by a team to follow a Poisson probability distribution.
 
+```{r}
+poisson.test(x = 6, T = 2.213)
+```
 
+0.0255
 ---
 
 >Q2.5 What is the probability of Denmark scoring exactly 1 goal during the first 45 mins of a friendly match at home ?
 
 Hint: We still assume that goals have a constant probability of occurring per unit time.
 
-
+```{r}
+dpois(x = 1, lambda = 2.213 / 2)
+```
+0.3659355
 ---
 
 ## Poisson distributed goals?
@@ -67,6 +88,16 @@ Now we will focus on Spain playing in "FIFA World Cup qualification" at home.
 
 >Q2.6 Calculate the variance to mean ratio of scorings when Spain playing in "FIFA World Cup qualification" at home
 
+```{r}
+(v2m_obs <- as.double(df %>%
+    filter(home_team == "Spain", tournament == "FIFA World Cup qualification") %>%
+    select(home_score) %>%
+    { # nolint
+        var(.) / (colMeans(.) ->> spain_mean)
+    }))
+```
+
+
 
 ---
 
@@ -76,22 +107,40 @@ Here is a small R code snippet to simulate distribution of that statistic using 
 
 ```{r}
 
+
+
 var_to_mean <- rep(NA, 100) # A vector for storing the ratios simulated under H0
 
 set.seed(0) # random seed init
 for (i in 1:100) {
-  pseudo_data <- rpois(n = 50, lambda = 1.2)
-  var_to_mean[i] <- var(pseudo_data)/mean(pseudo_data)
+    pseudo_data <- rpois(n = 50, lambda = 1.2)
+    var_to_mean[i] <- var(pseudo_data) / mean(pseudo_data)
 }
 
 summary(var_to_mean)
-
 ```
 
 Adapt the code above to generate the distribution using 10.000 pseudo datasets of the same size as the observed Spanish data under the null hypothesis that the data is Poisson distributed. 
 
 >Q2.7 Calculate and report the probability that the variance to mean ratio is equal or above the observed value in the actual data for Spain playing at home in the "FIFA World Cup qualification"?
 
+```{r}
+var_to_mean <- rep(NA, 10000) # A vector for storing the ratios simulated under H0
+
+samplesize <- df %>%
+    filter(home_team == "Spain", tournament == "FIFA World Cup qualification") %>%
+    select(home_score) %>%
+    nrow()
+
+set.seed(0) # random seed init
+for (i in 1:length(var_to_mean)) {
+    pseudo_data <- rpois(n = sample_size, lambda = spain_mean)
+    var_to_mean[i] <- var(pseudo_data) / mean(pseudo_data)
+}
+
+#summary(var_to_mean)
+sum(var_to_mean >= v2m_obs) / length(var_to_mean)
+```
 
 ---
 
@@ -104,6 +153,7 @@ Adapt the code above to generate the distribution using 10.000 pseudo datasets o
 
 The answer should be given as a single number: 1, 2, 3..
 
+1
 
 ---
 

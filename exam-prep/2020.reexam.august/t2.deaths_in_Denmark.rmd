@@ -125,9 +125,13 @@ tmp <- df %>%
     table()
 
 fisher.test(tmp)
-chisq.test(tmp)
+
+chisq.test(tmp, correct = F)
 ```
-p 1.024e-07
+
+fisher: 	p 1.024e-07
+chisq: 		p-value = 7.968e-08
+
 
 >Q2.8 What is your conclusion?
 
@@ -138,21 +142,39 @@ Answer should be a number indicating one of the following statements:
 3. The cause of deaths is higly associated to sex.  
 4. It is not possible to conclude anything.
 
+1 is somewhat the answer?
+but i'd  
 
 >Q2.9 Test if cause of death and sex are independent in 2018 Report the p value.
 
 ```{r}
 
+tmp <- df %>%
+    filter(year == 2018) %>%
+    select(cause, sex) %>%
+    table()
 
 
+x <- chisq.test(tmp, correct = F)
+x$p.value
 ```
+x$p.value
+[1] 6.939939e-56
 
 >Q2.10 What is the sample size in 2018?
-
+```{r}
+df %>%
+    filter(year == 2018) %>%
+    nrow()
+```
 
 >Q2.11 What are the degrees of freedom for the last test you did?
 
+```{r}
 
+x$parameter
+```
+df = 2
 ## Comparing associations
 
 We can’t directly say if the association between cause of death and sex is strongest in 1981 or 2018, since we have different sample sizes for the two years.
@@ -173,9 +195,45 @@ In statistics, the phi coefficient (also called mean square contingency coeffici
 
 >Q2.12 What is the phi coefficient for 1981?
 
+```{r}
 
->Q2.13 What is the phi coefficient for 1981?
+tmp <- df %>%
+    filter(year == 1981) %>%
+    select(cause, sex) %>%
+    table()
 
+x <- chisq.test(tmp, correct = F)
+x$statistic
+
+samplesize <- df %>%
+    filter(year == 1981) %>%
+    nrow()
+samplesize
+
+sqrt(x$statistic / samplesize)
+```
+0.114719
+
+>Q2.13 What is the phi coefficient for 2018?
+
+```{r}
+
+tmp2 <- df %>%
+    filter(year == 2018) %>%
+    select(cause, sex) %>%
+    table()
+
+x2 <- chisq.test(tmp2, correct = F)
+x2$statistic
+
+samplesize2 <- df %>%
+    filter(year == 2018) %>%
+    nrow()
+samplesize2
+
+sqrt(x2$statistic / samplesize2)
+```
+0.2380906
 
 >Q2.14 What is your final conclusion?
 
@@ -186,5 +244,6 @@ Answer should be a number indicating one of the following statements:
 3. The association has increased from 1981 to 2018.
 4. The association is the same in 1981 and 2018
 
+3
 
 
