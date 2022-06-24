@@ -135,7 +135,7 @@ df %>%
     ggplot(aes(x = signal_strength)) +
     geom_histogram(position = "identity", alpha = 0.3)
 
-df <- df %>%
+df2 <- df %>%
     filter(group == "A") %>%
     mutate(subgroup = ifelse(signal_strength < 20, 1, 2))
 ```

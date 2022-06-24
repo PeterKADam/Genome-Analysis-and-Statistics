@@ -35,23 +35,22 @@ We used a different number of simulations and different values of effect sizes a
 ```{r message=FALSE, warning=FALSE}
 
 library(tidyverse)
-options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-r <- rep(NA,10)
+r <- rep(NA, 10)
 
 set.seed(0)
 
 for (i in 1:length(r)) {
-  x <- tibble(placebo = round(runif(n = 50, min = 0, max = 20))) %>%
-    mutate(effect = rnorm(n = n(), mean=0.97, sd = 0.1)) %>%
-    mutate(drug = round(placebo * effect))
-  tr <- wilcox.test(x = x$drug, y=x$placebo, paired = TRUE)
-  r[i] <- tr$p.value
+    x <- tibble(placebo = round(runif(n = 50, min = 0, max = 20))) %>%
+        mutate(effect = rnorm(n = n(), mean = 0.97, sd = 0.1)) %>%
+        mutate(drug = round(placebo * effect))
+    tr <- wilcox.test(x = x$drug, y = x$placebo, paired = TRUE)
+    r[i] <- tr$p.value
 }
 
-tibble(p=r, effect="0.97", size=50)
-
+tibble(p = r, effect = "0.97", size = 50)
 ```
 
 ## The code above outputs
@@ -77,8 +76,7 @@ Your job is now to look at all our simulations results and answer some questions
 
 ```{r}
 
-df <- read_tsv(file = "t4.data.tsv")
-
+df <- read_tsv(file = r"(exam-prep\2021.reexam.august\t4.data.tsv)")
 ```
 
 >Q4.1 How many different sample sizes did I simulate?
@@ -94,11 +92,11 @@ df %>% count(size)
 (result <- df %>% count(size) %>% nrow())
 
 answer_list[["1"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -116,12 +114,11 @@ df %>% count(effect)
 (result <- df %>% count(effect) %>% nrow())
 
 answer_list[["2"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1)
-
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -134,17 +131,16 @@ answer_list[["2"]] <- tibble(
 
 ```{r}
 
-df %>% filter(size==30)
+df %>% filter(size == 30)
 
-(result <- df %>% filter(size==30) %>% nrow())
+(result <- df %>% filter(size == 30) %>% nrow())
 
 answer_list[["3"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 1,
-  tolerance   = 0.1)
-
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 1,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -157,17 +153,16 @@ answer_list[["3"]] <- tibble(
 
 ```{r}
 
-df %>% filter(size==40 & effect==0.96)
+df %>% filter(size == 40 & effect == 0.96)
 
-(result <- df %>% filter(size==40 & effect==0.96) %>% nrow())
+(result <- df %>% filter(size == 40 & effect == 0.96) %>% nrow())
 
 answer_list[["4"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -190,7 +185,7 @@ For all other simulation we know that H0 is false (i.e. drug != placebo).
 
 ```{r}
 
-df2 <- df %>% filter(effect==1.0)
+df2 <- df %>% filter(effect == 1.0)
 
 sum(df2$p <= 0.05) # significant = TRUE positives
 sum(df2$p > 0.05) # not significant = FALSE NEGATIVES
@@ -199,11 +194,11 @@ nrow(df2) # All the positives
 (result <- sum(df2$p <= 0.05) / nrow(df2))
 
 answer_list[["5"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.001)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.001
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -216,16 +211,16 @@ answer_list[["5"]] <- tibble(
 
 ```{r}
 
-df2 <- df %>% filter(size==10 & effect==0.98)
+df2 <- df %>% filter(size == 10 & effect == 0.98)
 
 (result <- sum(df2$p <= 0.05))
 
 answer_list[["6"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -244,22 +239,22 @@ Or: 1 - false negative rate
 
 ```{r}
 
-df2 <- df %>% filter(size==10 & effect==0.98) # <-- these should all be significant.
+df2 <- df %>% filter(size == 10 & effect == 0.98) # <-- these should all be significant.
 
 
 nrow(df2) # they should all be significant since effect = 0.98
 sum(df2$p <= 0.05) # significant ones = true positives
-sum(df2$p > 0.05)  # not significant = false negatives
-sum(df2$p <= 0.05) / nrow(df2)  # power
+sum(df2$p > 0.05) # not significant = false negatives
+sum(df2$p <= 0.05) / nrow(df2) # power
 1 - (sum(df2$p > 0.05) / nrow(df2)) # power (same result)
 (result <- sum(df2$p <= 0.05) / nrow(df2))
 
 answer_list[["7"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.001)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.001
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -274,16 +269,16 @@ Power is a number [0;1]
 
 ```{r}
 
-df2 <- df %>% filter(size==20 & effect==0.98) 
+df2 <- df %>% filter(size == 20 & effect == 0.98)
 
 (result <- sum(df2$p <= 0.01) / nrow(df2))
 
 answer_list[["8"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.001)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.001
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -306,22 +301,24 @@ Or: 1 - false negative rate
 
 ```{r}
 
-df %>% 
-  group_by(size,effect) %>% 
-  summarise(power_005 = sum(p <=0.05)/n(),
-            power_001 = sum(p <=0.01)/n(),
-            negative_rate = sum(p > 0.05)/n())
+df %>%
+    group_by(size, effect) %>%
+    summarise(
+        power_005 = sum(p <= 0.05) / n(),
+        power_001 = sum(p <= 0.01) / n(),
+        negative_rate = sum(p > 0.05) / n()
+    )
 
-df2 <- df %>% filter(size==50 & effect ==1.04) # <-- these should all be significant.
+df2 <- df %>% filter(size == 50 & effect == 1.04) # <-- these should all be significant.
 
 (result <- sum(df2$p <= 0.05) / nrow(df2))
 
 answer_list[["9"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 3,
-  tolerance   = 0.01)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 3,
+    tolerance   = 0.01
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -355,11 +352,11 @@ NOTE: We ask for the most WRONG statement.
 (result <- 4)
 
 answer_list[["10"]] <- tibble(
-  true_answer = result, 
-  type        = "numeric",
-  points      = 2,
-  tolerance   = 0.1)
-
+    true_answer = result,
+    type        = "numeric",
+    points      = 2,
+    tolerance   = 0.1
+)
 ```
 
 ---------!end suggested answer ------------------------
@@ -372,10 +369,9 @@ answer_list[["10"]] <- tibble(
 
 ```{r}
 
-topic             <- "t4"  # If you change this to e.g. 2 - you should search & replace all >Q4. with >Q2.
+topic <- "t4" # If you change this to e.g. 2 - you should search & replace all >Q4. with >Q2.
 topic_description <- "# Designing an experiment"
-file_description  <- "designing_an_experiment"
-
+file_description <- "designing_an_experiment"
 ```
 
 ## Answers table
@@ -383,11 +379,10 @@ file_description  <- "designing_an_experiment"
 ```{r}
 
 (
-answer <- bind_rows(answer_list) %>%
-  mutate(question = paste(topic, ".", names(answer_list), sep="")) %>%
-  select(question, everything())
+    answer <- bind_rows(answer_list) %>%
+        mutate(question = paste(topic, ".", names(answer_list), sep = "")) %>%
+        select(question, everything())
 )
-
 ```
 
 ## Saving exam files
@@ -395,16 +390,15 @@ answer <- bind_rows(answer_list) %>%
 ```{r}
 
 # Save answer sheet for students to fill out (including points)
-x <- paste("answer$", answer$question, " = NA # (",answer$points," points)",sep="")
+x <- paste("answer$", answer$question, " = NA # (", answer$points, " points)", sep = "")
 
-answer_filename <- paste("exam_answer_sheet.",topic, ".", file_description, ".txt", sep="")
+answer_filename <- paste("exam_answer_sheet.", topic, ".", file_description, ".txt", sep = "")
 write_lines(topic_description, answer_filename)
 write_lines(x, answer_filename, append = T)
 
 # Save answer key for grading
-key_filename <- paste("answer.key.",topic, ".", file_description, ".tsv", sep="")
+key_filename <- paste("answer.key.", topic, ".", file_description, ".tsv", sep = "")
 write_tsv(answer, key_filename)
-
 ```
 
 ---------!end suggested answer ------------------------

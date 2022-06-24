@@ -143,9 +143,9 @@ df %>%
 Power is a number [0;1] 
 
 ```{r}
-1-df %>%
-    filter(effect == 0.98, size == 10) %>%
-    { }
+df2 <- df %>% filter(size == 10, effect == 0.98)
+
+sum(df2$p < 0.05) / nrow(df2)
 ```
 
 ---
@@ -154,7 +154,11 @@ Power is a number [0;1]
 
 Power is a number [0;1] 
 
+```{r}
+df3 <- df %>% filter(size == 20, effect == 0.98)
 
+sum(df3$p < 0.01) / nrow(df3)
+```
 ---
 
 # A bad drug

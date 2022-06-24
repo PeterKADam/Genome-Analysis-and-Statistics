@@ -24,7 +24,7 @@ library(tidyverse)
 options(digits = 7)        # number of digits printed by R default (vectors, data.frames, lists)
 options(pillar.sigfig = 7) # number of digits printed by tibbles default.
 
-df <- read_tsv("t2.alien_radio_signal.tsv")
+df <- read_tsv(r"(exam-prep\2021.reexam.august\t2.alien_radio_signal.tsv)")
 
 ```
 
