@@ -227,6 +227,8 @@ x4 %>% group_by(parasites, name) %>% count() # Check numbers are still correct
 # From tibble to table
 table(x4$parasites, x4$name)
 
+chisq.test()
+fisher.test()
 ```
 
 >Q3.7: What is the p value when you compare 1978-1982 with 1983-1987?

@@ -144,6 +144,8 @@ This is a simple chi square test of independence.
 ```{r}
 unique(df$cause)
 
+
+
 tmp <- df %>%
     filter(cause == "Motor vehicle accidents") %>%
     select(sex, year) %>%
