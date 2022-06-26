@@ -1,0 +1,139 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+
+# libraries
+```{r}
+library(tidyverse)
+
+```
+
+# tests
+## P, Q, D, R-kommandoer
+### D
+R-funktioner der giver densiteten ved den x som man sættet til P(x = antal successes).
+Eksempel på 2 "succesess" i en normal distribution på N = 10, med en sandsynlighed for success på p = 0.02.
+```{r}
+dbinom(x = 2, size = 10, prob = 0.02)
+```
+### R
+R-funktioner virker ved at lave n tilfældige outputs fra en distribution.
+eksempel på 150 outputs fra en binom distribution med n=10 og p=0.02:
+```{r}
+rbinom(n = 150, size = 10, prob = 0.02)
+```
+### P
+R-funktioner giver den integrede p-værdi under q fra distributionsfunktionen. 
+eksempel på 5 eller under i en sample på 25 med en Pr=2%
+```{r}
+pbinom(q = 5, size = 25, prob = 0.02)
+```
+
+kan ændres til over P over 5 med lower.tail=FALSE
+```{r}
+pbinom(q = 5, size = 25, prob = 0.02, lower.tail = FALSE)
+```
+
+kan også udregne et areal mellem 2 q-værdier mellem 5 og 3 (altså 5 og under, men over 3.) feks.:
+```{r}
+pbinom(q = 5, size = 25, prob = 0.02) - pbinom(q = 3, size = 25, prob = 0.02)
+```
+
+### Q
+
+Finder q (antal) der indeholder en angivet p værdi. Tænk den som en omvendt p funktion.
+
+eks: hvor mange "q" skal vi have for at indeholde 95% af sansynligheds-arealet.
+```{r}
+qbinom(p = 0.95, size = 25, prob = 0.02)
+```
+
+```{r}
+chisq.test()
+
+pchisq()
+
+```
+
+
+
+# plots
+
+## nice to knows
+eksempel på fjernelse af legend med
+theme(legend.position = "")
+
+x og y aksen kan labeles med:
+  xlab("Days of the week") 
+  ylab("Number of Births\n(bars observed, points expected)")
+
+```{r}
+bir %>%
+  ggplot() +
+  geom_bar(stat = "identity", aes(x = days, y = nbirths), fill="lightgrey") +
+  geom_point(aes(x = days, y = pbirths), color="blue", size=3) +
+  geom_segment(aes(x = days, xend = days, y = nbirths, yend = pbirths),color="green") +
+  theme(legend.position = "") +
+  xlab("Days of the week") +
+  ylab("Number of Births\n(bars observed, points expected)") +
+  scale_x_discrete(limits = c("Mon", "Tue", "Wed", "Thr", "Fri", "Sat", "Sun"))+
+  theme_light(base_size = 20)
+```
+
+
+## histograms
+counts of data into bins y=count x=data
+kan ikke bruges til at blotte x og y. Brug et bar-plot istedet. (geom_col(), IKKE geom_bar)
+
+```{r}
+df %>% ggplot(aes(x = data)) +
+    geom_histogram(fill = "firebrick", color = "black")
+```
+
+kan køres med fast bin-width eller fast bin-antal
+bin-width:x antal i en bin
+bin-antal:x bins i et sæt, data fordeles automatisk
+
+```{r}
+df %>% ggplot(aes(x = data)) +
+    geom_histogram(fill = "firebrick", color = "black", bins = 30)
+
+geom_bar()
+```
+
+```{r}
+df %>% ggplot(aes(x = data)) +
+    geom_histogram(fill = "firebrick", color = "black", binwidth = 30)
+```
+
+For at få y-aksen som frekvens, kan man f.eks. gøre således:
+
+```{r}
+df %>%
+    ggplot(aes(x = data)) +
+    geom_histogram(aes(y = stat(count) / sum(count)), bins = 35, fill = "hotpink", color = "gold") +
+    ylab("frequency")
+```
+
+
+##
+
+
+# R stuff
+
+```{r}
+df %>% summarise()
+```
+
+# math
+
+## Standard error (of the mean)
+```{r}
+SEM <- sd(vektor) / sqrt(length(vektor))
+```
+
