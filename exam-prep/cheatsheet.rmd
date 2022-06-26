@@ -14,7 +14,53 @@ library(tidyverse)
 ```
 
 # tests
-## P, Q, D, R-kommandoer
+
+## Goodness of fit, chisq, fisher. 
+```{r}
+chisq.test()
+fisher.test()
+```
+## Binom test
+```{r}
+binom.test()
+```
+## Fisketest
+```{r}
+poisson.test()
+```
+## Students T-Test. onesample, twosample, paired...
+
+Test of sample(norm dist) (true)means.
+either against specific mean: onesample
+or
+another samples mean: twosample-test
+Two samples can either be independent= not paired, or dependent =paired
+Two samples of something from 2018 and 2019 for example would be paired.
+
+assumptions:
+approx norm-distribution
+somewhat same variance
+independent
+
+H0: true difference in means is equal to 0
+Ha: true difference in means is not equal to 0
+
+
+```{r}
+t.test(x = sample1, mu = examplemean)
+t.test(x = sample1, y = sample2, paired = TRUE)
+```
+
+## Shapiro-Wilk test of normality
+Tester H0:
+at sample kommer fra en normalfordeling.
+Ha:
+sample er ikke fra en normalfordeling.
+```{r}
+shapiro.test()
+```
+
+# P, Q, D, R-kommandoer
 ### D
 R-funktioner der giver densiteten ved den x som man sættet til P(x = antal successes).
 Eksempel på 2 "succesess" i en normal distribution på N = 10, med en sandsynlighed for success på p = 0.02.
@@ -53,12 +99,6 @@ eks: hvor mange "q" skal vi have for at indeholde 95% af sansynligheds-arealet.
 qbinom(p = 0.95, size = 25, prob = 0.02)
 ```
 
-```{r}
-chisq.test()
-
-pchisq()
-
-```
 
 
 
@@ -74,15 +114,15 @@ x og y aksen kan labeles med:
 
 ```{r}
 bir %>%
-  ggplot() +
-  geom_bar(stat = "identity", aes(x = days, y = nbirths), fill="lightgrey") +
-  geom_point(aes(x = days, y = pbirths), color="blue", size=3) +
-  geom_segment(aes(x = days, xend = days, y = nbirths, yend = pbirths),color="green") +
-  theme(legend.position = "") +
-  xlab("Days of the week") +
-  ylab("Number of Births\n(bars observed, points expected)") +
-  scale_x_discrete(limits = c("Mon", "Tue", "Wed", "Thr", "Fri", "Sat", "Sun"))+
-  theme_light(base_size = 20)
+    ggplot() +
+    geom_bar(stat = "identity", aes(x = days, y = nbirths), fill = "lightgrey") +
+    geom_point(aes(x = days, y = pbirths), color = "blue", size = 3) +
+    geom_segment(aes(x = days, xend = days, y = nbirths, yend = pbirths), color = "green") +
+    theme(legend.position = "") +
+    xlab("Days of the week") +
+    ylab("Number of Births\n(bars observed, points expected)") +
+    scale_x_discrete(limits = c("Mon", "Tue", "Wed", "Thr", "Fri", "Sat", "Sun")) +
+    theme_light(base_size = 20)
 ```
 
 
@@ -130,7 +170,29 @@ df %>%
 df %>% summarise()
 ```
 
+## p-adjustment
+```{r}
+p.adjust(p = df$pvalue, method = "x")
+```
+x kan være:
+(“holm”, “hochberg”, “hommel”, “bonferroni”, “BH”, “BY”,
+“fdr”, “none”)
+
 # math
+
+## beta
+Beta er sandsynligheden for en type II error (acceptere en falsk H0)
+Vi skal vide at effect size =/= 1. 
+```{r}
+beta <- sum(p > alpha) / nrow(p)
+```
+
+## power
+Power tests kræver at man kender effect-size
+Power er ratioen af "true negatives". Power er sandsynligheden for at rejecte H0 når den faktisk er falsk.
+```{r}
+power <- 1 - beta
+```
 
 ## Standard error (of the mean)
 ```{r}

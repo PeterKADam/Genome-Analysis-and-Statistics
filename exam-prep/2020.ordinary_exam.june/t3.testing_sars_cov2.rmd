@@ -157,7 +157,13 @@ n <- 48
 
 pbinom(q=1, size=n, prob=rate,lower.tail = F)
 ```
+
 Pr=4.27729e-05
+
+```{r}
+
+```
+
 Assume pools are obtained via randomly sampling people.
 
 Assume that the proportion in the whole population is the one you calculated in Q3.6 above 

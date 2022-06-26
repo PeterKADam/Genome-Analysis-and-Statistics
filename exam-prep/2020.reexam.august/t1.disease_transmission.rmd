@@ -124,6 +124,7 @@ Now, please test the null hypothesis that you are a "normal" infectious person. 
 
 ```{r}
 binom.test(x = 27, n = 75, p = 0.25)
+
 ```
 p-value = 0.03265
  Exact binomial test
