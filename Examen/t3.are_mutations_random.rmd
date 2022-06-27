@@ -1,0 +1,173 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(tidyverse)
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+```
+
+# Mutations in Icelandic trios
+
+Below is a small dataset where 5 trios (mother, father and 1 child) had their genome sequenced to high coverage to detect new mutations. 
+
+Data source is from a pioneer study made at the time where whole genome sequencing was still very expensive (hence only 5 trios) "Rate of de novo mutations and the importance of father’s age to disease risk" <https://www.nature.com/articles/nature11396.>
+
+For each trio you are given the `combined` counts as well as counts of mutations inherited via the father (`paternal.chrom`) and the mother (`maternal.chrom`): 
+
+```{r}
+
+dataTrio <- tibble(
+    trio = c("Trio1", "Trio2", "Trio3", "Trio4", "Trio5"),
+    paternal.chrom = c(39, 43, 51, 53, 91),
+    maternal.chrom = c(9, 10, 11, 26, 15),
+    combined = c(48, 53, 62, 79, 106)
+)
+
+dataTrio
+```
+
+## >Q3.1 The typical mutation rate in humans
+
+Given the data available on the five trios, choose a single summary statistic that best describes the "typical" number of new mutations that a child inherits from his/her parents over one generation. Report that number.
+
+```{r}
+summary(dataTrio)
+mean(dataTrio$combined)
+```
+
+---
+
+## >Q3.2 What is the probability of a new child inheriting more than 70 new mutations ? 
+
+For this question, we focus on Trio 3 only.
+
+We assume that the number of new mutations inherited by a child from his parents can be described as a random process along the genome. We know that the first child inherited 62 mutations. 
+
+Choose a probability distribution that is most adequate to describe that number in a future newborn from the same parents.
+
+Based on your assumed distribution, calculate the probability that a new child from parents of Trio3 will inherit more than 70 mutations
+
+```{r}
+# i assume poisson distribution of mutations
+
+ppois(q = 70, lambda = 62, lower.tail = FALSE)
+```
+
+
+
+# Are mutations in new genomes Poisson distributed? .. or not  
+
+Calculate the observed variance to mean ratio of the paternal counts of mutations.
+
+If mutations occur as a random process that can be described as Poisson events, we would expect that the variance to mean ratio is close to the one expected if data come from a Poisson distribution with the appropriate parameter $\lambda$ . 
+
+Simulate 10000 datasets (one simulated dataset consist of the paternal counts in 5 trios) under the null hypothesis ($H_0$) that mutations are Poisson distributed.
+
+Use the simulated data as the null distribution of the variance to mean ratio under $H_0$. Use this distribution to test if the observed ratio is in the range expected under $H_0$.
+
+```{r}
+var(dataTrio$paternal.chrom) / mean(dataTrio$paternal.chrom)
+
+r <- rep(NA, 10000)
+for (i in 1:length(r)) {
+    fakedata <- rpois(5, lambda = 55.4)
+    r[i] <- var(fakedata) / mean(fakedata)
+}
+
+summary(r)
+```
+
+## >Q3.3 What is the estimated p value? 
+
+Report the p-value with 3 digits accuracy, e.g. 0.00345 or 0.123
+
+summary(r)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+0.01389 0.48099 0.82967 0.99097 1.32420 7.71300
+ingen simulerede værdier var over var/mean ift observed (7.740072), og p-værdien kan derfor kun siges at være at least 
+<0.000100
+
+# Effect of parental age on the expected number of de novo SNV
+
+A very recent study reports on 7,930 exome-sequenced trios and examined de novo Single nucleotide variantes (dnSNVs) (Source : <https://www.nature.com/articles/s41586-022-04712-2>). 
+
+That study reports a total of 241,063 dnSNVs (across the 7,930 exome-sequenced trios) and found that 77% of mutations were of paternal origin. 
+
+# SE on proportion of paternal mutations.
+
+If we assume that dnSNVs are arising independently of each-other, calculate the SE around the observed proportion of dnSNVs that are of paternal origin.
+
+## >Q3.4 What is the SE on the proportion of paternal mutations.
+
+Report the SE with 4 digits precision eg 0.0001234 or 1.291
+
+```{r}
+dnsnv <- 241063
+trios <- 7930
+paternalrate <- 0.77
+
+dnsnv_paternal <- dnsnv * paternalrate
+dnsnv_maternal <- dnsnv * 1 - paternalrate
+
+
+
+SE <- (dnsnv - dnsnv_paternal) / sqrt(7930)
+SE
+```
+
+
+## >Q3.5 How many trios should we sequence in chimpanzees ? 
+
+We also want to determine what proportion of mutations are of paternal 
+origin in chimpanzees. We would like to make sure that the SE on the proportion we will estimate is no bigger than 0.01 . 
+What is your recommendation on the minimum number of trios to achieve an SE of 0.01 if you assume that 60 mutations will be discovered in each chimpanzee trio and assuming that 75% as expected proportion of paternal mutations are identical in chimpanzee  ? 
+
+Report your minimum  number of trios  as a single digit eg 33, 77 etc,  and if in doubt round the next integer. Eg if you find your minimum number to be 12.1 round round 13.
+
+```{r}
+(60 - 45) / sqrt(2000000)
+```
+200k lol
+
+
+## How likely are we to see trios with "extreme" number of mutations ?  
+
+If we assume that the expected number of mutations in dnSNVs per trio is 72, calculate how many trios - among the 7,930 sequenced trios-  do you expect will have more than 100 mutations ?
+
+
+
+## >Q3.6 What is the expecter number of trios with more than 100 mutations?
+
+The expected number doesn't need to be an integer, e.g. it can be 13.45
+```{r}
+# poisson.test(x = 100, T = 72, alternative = "greater")
+ppois(100, 72, lower.tail = FALSE)
+0.0007216347 * 7930
+```
+
+# What is the probabilty of being a mutator? 
+
+We assume that the expected mean number of mutations in a normal trio is 72.
+
+We can also expect that 0.01% of trios are so called "hyper mutators", because one parent is carrying a mutation that produces a defective mismatch repair. These "hyper mutator trios" are expected to have an overall 2-fold increase in their mutation rate.
+
+If one trio exhibits 120 mutations, calculate the probability that this trio is a "hyper mutator trio".
+
+## >Q3.7 What is the probability of a trio with 120 mutations to be a "hyper mutator trio"?
+
+HINT: The basic probability is 0.01% (1 in 10000). But we have observed the trio to have 120 mutations. A normal trio (9999 of 10000 trios) is expected to have 72 mutations, but a mutator trio is expected to have an overall 2-fold increase in their mutation rate.
+
+```{r}
+poisson.test(x = 120, T = 72, r = 2)
+
+binom.test()
+```
+i dont even. 
+

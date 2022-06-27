@@ -1,0 +1,150 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+
+library(tidyverse)
+options(digits = 7)
+options(pillar.sigfig = 7)
+```
+
+# Insertions of transposable elements into the rice genome
+
+Pack-MULEs are non-autonomous DNA transposable elements that belong to the Mutator superfamily. 
+First isolated in maize, Pack-MULEs can amplify genes or gene fragments on a massive scale.
+
+In rice, there are nearly 3,000 Pack-MULEs, of which 22% are transcribed and at least 1% are translated into protein. This suggests that Pack-MULEs have a great potential in regulating gene expression and providing unique resources for coding sequences.
+
+Here is a curated list of proven transcript ORFS that are embedded in Pack-MULEs elements in rice. For each element, the `chromosome` of origin as well as `locus` identifier and the percentage of gc nucleotides in the transcript are reported.
+
+Source: Jian et al 2011. Supplementary table 3b. <https://www.pnas.org/doi/10.1073/pnas.1010814108>
+
+```{r}
+
+rice_mules <- read_rds(r"(Examen\t4.rice_mules.rds)")
+
+rice_mules
+```
+
+As you can see our dataset consists of 84 ORFs embedded in Pack-MULEs elements.
+
+# Summaries of Mules abundance in the rice genome
+
+## >Q4.1 How many ORFS that are embedded in Pack-MULEs elements are found on chromosome 2  in the genome of cultivated rice (Oryza sativa)?
+
+Note that the official name for the chromosome 2 in question is `Oschr02`.
+
+```{r}
+rice_mules %>%
+    filter(chromosome == "Oschr02") %>%
+    nrow()
+```
+
+
+# Is the abundance of ORFS that are embedded in Pack-MULEs elements random? 
+
+For the next few questions, we assume that we can use a proportional (equal opportunity) model where abundance of Pack-MULEs embedded ORFs scales with the physical size of chromosomes (we assume that the % of gene coding sequence is homogeneous across chromosomes). So we basically assume that larger chromosomes have more Pack-MULEs embedded.
+
+If we formulate it as a NULL hypothesis it would be:
+
+H0: The number of Pack-MULEs pr. megabase is the same for all chromosomes.
+Ha: The number of Pack-MULEs pr. megabase is NOT the same for all chromosomes.
+
+We have prepared a small tibble with the chromosome sizes (in megabases).
+
+```{r}
+
+rice_chr <- tibble(
+    chromsome = c(
+        "Oschr1", "Oschr2", "Oschr3", "Oschr4",
+        "Oschr5", "Oschr6", "Oschr7", "Oschr8",
+        "Oschr9", "Oschr10", "Oschr11", "Oschr12"
+    ),
+    size_mb = c(44, 37, 37, 36, 30, 31, 29, 24, 22, 24, 29, 27)
+)
+
+rice_chr
+```
+
+## >Q4.2 Report the value of the correct test statistic when you test the H0 above.
+
+Use at least 3 digits accuracy, eg 3.841 (not 3.84). 
+
+And note that we ask for the value of the test statistic.
+
+```{r}
+
+dfrandom <- rice_chr %>% mutate(n = rice_mules %>%
+    group_by(chromosome) %>%
+    count() %>% pull(n))
+
+
+# fisher.test(dfrandom$size_mb, dfrandom$n)
+# chisq.test(dfrandom$size_mb, dfrandom$n)
+t.test(dfrandom$size_mb, dfrandom$n)
+```
+
+
+
+## >Q4.3 Report the associated p-value when you perform the correct test.
+
+Use at least 2 digits accuracy : eg 0.051  (not 0.05) or 0.23 (not 0.2).
+
+
+---
+
+## Are PACK mules preferreably recruiting GC rich genes ?
+
+Another way to understand in a more fine-grained way how PACK mules are inserted and amplify genes is to see if these elements preferentially insert in specific genomic contexts.
+
+Here we more specifically study whether PACK mules target preferentially genes based on their GC content. 
+
+Using the observed `percent_gc` in the data (percentage of GC nucleotides in the transcripts),
+test the null hypothesis ($H_0$) that the gc% in the transcripts sitting in Pack-MULEs is the same as the gc% the rest of the ORFs. 
+
+We assume here that the distribution of GC% of ORFS is known with error (based on measurements on more than 30,000 well annotated and curated ORFs). 
+
+As a "fair" basis for comparison, we will use the the genome-wide distribution of percent GC in the ORFs annotated in the O.sativa genome.
+
+More specifically we will assume that the GC% of ORFS is distributed with mean 43.5525 and standard deviation 5.21
+
+## >Q4.4 Report the test statistic value for $H_0$
+
+Hint: choose first which test is most appropriate to test the H0 formulated above.
+
+Report the test statistic value. Use 3 digits precision. 
+
+```{r}
+
+t.test(rice_mules$gc_percent, mu = 43.5525)$p.value
+```
+
+---
+
+## >Q4.5 Report the p-value associated with the test statistic for $H_0$
+
+Use 3 digits precision.
+
+
+---
+
+## >Q4.6 Choose wich of the statement more adequately summarizes your findings regarding MULES.
+
+* Statement 1: "Insertion of MULES is random throughout the genome as neither chromosome nor GC% explain the variation in abundance of MULES across the O. sativa genome (both tests, p > 0.1)"
+
+* Statement 2. "The process of MULES insertion throughout the genome is clearly not random:  MULES abundance per chromosomes is not well predicted by a proportional model accounting for mere chromosome length (p < 0.05) and MULES embedded transcripts are very GC rich relative to the rests of  ORFS in the genome (p <0.001)"
+
+* Statement 3: "Abundance of MULES throughout the genome is seemingly random and does not deviate from what is predicted by a proportional model accounting for mere chromosome length (p > 0.25). However, MULES embedded transcripts are strikingly GC rich relative to the rest of  ORFS in the genome (observed gc% exceeds 60%, p < 10^(-6) ).". 
+
+* Statement 4: "When abundance of MULES throughout the genome is quantified by chromosomes,it does not deviate from what is predicted by a proportional model accounting for mere chromosome length (p > 0.25). However, MULES embedded transcripts are very GC poor relative to the rests of  ORFS in the genome (p <0.0000001)". That is compatible with pervasive AT mutation bias in MULES.
+
+
+
+
+

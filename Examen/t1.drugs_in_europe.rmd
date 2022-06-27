@@ -1,0 +1,181 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+# Drugs in sewage water in European cities
+
+The European Centre for Drugs and Drug Addiction is monitoring drug use in European cities.
+
+Analyzing communal waste waters for drugs and their metabolic products in order to estimate their consumption in the community is a developing field, involving scientists working in different research areas, including analytical chemistry, physiology and biochemistry, sewage engineering, spatial epidemiology and statistics, and conventional drug epidemiology.
+
+The collaboration have collected data from several drugs over the years from various cities in Europe. 
+
+Data are originally found here: https://www.emcdda.europa.eu/topics/wastewater
+
+The measured concentrations are given as X mg/1000 persons/day. So it is independent of city size. The data provided here is a summary of the average concentration over all days (Monday-Sunday) measured in a time window for a given year. 
+
+If a city didn't collect any data a given year, the value is indicated as NA (= missing data).
+
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+
+df <- read_rds(r"(Examen\t1.drugs_in_europe_data.rds)")
+
+head(df)
+```
+
+## >Q1.1 How many different drugs do we have data for?
+
+```{r}
+n_distinct(df$metabolite)
+```
+
+
+## >Q1.2 How many different cities have a concentration > 0 in 2021 for amphetamine? 
+
+```{r}
+df %>%
+    filter(metabolite == "amphetamine" & year_2021 > 0) %>%
+    nrow()
+```
+
+## >Q1.3 What is the observed mean consumption of cocaine in Austria (AT) in 2021?
+
+You may need to remove missing values when summarising. 
+
+Many R functions have the `na.rm=T/F` parameter which can be used.
+
+Example of using `na.rm=T/F` parameter in the `sum()` function.
+
+```{r}
+
+tibble(x = c(1, 2, 3, NA)) %>% summarise(median = sum(x)) # default is na.rm=F
+
+tibble(x = c(1, 2, 3, NA)) %>% summarise(median = sum(x, na.rm = T))
+```
+
+
+```{r}
+df %>%
+    filter(country == "AT" & metabolite == "cocaine") %>%
+    pull(year_2021) %>%
+    mean(na.rm = T)
+```
+
+
+## >Q1.4 In how many cities were the measured cocaine consumption > 100 mg pr. 1000 people pr. day in 2021? 
+
+```{r}
+df %>%
+    filter(metabolite == "cocaine" & year_2021 > 100) %>%
+    nrow()
+```
+## >Q1.5 In how many cities did the measured cocaine consumption increase in 2021 relative to 2019? 
+
+```{r}
+df %>%
+    filter(metabolite == "cocaine" & year_2021 > year_2019) %>%
+    nrow()
+```
+# A theoretical MDMA example
+
+NOTE: This is a purely theoretical question. You should NOT use the dataset to answer this.
+
+## >Q1.6 If we assume that every city have equal probability (50:50) of going up/down in MDMA consumption from 2019 to 2021, what is the probability of observing "just by chance" precisely 40 out of 65 cities going up in consumption.
+
+```{r}
+
+
+dbinom(x = 40, size = 65, prob = 0.5)
+```
+
+Now let's assume that we actually did observe that 40 cities out of 65 went up in MDMA consumption.
+
+Can you test the hypothesis:
+
+H0: The probability of increased consumption is 0.5
+Ha: The probability of increased consumption is NOT 0.5
+
+## >Q1.7 Report the p value for the adequate test.
+
+```{r}
+binom.test(x = 40, n = 65, p = 0.5)
+```
+
+## >Q1.8 What do you conclude from your test results?
+
+Answer should be a number indicating one of the following statements:
+
+1. In more than half of the cities surveyed, MDMA consumption went up in 2021, relative to 2019. The trend is not significant (at the alpha=0.05 level).
+
+2. In more than half of the cities surveyed, MDMA consumption went up in 2021, relative to 2019. The trend is strongly significant (at the alpha=0.05 level).
+
+3. Mean MDMA consumption in Europe was significantly higher in 2021 relative to 2019. 
+
+4. Mean MDMA consumption in Europe was significantly lower in 2021 relative to 2019. 
+
+5. None of the above.
+
+###
+dataen er fra et hypotetisk H0 og er ikke surveyed, såehhhh. Dog er der en ikke significant trend op.
+1 hvis "surveyed" er det i rent faktisk mener, ellers 5
+
+
+# Back to the dataset
+
+Using the city as an observation unit, compare the mean consumption of amphetamine in 2021 and 2019 using the appropriate type of test for comparing means.
+
+You should start by checking if assumptions of normal data are met.
+
+Then choose the correct test and
+
+## >Q1.9  Report the p value of the test. 
+
+```{r}
+df2 <- df %>%
+    filter(metabolite == "amphetamine") %>%
+    select(city, year_2021, year_2019)
+
+shapiro.test(df2$year_2021)
+shapiro.test(df2$year_2019)
+
+# dataen er altså ikke normalfordelt
+
+wilcox.test(df2$year_2021, df2$year_2019)
+
+
+# sanitytest for tolerance
+t.test(df2$year_2021, df2$year_2019)
+# seems about right. #paired seems wonky with na data.
+```
+
+Our null hypothesis: the mean consumption were the same in the two years. 
+
+Our alternative hypothesis: the mean consumption were different in the two years.
+
+
+## >Q1.10 What do you conclude from your test results?
+
+Answer should be a number indicating one of the following statements:
+
+1. I could not reject that data were normal, so I used t.test and found the result to be NOT significant.
+2. I could not reject that data were normal, so I used t.test and found the result to be significant (p < 0.05)
+3. I could not reject that data were normal, so I used t.test and found the result to be significant (p < 0.01)
+4. I rejected that data were normal, so I used wilcox.test and found the result to be NOT significant.
+5. I rejected that data were normal, so I used wilcox.test and found the result to be significant (p < 0.05)
+6. I rejected that data were normal, so I used wilcox.test and found the result to be significant (p < 0.01)
+7. None of the above.
+
+
+
+
+

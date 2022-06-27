@@ -92,6 +92,11 @@ kan også udregne et areal mellem 2 q-værdier mellem 5 og 3 (altså 5 og under,
 pbinom(q = 5, size = 25, prob = 0.02) - pbinom(q = 3, size = 25, prob = 0.02)
 ```
 
+
+```{r}
+pchisq()
+```
+
 ### Q
 
 Finder q (antal) der indeholder en angivet p værdi. Tænk den som en omvendt p funktion.

@@ -1,0 +1,52 @@
+#########
+#
+# Please fill in your answers into this sheet
+# All answers should be given as numbers that can be understood by R.
+#
+# After each answer the points awarded for a correct answer is indicated.
+#
+# Examples of answers
+#
+# answer$t1.1 = 42         # (1 points)
+# answer$t1.2 = 1.3e-10    # (it's a very small number)
+# answer$t1.3 = 0.00000047 # (1 points) - Maybe I should have used more digits?
+#
+# 
+############ 
+#
+#
+# Drugs in European sewage water
+answer$t1.1 = 5 # (1 points)
+answer$t1.2 = 61 # (1 points)
+answer$t1.3 = 183.4678 # (1 points)
+answer$t1.4 = 49 # (2 points)
+answer$t1.5 = 38 # (2 points)
+answer$t1.6 = 0.01766403 # (3 points)
+answer$t1.7 = 0.08168 # (3 points)
+answer$t1.8 = 1 # (2 points)
+answer$t1.9 = 0.8642 # (3 points)
+answer$t1.10 = 4 # (3 points)
+# Power of the correlation test in R
+answer$t2.1 = 5 # (1 points)
+answer$t2.2 = 3 # (1 points)
+answer$t2.3 = 10000 # (1 points)
+answer$t2.4 = 9212 # (2 points)
+answer$t2.5 = 0.9212 # (3 points)
+answer$t2.6 = 200 # (2 points)
+answer$t2.7 = 100 # (3 points)
+answer$t2.8 = 6 # (3 points)
+# Distribution of new mutations in human genomes in R
+answer$t3.1 = 69.6 # (1 points)
+answer$t3.2 = 0.1407647 # (2 points)
+answer$t3.3 = 0.000100 # (3 points)
+answer$t3.4 = 622.6 # (2 points)
+answer$t3.5 = 200000 # (3 points)
+answer$t3.6 = 5.722563 # (2 points)
+answer$t3.7 = 0.04537 # (3 points)
+# Transposable elements in the rice genome
+answer$t4.1 = 12 # (1 points)
+answer$t4.2 = 11.12641 # (2 points)
+answer$t4.3 = 3.429e-09 # (2 points)
+answer$t4.4 = 22.0203 # (3 points)
+answer$t4.5 = 2.06153e-36 # (3 points)
+answer$t4.6 = 2 # (3 points)

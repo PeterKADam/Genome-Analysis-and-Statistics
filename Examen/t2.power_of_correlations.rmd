@@ -1,0 +1,183 @@
+---
+output:
+  html_document:
+        theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+
+library(tidyverse)
+
+options(digits = 7) # number of digits printed by R default (vectors, data.frames, lists)
+options(pillar.sigfig = 7) # number of digits printed by tibbles default.
+```
+
+# Simulation of different correlation tests
+
+In statistics we use the term correlation to measure association between two continuous variables (e.g. height and weight).
+
+Correlation describes the association between two variables and goes from -1 to +1. 
+
+-1 = perfect negative correlation
+
+0 = NO association = no correlation
+
++1 = perfect positive correlation
+
+In R we can test for correlation using the function cor.test(x=variable1, y=variable2, method=...)
+
+As you have seen in the course, we very often use different variations of a statistical test, each of them based on different assumptions. For the `cor.test()` we have three different types of correlation for testing:
+
+1. Pearson correlation. It assumes that both variables come from a normal distribution
+2. Spearman rank correlation test. It does not assume normality.
+3. Kendall rank correlation test. It does not assume normality.
+
+We have simulated datasets where we know the effect size (the correlation) and the sample size (the number of datapoints). 
+
+Here is one example of the test output.
+
+```{r}
+
+df <- tibble(
+    x = c(
+        0.562, 1.194, -0.081, 1.327, -0.313, 1.231,
+        0.844, -1.018, -0.405, 0.916
+    ),
+    y = c(
+        0.721, 0.25, -1.405, 0.252, -0.529, 0.923,
+        0.789, -0.432, -0.134, 1.268
+    )
+)
+
+cor.test(x = df$x, y = df$y, method = "pearson")
+cor.test(x = df$x, y = df$y, method = "spearman")
+cor.test(x = df$x, y = df$y, method = "kendall")
+```
+
+We have simulated thousands of datasets for different sample sizes and correlation values.
+
+For each single simulated dataset, we applied the three tests, and saved the resulting p-values in the three columns `pearson`, `spearman` and `kendall`.
+
+```{r message=FALSE, warning=FALSE}
+
+df <- read_rds(r"(Examen\t2.power_of_correlation.rds)")
+
+df
+```
+
+As you can see have we done a total of 150.000 simulations. 
+
+If you for some of the questions prefer the data in "tidy" format you can use the `pivot_longer()` function like this:
+
+```{r}
+
+df %>% pivot_longer(cols = c("pearson", "spearman", "kendall"), names_to = "test", values_to = "p.value")
+```
+
+We have chosen to give you the dataset organized with the three test columns, since each row then corresponds to one simulated dataset (with three test results).
+
+## >Q2.1 How many different sample_sizes have we simulated?
+
+```{r}
+n_distinct(df$sample_size)
+```
+
+## >Q2.2 How many different correlation values (effect sizes) have we simulated?
+```{r}
+n_distinct(df$correlation)
+```
+
+## >Q2.3 How many datasets have we simulated for each combination of correlation and samplesize?
+```{r}
+df %>%
+    filter(correlation == 0.25, sample_size == 50) %>%
+    nrow()
+```
+
+###
+10000 assuming equal amount for all combinations which checks out by 5*3*10000=150000
+
+## >Q2.4 How many of the pearson tests had a significant p value (alfa=0.05) for correlation = 0.33 and sample_size=100?
+```{r}
+df %>%
+    filter(correlation == 0.33, sample_size == 100, pearson < 0.05) %>%
+    nrow()
+```
+
+## >Q2.5 What is the estimated power for the pearson test when alfa=0.05, correlation = 0.33 and sample_size=100?
+
+Power should be reported as a number [0;1]
+
+```{r}
+df2 <- df %>% filter(correlation == 0.33, sample_size == 100)
+
+(1 - sum(df2$pearson > 0.05) / nrow(df2))
+```
+
+
+## >Q2.6 What sample size do we need to get at least 80% power for the kendall test for alfa=0.05 and correlation = 0.25?
+
+Note: The answer should be one of the simulated sample sizes.
+
+```{r}
+unique(df$sample_size)
+df3 <- df %>% filter(correlation == 0.25)
+
+df31 <- df3 %>% filter(sample_size == 100)
+df32 <- df3 %>% filter(sample_size == 200)
+(1 - sum(df31$kendall > 0.05) / nrow(df31))
+(1 - sum(df32$kendall > 0.05) / nrow(df32))
+
+(1 - sum(df32$pearson > 0.05) / nrow(df32))
+(1 - sum(df32$kendall > 0.05) / nrow(df32))
+(1 - sum(df32$spearman > 0.05) / nrow(df32))
+```
+
+## >Q2.7 What sample size do we need to get at least 80% power for the pearson test for alfa=0.05, correlation = 0.33?
+
+Note: The answer should be one of the simulated sample sizes.
+```{r}
+unique(df$sample_size)
+df3 <- df %>% filter(correlation == 0.33)
+
+df31 <- df3 %>% filter(sample_size == 50)
+df32 <- df3 %>% filter(sample_size == 100)
+(1 - sum(df31$pearson > 0.05) / nrow(df31))
+(1 - sum(df32$pearson > 0.05) / nrow(df32))
+(1 - sum(df32$kendall > 0.05) / nrow(df32))
+(1 - sum(df32$spearman > 0.05) / nrow(df32))
+```
+
+# Plotting the data
+
+We suggest you plot the data so you can compare the power for the different sample sizes, correlations and three methods.
+
+
+```{r}
+
+df %>%
+    pivot_longer(cols = c("pearson", "spearman", "kendall"), names_to = "test", values_to = "p.value") %>%
+    group_by(correlation) %>%
+    summary()
+df %>%
+    select(-spearman, -kendall) %>%
+    filter(correlation == 0) %>%
+    group_by()
+# df %>% ggplot(aes(x = sample_size, y = power, group = correlation))
+```
+## >Q2.8 Which of the following statements is the best description of the pattern you see?
+
+1. Generally the power is very similar for all three tests.
+2. The power is sometimes lower for the pearson test when compared to the kendall test.
+3. The power is higher for the pearson test, followed by spearman and then kendall as the worst.
+4. The power is higher for the pearson test and spearman and kendall have nearly the same power.
+5. The power is similar for pearson and spearman and kendall have lower power.
+6. The power is similar for pearson and kendall and spearman have lower power.
+
+
+
+
+
