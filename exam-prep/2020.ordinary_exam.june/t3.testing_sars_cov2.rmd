@@ -54,7 +54,7 @@ In that context, a false negative test is the unlucky event that zero molecules 
 lambda <- 50
 (exp(1)^-lambda) * (lambda^0)
 
-poisson.test()
+# poisson.test()
 dpois(x = 0, lambda = 50)
 ```
 1.92875e-22
@@ -155,7 +155,7 @@ Hint: So we assume we see 0 or 1 carrier in each pool (though this will lead to 
 rate <- 0.0001953125
 n <- 48
 
-pbinom(q=1, size=n, prob=rate,lower.tail = F)
+pbinom(q = 1, size = n, prob = rate, lower.tail = F)
 ```
 
 Pr=4.27729e-05

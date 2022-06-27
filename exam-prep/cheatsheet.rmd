@@ -20,10 +20,12 @@ library(tidyverse)
 chisq.test()
 fisher.test()
 ```
+
 ## Binom test
 ```{r}
 binom.test()
 ```
+
 ## Fisketest
 ```{r}
 poisson.test()
